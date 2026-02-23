@@ -1,0 +1,267 @@
+# Multi-Sport Venue Reservation — Database Schema
+
+Build the complete database layer for a venue reservation platform that supports **multiple sports** (padel, tennis, badminton, futsal, etc.), not just padel.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Sport-agnostic design**: The schema uses a `sports` table so venues and courts can be tagged with any sport type. The app name is "VibePadel" but the data model is flexible.
+
+> [!IMPORTANT]
+> **Pricing model**: The plan stores price **per court** (each court has its own hourly rate). If you prefer venue-level or time-based dynamic pricing (e.g. peak hours cost more), let me know.
+
+> [!IMPORTANT]
+> **Booking flow**: A booking ties one user → one court → one date + time range. Multi-slot bookings are a single row with `start_time` / `end_time` (not multiple rows). If you want to support booking multiple courts at once, let me know.
+
+---
+
+## Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    USERS ||--o{ BOOKINGS : "makes"
+    USERS ||--o{ REVIEWS : "writes"
+    SPORTS ||--o{ COURTS : "played on"
+    VENUES ||--o{ COURTS : "has"
+    VENUES ||--o{ REVIEWS : "receives"
+    VENUES }o--o{ VENUE_FACILITIES : "has"
+    FACILITIES ||--o{ VENUE_FACILITIES : "belongs to"
+    COURTS ||--o{ BOOKINGS : "reserved via"
+    BOOKINGS ||--o| PAYMENTS : "paid by"
+
+    SPORTS {
+        id bigint PK
+        name string
+        slug string UK
+        icon string
+    }
+
+    VENUES {
+        id bigint PK
+        name string
+        slug string UK
+        description text
+        address string
+        city string
+        latitude decimal
+        longitude decimal
+        phone string
+        image_url string
+        is_active boolean
+    }
+
+    FACILITIES {
+        id bigint PK
+        name string
+        icon string
+    }
+
+    VENUE_FACILITIES {
+        venue_id bigint FK
+        facility_id bigint FK
+    }
+
+    COURTS {
+        id bigint PK
+        venue_id bigint FK
+        sport_id bigint FK
+        name string
+        type enum
+        price_per_hour integer
+        is_active boolean
+    }
+
+    BOOKINGS {
+        id bigint PK
+        user_id bigint FK
+        court_id bigint FK
+        date date
+        start_time time
+        end_time time
+        total_price integer
+        status enum
+        notes text
+    }
+
+    PAYMENTS {
+        id bigint PK
+        booking_id bigint FK
+        method enum
+        amount integer
+        status enum
+        paid_at timestamp
+    }
+
+    REVIEWS {
+        id bigint PK
+        user_id bigint FK
+        venue_id bigint FK
+        rating tinyint
+        comment text
+    }
+```
+
+---
+
+## Proposed Changes
+
+### Migrations (7 new files)
+
+All prices are stored as **integers in Rupiah** (no decimals needed for IDR).
+
+#### [NEW] `create_sports_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint | PK |
+| `name` | string | e.g. "Padel", "Tenis", "Badminton" |
+| `slug` | string | unique, URL-friendly |
+| `icon` | string, nullable | Icon name or emoji |
+| timestamps | | |
+
+---
+
+#### [NEW] `create_venues_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint | PK |
+| `name` | string | |
+| `slug` | string | unique |
+| `description` | text, nullable | |
+| `address` | string | Full street address |
+| `city` | string | For filtering |
+| `latitude` | decimal(10,7), nullable | Geolocation |
+| `longitude` | decimal(10,7), nullable | Geolocation |
+| `phone` | string, nullable | |
+| `image_url` | string, nullable | Hero/cover image |
+| `is_active` | boolean | default true |
+| timestamps | | |
+
+---
+
+#### [NEW] `create_facilities_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint | PK |
+| `name` | string | e.g. "Parkir", "Kafe", "Kamar Mandi" |
+| `icon` | string, nullable | |
+| timestamps | | |
+
+---
+
+#### [NEW] `create_venue_facilities_pivot_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `venue_id` | FK → venues | |
+| `facility_id` | FK → facilities | |
+| primary key | composite (venue_id, facility_id) | |
+
+---
+
+#### [NEW] `create_courts_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint | PK |
+| `venue_id` | FK → venues | |
+| `sport_id` | FK → sports | |
+| `name` | string | e.g. "Lapangan 1 - Indoor" |
+| `type` | enum: `indoor`, `outdoor` | |
+| `price_per_hour` | unsignedInteger | In Rupiah |
+| `is_active` | boolean | default true |
+| timestamps | | |
+
+---
+
+#### [NEW] `create_bookings_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint | PK |
+| `user_id` | FK → users | |
+| `court_id` | FK → courts | |
+| `date` | date | Booking date |
+| `start_time` | time | e.g. 08:00 |
+| `end_time` | time | e.g. 09:00 |
+| `total_price` | unsignedInteger | In Rupiah |
+| `status` | enum: `pending`, `confirmed`, `cancelled`, `completed` | default `pending` |
+| `notes` | text, nullable | |
+| timestamps | | |
+| **unique** | [(court_id, date, start_time)](file:///Users/alexjanuar/Projects/padel-reservation/database/migrations/0001_01_01_000000_create_users_table.php#9-39) | Prevent double-booking |
+
+---
+
+#### [NEW] `create_payments_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint | PK |
+| `booking_id` | FK → bookings | |
+| `method` | enum: `bank_transfer`, `ewallet`, `cash` | |
+| `amount` | unsignedInteger | In Rupiah |
+| `status` | enum: `pending`, `paid`, `failed`, `refunded` | default `pending` |
+| `paid_at` | timestamp, nullable | |
+| timestamps | | |
+
+---
+
+#### [NEW] `create_reviews_table.php`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint | PK |
+| `user_id` | FK → users | |
+| `venue_id` | FK → venues | |
+| `rating` | unsignedTinyInteger | 1–5 |
+| `comment` | text, nullable | |
+| timestamps | | |
+| **unique** | [(user_id, venue_id)](file:///Users/alexjanuar/Projects/padel-reservation/database/migrations/0001_01_01_000000_create_users_table.php#9-39) | One review per user per venue |
+
+---
+
+### Models (7 new files)
+
+Each model will be created via `php artisan make:model` with `--factory` and include:
+- Fillable attributes
+- Return-typed relationship methods
+- Casts where needed
+
+| Model | Key Relationships |
+|---|---|
+| `Sport` | `hasMany(Court)` |
+| [Venue](file:///Users/alexjanuar/Projects/padel-reservation/resources/js/pages/Venue/Show.tsx#60-385) | `hasMany(Court)`, `belongsToMany(Facility)`, `hasMany(Review)` |
+| `Facility` | `belongsToMany(Venue)` |
+| `Court` | `belongsTo(Venue)`, `belongsTo(Sport)`, `hasMany(Booking)` |
+| `Booking` | `belongsTo(User)`, `belongsTo(Court)`, `hasOne(Payment)` |
+| `Payment` | `belongsTo(Booking)` |
+| `Review` | `belongsTo(User)`, `belongsTo(Venue)` |
+
+A `bookings()` relationship will also be added to the existing [User](file:///Users/alexjanuar/Projects/padel-reservation/app/Models/User.php#11-53) model.
+
+---
+
+### Factories & Seeders
+
+- A factory for each model with realistic Indonesian data
+- [DatabaseSeeder](file:///Users/alexjanuar/Projects/padel-reservation/database/seeders/DatabaseSeeder.php#9-24) will seed: 5 sports, 6 venues, ~20 facilities, ~15 courts, ~30 bookings, sample reviews
+- Seeder data will match the mock data currently used in [welcome.tsx](file:///Users/alexjanuar/Projects/padel-reservation/resources/js/pages/welcome.tsx) and [Venue/Show.tsx](file:///Users/alexjanuar/Projects/padel-reservation/resources/js/pages/Venue/Show.tsx)
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+Run all tests:
+```bash
+php artisan test --compact
+```
+
+New tests to create:
+
+1. **`tests/Feature/Models/SportTest.php`** — Verify `Sport` has courts relationship
+2. **`tests/Feature/Models/VenueTest.php`** — Verify [Venue](file:///Users/alexjanuar/Projects/padel-reservation/resources/js/pages/Venue/Show.tsx#60-385) → courts, facilities, reviews relationships and computed average rating
+3. **`tests/Feature/Models/BookingTest.php`** — Verify booking creation, status transitions, and the unique constraint preventing double-bookings
+
+### Manual Verification
+
+After seeding, verify the data looks correct:
+```bash
+php artisan migrate:fresh --seed
+```
+Then check the database has the expected records via tinker / the app UI.

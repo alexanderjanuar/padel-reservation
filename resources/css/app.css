@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import 'tailwindcss';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-heading: 'Outfit', sans-serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    --color-padel-green: #10b981;
+    --color-padel-green-dark: #059669;
+    --color-padel-dark: #0f172a;
+    --color-padel-light: #f8fafc;
+    --color-padel-border: #e2e8f0;
+    --color-padel-muted: #64748b;
+}
+
+@layer base {
+    * {
+        @apply border-padel-border;
+    }
+
+    body {
+        @apply bg-padel-light font-sans text-padel-dark antialiased;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-heading tracking-tight text-padel-dark;
+    }
+}
+
+/* ── Login page animations ───────────────────────── */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-hero-stagger {
+    animation: fadeInUp 0.6s ease-out both;
+}
+
+.login-hero-stagger:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.login-hero-stagger:nth-child(2) {
+    animation-delay: 0.25s;
+}
+
+.login-hero-stagger:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.login-form-stagger {
+    animation: fadeInUp 0.5s ease-out both;
+}
+
+.login-form-stagger:nth-child(1) {
+    animation-delay: 0.15s;
+}
+
+.login-form-stagger:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.login-form-stagger:nth-child(3) {
+    animation-delay: 0.45s;
+}
+
+.login-form-stagger:nth-child(4) {
+    animation-delay: 0.55s;
+}
