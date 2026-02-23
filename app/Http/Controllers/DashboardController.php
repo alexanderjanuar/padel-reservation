@@ -46,7 +46,7 @@ class DashboardController extends Controller
                 ->groupBy('court_id')
                 ->orderByDesc('count')
                 ->first()
-                ?->court_id;
+                    ?->court_id;
 
             if ($mostBookedCourtId) {
                 // Eager load the venue
@@ -56,14 +56,95 @@ class DashboardController extends Controller
         }
 
         if ($user->hasRole('admin')) {
-            // Admin receives different stats, these can be updated later with real metrics.
+            $now = now();
+            $last7DaysStart = $now->copy()->subDays(6)->startOfDay();
+            $previous7DaysStart = $now->copy()->subDays(13)->startOfDay();
+            $previous7DaysEnd = $now->copy()->subDays(7)->endOfDay();
+
+            // Trend Helper Function
+            $calculateTrend = function ($current, $previous) {
+                if ($previous > 0) {
+                    return round((($current - $previous) / $previous) * 100, 1);
+                }
+                return $current > 0 ? 100 : 0;
+            };
+
+            // Calculate metric totals & trends
+            $totalUsers = \App\Models\User::count();
+            $newUsersLast7Days = \App\Models\User::where('created_at', '>=', $last7DaysStart)->count();
+            $newUsersPrev7Days = \App\Models\User::whereBetween('created_at', [$previous7DaysStart, $previous7DaysEnd])->count();
+            $userTrend = $calculateTrend($newUsersLast7Days, $newUsersPrev7Days);
+
+            $totalBookings = \App\Models\Booking::count();
+            $newBookingsLast7Days = \App\Models\Booking::where('created_at', '>=', $last7DaysStart)->count();
+            $newBookingsPrev7Days = \App\Models\Booking::whereBetween('created_at', [$previous7DaysStart, $previous7DaysEnd])->count();
+            $bookingTrend = $calculateTrend($newBookingsLast7Days, $newBookingsPrev7Days);
+
+            $totalVenues = \App\Models\Venue::count();
+            $newVenuesLast7Days = \App\Models\Venue::where('created_at', '>=', $last7DaysStart)->count();
+            $newVenuesPrev7Days = \App\Models\Venue::whereBetween('created_at', [$previous7DaysStart, $previous7DaysEnd])->count();
+            $venueTrend = $calculateTrend($newVenuesLast7Days, $newVenuesPrev7Days);
+
+            $totalRevenue = \App\Models\Booking::whereIn('status', ['confirmed', 'completed'])->sum('total_price');
+            $revenueLast7Days = \App\Models\Booking::whereIn('status', ['confirmed', 'completed'])->where('created_at', '>=', $last7DaysStart)->sum('total_price');
+            $revenuePrev7Days = \App\Models\Booking::whereIn('status', ['confirmed', 'completed'])->whereBetween('created_at', [$previous7DaysStart, $previous7DaysEnd])->sum('total_price');
+            $revenueTrend = $calculateTrend($revenueLast7Days, $revenuePrev7Days);
+
+            // Fetch daily raw data for last 7 days
+            $fetchDailyCounts = function ($query) use ($last7DaysStart) {
+                return $query->where('created_at', '>=', $last7DaysStart)
+                    ->selectRaw('DATE(created_at) as date, count(*) as value')
+                    ->groupBy('date')
+                    ->get()
+                    ->mapWithKeys(function ($item) {
+                        return [\Carbon\Carbon::parse($item->date)->format('M d') => (int) $item->value];
+                    });
+            };
+
+            $userDaily = $fetchDailyCounts(\App\Models\User::query());
+            $venueDaily = $fetchDailyCounts(\App\Models\Venue::query());
+
+            $bookingDaily = \App\Models\Booking::where('date', '>=', $last7DaysStart->toDateString())
+                ->selectRaw('date, count(*) as value')
+                ->groupBy('date')
+                ->get()
+                ->mapWithKeys(function ($item) {
+                    return [\Carbon\Carbon::parse($item->date)->format('M d') => (int) $item->value];
+                });
+
+            $revenueDaily = \App\Models\Booking::whereIn('status', ['confirmed', 'completed'])
+                ->where('date', '>=', $last7DaysStart->toDateString())
+                ->selectRaw('date, sum(total_price) as value')
+                ->groupBy('date')
+                ->get()
+                ->mapWithKeys(function ($item) {
+                    return [\Carbon\Carbon::parse($item->date)->format('M d') => (int) $item->value];
+                });
+
+            // Ensure 7 days array
+            $dates = collect(range(6, 0))->map(function ($days) {
+                return now()->subDays($days)->format('M d');
+            });
+
+            $chartData = [
+                'users' => $dates->map(fn($d) => ['date' => $d, 'count' => $userDaily->get($d, 0)]),
+                'venues' => $dates->map(fn($d) => ['date' => $d, 'count' => $venueDaily->get($d, 0)]),
+                'bookings' => $dates->map(fn($d) => ['date' => $d, 'count' => $bookingDaily->get($d, 0)]),
+                'revenue' => $dates->map(fn($d) => ['date' => $d, 'revenue' => $revenueDaily->get($d, 0)]),
+            ];
+
             return Inertia::render('Admin/Dashboard', [
                 'stats' => [
-                    'totalUsers' => \App\Models\User::count(),
-                    'totalBookings' => \App\Models\Booking::count(),
-                    'totalVenues' => \App\Models\Venue::count(),
-                    'totalRevenue' => \App\Models\Booking::whereIn('status', ['confirmed', 'completed'])->sum('total_price'),
+                    'totalUsers' => $totalUsers,
+                    'userTrend' => $userTrend,
+                    'totalBookings' => $totalBookings,
+                    'bookingTrend' => $bookingTrend,
+                    'totalVenues' => $totalVenues,
+                    'venueTrend' => $venueTrend,
+                    'totalRevenue' => $totalRevenue,
+                    'revenueTrend' => $revenueTrend,
                 ],
+                'chartData' => $chartData,
                 'recentBookings' => \App\Models\Booking::with(['user', 'court.venue'])
                     ->latest('created_at')
                     ->take(5)

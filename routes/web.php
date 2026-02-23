@@ -22,10 +22,14 @@ Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'inde
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('sports', [\App\Http\Controllers\Admin\SportController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('sports.index');
+
 Route::get('venue/{id}', function ($id) {
     return Inertia::render('Venue/Show', [
         'id' => $id,
     ]);
 })->name('venue.show');
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
