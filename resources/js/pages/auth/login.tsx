@@ -2,6 +2,7 @@ import { Form, Head, Link } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -19,33 +20,42 @@ export default function Login({
     canRegister,
 }: Props) {
     return (
-        <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F9FAFB] p-6 font-sans sm:p-12">
+        <div className="flex min-h-dvh w-full bg-white font-sans text-slate-900">
             <Head title="Masuk — VibePadel" />
 
-            {/* Container */}
-            <div className="w-full max-w-[1000px] overflow-hidden rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-900/5 sm:flex sm:min-h-[600px]">
-
-                {/* ═══════════ Left Panel — Form ═══════════ */}
-                <div className="flex w-full flex-col justify-center px-8 py-12 sm:w-1/2 sm:px-12 lg:px-16">
-                    {/* Header */}
+            {/* ═══════════ Left Panel — The Functional Zone ═══════════ */}
+            <div className="flex w-full flex-col p-8 sm:p-16 lg:w-1/2 lg:p-24 xl:p-32">
+                {/* Header Anchor */}
+                <div className="flex items-center justify-between">
                     <Link
                         href={home()}
-                        className="mb-10 inline-block font-heading text-xl font-bold tracking-tight text-slate-900"
+                        className="font-heading text-2xl font-bold tracking-tighter text-slate-900"
                     >
-                        VibePadel
+                        VibePadel.
                     </Link>
+                    {canRegister && (
+                        <Link
+                            href={register()}
+                            className="text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-padel-green"
+                        >
+                            Buat Akun
+                        </Link>
+                    )}
+                </div>
 
-                    <div>
-                        <h1 className="mb-2 font-heading text-3xl font-semibold tracking-tight text-slate-900">
-                            Masuk ke akun Anda
+                {/* Main Form Area */}
+                <div className="flex flex-1 flex-col justify-center max-w-md w-full mx-auto lg:mx-0 py-16">
+                    <div className="login-form-stagger mb-12">
+                        <h1 className="mb-4 font-heading text-[2.5rem] leading-tight font-medium tracking-tight text-slate-900 sm:text-5xl">
+                            Selamat Datang
                         </h1>
-                        <p className="mb-8 text-sm text-slate-500">
-                            Masuk untuk melanjutkan reservasi lapangan.
+                        <p className="text-[15px] leading-relaxed tracking-wide text-slate-500">
+                            Silakan masukkan detail Anda untuk mengakses platform VibePadel.
                         </p>
                     </div>
 
                     {status && (
-                        <div className="mb-6 rounded-md bg-emerald-50 p-4 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200/50">
+                        <div className="mb-8 border-l-2 border-slate-900 bg-slate-50 p-4 text-sm font-medium tracking-wide text-slate-800">
                             {status}
                         </div>
                     )}
@@ -53,19 +63,16 @@ export default function Login({
                     <Form
                         {...store.form()}
                         resetOnSuccess={['password']}
-                        className="flex flex-col gap-5"
+                        className="flex flex-col gap-6"
                     >
                         {({ processing, errors }) => (
                             <>
-                                <div className="flex flex-col gap-5">
-                                    {/* Email Field */}
-                                    <div>
-                                        <label
-                                            htmlFor="email"
-                                            className="mb-1.5 block text-sm font-medium text-slate-700"
-                                        >
-                                            Alamat Email
-                                        </label>
+                                <div className="login-form-stagger flex flex-col gap-6">
+                                    {/* Interactive Email Field */}
+                                    <div className="group relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
+                                            <Mail className="h-[18px] w-[18px]" />
+                                        </div>
                                         <input
                                             id="email"
                                             type="email"
@@ -74,32 +81,22 @@ export default function Login({
                                             autoFocus
                                             tabIndex={1}
                                             autoComplete="email"
-                                            className="block w-full rounded-lg border-0 bg-slate-50 py-2.5 px-3.5 text-slate-900 ring-1 ring-inset ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:text-sm sm:leading-6"
+                                            placeholder=" "
+                                            className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pb-2.5 pt-6 pl-11 text-[15px] font-medium text-slate-900 transition-all duration-300 placeholder-transparent hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:outline-none focus:ring-0"
                                         />
-                                        <InputError
-                                            message={errors.email}
-                                            className="mt-2"
-                                        />
+                                        <label
+                                            htmlFor="email"
+                                            className="pointer-events-none absolute left-11 top-1/2 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:text-padel-green peer-focus:uppercase peer-focus:tracking-widest peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:uppercase peer-[:not(:placeholder-shown)]:tracking-widest"
+                                        >
+                                            Alamat Email
+                                        </label>
+                                        <InputError message={errors.email} className="mt-2" />
                                     </div>
 
-                                    {/* Password Field */}
-                                    <div>
-                                        <div className="mb-1.5 flex items-center justify-between">
-                                            <label
-                                                htmlFor="password"
-                                                className="block text-sm font-medium text-slate-700"
-                                            >
-                                                Password
-                                            </label>
-                                            {canResetPassword && (
-                                                <Link
-                                                    href={request()}
-                                                    className="text-sm font-medium text-slate-600 hover:text-slate-900"
-                                                    tabIndex={5}
-                                                >
-                                                    Lupa password?
-                                                </Link>
-                                            )}
+                                    {/* Interactive Password Field */}
+                                    <div className="group relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
+                                            <Lock className="h-[18px] w-[18px]" />
                                         </div>
                                         <input
                                             id="password"
@@ -108,68 +105,139 @@ export default function Login({
                                             required
                                             tabIndex={2}
                                             autoComplete="current-password"
-                                            className="block w-full rounded-lg border-0 bg-slate-50 py-2.5 px-3.5 text-slate-900 ring-1 ring-inset ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:text-sm sm:leading-6"
+                                            placeholder=" "
+                                            className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pb-2.5 pt-6 pl-11 pr-14 text-[15px] font-medium text-slate-900 transition-all duration-300 placeholder-transparent hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:outline-none focus:ring-0"
                                         />
-                                        <InputError
-                                            message={errors.password}
-                                            className="mt-2"
-                                        />
+                                        <label
+                                            htmlFor="password"
+                                            className="pointer-events-none absolute left-11 top-1/2 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:text-padel-green peer-focus:uppercase peer-focus:tracking-widest peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:uppercase peer-[:not(:placeholder-shown)]:tracking-widest"
+                                        >
+                                            Password
+                                        </label>
+                                        {canResetPassword && (
+                                            <div className="absolute inset-y-0 right-1 pr-4 flex items-center z-10 transition-opacity peer-placeholder-shown:opacity-100 peer-focus:opacity-100 opacity-60">
+                                                <Link
+                                                    href={request()}
+                                                    className="text-[12px] font-bold tracking-wide text-slate-400 hover:text-padel-green-dark transition-colors"
+                                                    tabIndex={5}
+                                                >
+                                                    Lupa?
+                                                </Link>
+                                            </div>
+                                        )}
+                                        <InputError message={errors.password} className="mt-2" />
                                     </div>
 
                                     {/* Remember Me */}
-                                    <div className="flex items-center gap-2 pt-1">
+                                    <div className="flex items-center gap-3 pt-2">
                                         <Checkbox
                                             id="remember"
                                             name="remember"
                                             tabIndex={3}
-                                            className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                            className="h-[18px] w-[18px] rounded-[4px] border-slate-300 text-padel-green focus:ring-padel-green"
                                         />
                                         <label
                                             htmlFor="remember"
-                                            className="text-sm text-slate-600"
+                                            className="text-[14px] font-medium tracking-wide text-slate-600"
                                         >
-                                            Ingat saya
+                                            Ingat perangkat ini
                                         </label>
                                     </div>
                                 </div>
 
-                                {/* Submit Button */}
-                                <div className="mt-4">
+                                {/* Interactive Submit Button */}
+                                <div className="login-form-stagger mt-8">
                                     <button
                                         type="submit"
-                                        className="inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-70 disabled:hover:bg-slate-900"
+                                        className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-padel-green px-6 py-4 text-[15px] font-semibold tracking-wide text-white shadow-lg shadow-padel-green/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-padel-green/40 hover:bg-padel-green-dark active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 disabled:hover:-translate-y-0"
                                         tabIndex={4}
                                         disabled={processing}
                                         data-test="login-button"
                                     >
-                                        {processing && <Spinner className="mr-2 h-4 w-4" />}
-                                        Masuk
+                                        {/* Animated shine effect */}
+                                        <div className="absolute inset-0 -translate-x-[150%] skew-x-[-15deg] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-[800ms] ease-in-out group-hover:translate-x-[150%]" />
+
+                                        <span className="relative flex items-center justify-center text-center">
+                                            {processing ? (
+                                                <Spinner className="h-5 w-5" />
+                                            ) : (
+                                                <>
+                                                    <span className="translate-x-3 transition-transform duration-300 ease-out group-hover:translate-x-0">Masuk ke Akun</span>
+                                                    <ArrowRight strokeWidth={2.5} className="absolute right-[-24px] h-[18px] w-[18px] -translate-x-4 opacity-0 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100" />
+                                                </>
+                                            )}
+                                        </span>
                                     </button>
                                 </div>
                             </>
                         )}
                     </Form>
 
-                    {canRegister && (
-                        <p className="mt-8 text-center text-sm text-slate-500">
-                            Belum mendaftar?{' '}
-                            <Link
-                                href={register()}
-                                className="font-medium text-slate-900 transition-colors hover:underline"
-                            >
-                                Buat akun baru
-                            </Link>
-                        </p>
-                    )}
-                </div>
+                    <div className="login-form-stagger mt-8">
+                        <div className="relative mb-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-slate-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-white px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">atau lanjutkan dengan</span>
+                            </div>
+                        </div>
 
-                {/* ═══════════ Right Panel — Image ═══════════ */}
-                <div className="relative hidden w-1/2 bg-slate-50 sm:block">
-                    <img
-                        src="https://images.unsplash.com/photo-1646649853703-7645147474ba?auto=format&fit=crop&w=1200&q=80"
-                        alt="Padel court"
-                        className="absolute inset-0 h-full w-full object-cover"
-                    />
+                        <a
+                            href="/auth/google/redirect"
+                            className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-100 bg-white px-6 py-4 text-[15px] font-semibold tracking-wide text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-padel-green/10 focus:border-padel-green"
+                        >
+                            <svg className="h-[18px] w-[18px] transition-transform duration-300 ease-out group-hover:scale-110" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
+                            Lanjutkan dengan Google
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════════ Right Panel — Stacked Imagery ═══════════ */}
+            <div className="hidden lg:flex lg:w-1/2 p-12 xl:p-24 relative items-center justify-center overflow-hidden">
+                {/* 
+                    Outer container specifically sized to hold the entire "stack" plus their shadows and hover states.
+                    This ensures the images don't bleed back into the left form area or get cut off by the viewport edge.
+                */}
+                <div className="relative w-full aspect-[4/5] max-w-[550px] mx-auto z-10">
+
+                    {/* Back Image (Bottom layer) */}
+                    <div className="absolute -left-8 top-0 w-[65%] h-[70%] rounded-[2rem] overflow-hidden shadow-xl rotate-[-6deg] transition-all duration-500 hover:rotate-[-4deg] hover:scale-105 hover:z-30 border-[6px] border-white">
+                        <img
+                            src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&w=800&q=80"
+                            alt="Tennis courts overview"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+
+                    {/* Middle Image (Right layer) */}
+                    <div className="absolute -right-4 top-16 w-[70%] h-[60%] rounded-[2rem] overflow-hidden shadow-xl rotate-[8deg] transition-all duration-500 hover:rotate-[6deg] hover:scale-105 hover:z-30 border-[6px] border-white z-10">
+                        <img
+                            src="https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?auto=format&fit=crop&w=800&q=80"
+                            alt="Playing padel"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+
+                    {/* Front Hero Image (Top main layer) */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[40%] w-[80%] h-[75%] rounded-[2rem] overflow-hidden shadow-2xl z-20 border-[8px] border-white transition-all duration-500 hover:-translate-y-[42%] hover:scale-[1.03]">
+                        <img
+                            src="https://images.unsplash.com/photo-1646649853703-7645147474ba?auto=format&fit=crop&w=1200&q=80"
+                            alt="Padel match interior"
+                            className="w-full h-full object-cover"
+                        />
+
+                        {/* Overlay text on the top image */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-90" />
+                        <div className="absolute bottom-0 left-0 p-8 w-full text-white">
+                            <h3 className="font-heading text-3xl font-bold leading-tight mb-2 shadow-sm text-white">
+                                Tingkatkan<br />Permainan Anda.
+                            </h3>
+                            <div className="w-12 h-1 bg-padel-green mt-4 rounded-full" />
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
