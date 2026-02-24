@@ -46,7 +46,7 @@ class DashboardController extends Controller
                 ->groupBy('court_id')
                 ->orderByDesc('count')
                 ->first()
-                    ?->court_id;
+                ?->court_id;
 
             if ($mostBookedCourtId) {
                 // Eager load the venue
@@ -66,6 +66,7 @@ class DashboardController extends Controller
                 if ($previous > 0) {
                     return round((($current - $previous) / $previous) * 100, 1);
                 }
+
                 return $current > 0 ? 100 : 0;
             };
 
@@ -127,10 +128,10 @@ class DashboardController extends Controller
             });
 
             $chartData = [
-                'users' => $dates->map(fn($d) => ['date' => $d, 'count' => $userDaily->get($d, 0)]),
-                'venues' => $dates->map(fn($d) => ['date' => $d, 'count' => $venueDaily->get($d, 0)]),
-                'bookings' => $dates->map(fn($d) => ['date' => $d, 'count' => $bookingDaily->get($d, 0)]),
-                'revenue' => $dates->map(fn($d) => ['date' => $d, 'revenue' => $revenueDaily->get($d, 0)]),
+                'users' => $dates->map(fn ($d) => ['date' => $d, 'count' => $userDaily->get($d, 0)]),
+                'venues' => $dates->map(fn ($d) => ['date' => $d, 'count' => $venueDaily->get($d, 0)]),
+                'bookings' => $dates->map(fn ($d) => ['date' => $d, 'count' => $bookingDaily->get($d, 0)]),
+                'revenue' => $dates->map(fn ($d) => ['date' => $d, 'revenue' => $revenueDaily->get($d, 0)]),
             ];
 
             return Inertia::render('Admin/Dashboard', [

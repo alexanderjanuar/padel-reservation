@@ -25,6 +25,41 @@ Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'inde
 Route::get('sports', [\App\Http\Controllers\Admin\SportController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('sports.index');
+Route::post('sports', [\App\Http\Controllers\Admin\SportController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('sports.store');
+Route::put('sports/{sport}', [\App\Http\Controllers\Admin\SportController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('sports.update');
+Route::delete('sports/{sport}', [\App\Http\Controllers\Admin\SportController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->name('sports.destroy');
+
+Route::get('venues', [\App\Http\Controllers\Admin\VenueController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('venues.index');
+Route::post('venues', [\App\Http\Controllers\Admin\VenueController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('venues.store');
+Route::put('venues/{venue}', [\App\Http\Controllers\Admin\VenueController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('venues.update');
+Route::delete('venues/{venue}', [\App\Http\Controllers\Admin\VenueController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->name('venues.destroy');
+
+Route::get('facilities', [\App\Http\Controllers\Admin\FacilityController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('facilities.index');
+Route::post('facilities', [\App\Http\Controllers\Admin\FacilityController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('facilities.store');
+Route::put('facilities/{facility}', [\App\Http\Controllers\Admin\FacilityController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('facilities.update');
+Route::delete('facilities/{facility}', [\App\Http\Controllers\Admin\FacilityController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->name('facilities.destroy');
 
 Route::get('venue/{id}', function ($id) {
     return Inertia::render('Venue/Show', [
@@ -32,4 +67,4 @@ Route::get('venue/{id}', function ($id) {
     ]);
 })->name('venue.show');
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

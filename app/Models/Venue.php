@@ -24,7 +24,8 @@ class Venue extends Model
         'latitude',
         'longitude',
         'phone',
-        'image_url',
+        'image_url', // Retained for backwards compatibility if needed
+        'images',
         'is_active',
     ];
 
@@ -36,6 +37,7 @@ class Venue extends Model
         return [
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
+            'images' => 'array',
             'is_active' => 'boolean',
         ];
     }

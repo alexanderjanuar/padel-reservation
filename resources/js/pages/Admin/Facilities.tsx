@@ -13,7 +13,9 @@ import {
     ChevronRight,
     Pencil,
     Trash2,
+    HelpCircle,
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -28,20 +30,18 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import InputError from '@/components/input-error';
-import { store, update, destroy } from '@/routes/sports';
+import { store, update, destroy } from '@/routes/facilities';
 
-interface Sport {
+interface Facility {
     id: number;
     name: string;
-    slug: string;
     icon: string | null;
     created_at: string;
-    courts_count: number;
-    bookings_count: number;
+    venues_count: number;
 }
 
-interface SportsProps {
-    sports: Sport[];
+interface FacilitiesProps {
+    facilities: Facility[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -50,24 +50,137 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
     {
-        title: 'Analitik Olahraga',
-        href: '/sports',
+        title: 'Analitik Fasilitas',
+        href: '/facilities',
     },
 ];
 
-type SortKey = 'name' | 'courts_count' | 'bookings_count' | 'created_at';
+type SortKey = 'name' | 'venues_count' | 'created_at';
 type SortConfig = {
     key: SortKey;
     direction: 'asc' | 'desc';
 } | null;
 
-export default function Sports({ sports }: SportsProps) {
+const DynamicIcon = ({ name, className }: { name: string | null; className?: string }) => {
+    if (!name) return <HelpCircle className={className} />;
+
+    // Attempt to dynamically load the icon from LucideIcons
+    const IconComponent = (LucideIcons as any)[name];
+    if (!IconComponent) return <HelpCircle className={className} />;
+
+    return <IconComponent className={className} />;
+};
+
+const IconPicker = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Extract all valid icon names to search against
+    const allIconNames = useMemo(() => {
+        return Object.keys(LucideIcons).filter(key =>
+            key !== 'createLucideIcon' &&
+            key !== 'Icon' &&
+            key !== 'LucideIcon' &&
+            key !== 'LucideProps' &&
+            /^[A-Z]/.test(key)
+        );
+    }, []);
+
+    const filteredIcons = useMemo(() => {
+        if (!searchQuery) {
+            // Curated list of common facility/sports related icons for default view
+            const popularIcons = [
+                'Activity', 'Award', 'BadgeCheck', 'Bath', 'Battery', 'Bell', 'Bike', 'Book',
+                'Box', 'Briefcase', 'Building', 'Car', 'CheckCircle', 'Clock', 'Coffee',
+                'CreditCard', 'DoorClosed', 'Droplets', 'Dumbbell', 'Flame', 'Gamepad2',
+                'Heart', 'Home', 'Info', 'Key', 'Lock', 'MapPin', 'Monitor', 'Moon',
+                'Music', 'Navigation', 'Package', 'Phone', 'Radio', 'Search', 'Settings',
+                'Shield', 'ShoppingBag', 'ShowerHead', 'Smartphone', 'Snowflake', 'Speaker',
+                'Star', 'Store', 'Sun', 'Tent', 'Ticket', 'TreePine', 'Trophy', 'Tv',
+                'Users', 'Utensils', 'Video', 'Volume2', 'Wifi', 'Wind', 'Zap'
+            ];
+            return popularIcons.filter(name => allIconNames.includes(name));
+        }
+
+        // Search across all icons and limit to 100 to prevent rendering lag
+        return allIconNames.filter(name =>
+            name.toLowerCase().includes(searchQuery.toLowerCase())
+        ).slice(0, 100);
+    }, [searchQuery, allIconNames]);
+
+    return (
+        <div className="relative mt-2">
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex h-11 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-[15px] font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:border-padel-green focus:ring-1 focus:ring-padel-green focus:outline-none"
+            >
+                <div className="flex items-center gap-3">
+                    <DynamicIcon name={value} className="h-5 w-5 text-padel-green-dark" />
+                    <span>{value || 'Pilih Ikon...'}</span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+            </button>
+
+            {isOpen && (
+                <div className="absolute top-12 left-0 z-50 w-full rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+                    <div className="relative mb-3">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <Search className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                            type="text"
+                            className="block w-full rounded-lg border-0 py-2 pl-9 pr-3 text-sm text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-padel-green sm:text-sm sm:leading-6"
+                            placeholder="Cari ikon... (msl. Wifi)"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()} // Prevent toggling the dropdown
+                        />
+                    </div>
+                    <div className="grid max-h-56 grid-cols-6 gap-2 overflow-y-auto p-1">
+                        {filteredIcons.map((iconName) => {
+                            const IconComponent = (LucideIcons as any)[iconName];
+                            if (!IconComponent) return null;
+                            return (
+                                <button
+                                    key={iconName}
+                                    type="button"
+                                    onClick={() => {
+                                        onChange(iconName);
+                                        setIsOpen(false);
+                                        setSearchQuery('');
+                                    }}
+                                    className={cn(
+                                        "flex aspect-square items-center justify-center rounded-lg border transition-all hover:bg-padel-green-50 hover:text-padel-green-dark focus:outline-none",
+                                        value === iconName
+                                            ? "border-padel-green bg-padel-green-50 text-padel-green-dark"
+                                            : "border-transparent text-slate-600"
+                                    )}
+                                    title={iconName}
+                                >
+                                    <IconComponent className="h-5 w-5" />
+                                </button>
+                            );
+                        })}
+                        {filteredIcons.length === 0 && (
+                            <div className="col-span-6 py-4 text-center text-sm text-slate-500">
+                                Ikon tidak ditemukan.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default function Facilities({ facilities }: FacilitiesProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [linesPerPage, setLinesPerPage] = useState(10);
     const [filterOption, setFilterOption] = useState<
-        'all' | 'has_bookings' | 'no_bookings'
+        'all' | 'has_venues' | 'no_venues'
     >('all');
     const [isStatsVisible, setIsStatsVisible] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -76,9 +189,10 @@ export default function Sports({ sports }: SportsProps) {
     // Form logic setup
     const form = useForm({
         name: '',
+        icon: '',
     });
 
-    const submitCreateSport = (e: React.FormEvent) => {
+    const submitCreateFacility = (e: React.FormEvent) => {
         e.preventDefault();
 
         form.submit(store(), {
@@ -91,20 +205,23 @@ export default function Sports({ sports }: SportsProps) {
     };
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [sportToEdit, setSportToEdit] = useState<Sport | null>(null);
-    const editForm = useForm({ name: '' });
+    const [facilityToEdit, setFacilityToEdit] = useState<Facility | null>(null);
+    const editForm = useForm({ name: '', icon: '' });
 
-    const openEditModal = (sport: Sport) => {
-        setSportToEdit(sport);
-        editForm.setData('name', sport.name);
+    const openEditModal = (facility: Facility) => {
+        setFacilityToEdit(facility);
+        editForm.setData({
+            name: facility.name,
+            icon: facility.icon || '',
+        });
         setIsEditModalOpen(true);
     };
 
-    const submitEditSport = (e: React.FormEvent) => {
+    const submitEditFacility = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!sportToEdit) return;
+        if (!facilityToEdit) return;
 
-        editForm.submit(update({ sport: sportToEdit.id }), {
+        editForm.submit(update({ facility: facilityToEdit.id }), {
             onSuccess: () => {
                 setIsEditModalOpen(false);
                 editForm.reset();
@@ -114,19 +231,19 @@ export default function Sports({ sports }: SportsProps) {
     };
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [sportToDelete, setSportToDelete] = useState<Sport | null>(null);
+    const [facilityToDelete, setFacilityToDelete] = useState<Facility | null>(null);
     const deleteForm = useForm({});
 
-    const openDeleteModal = (sport: Sport) => {
-        setSportToDelete(sport);
+    const openDeleteModal = (facility: Facility) => {
+        setFacilityToDelete(facility);
         setIsDeleteModalOpen(true);
     };
 
-    const submitDeleteSport = (e: React.FormEvent) => {
+    const submitDeleteFacility = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!sportToDelete) return;
+        if (!facilityToDelete) return;
 
-        deleteForm.submit(destroy({ sport: sportToDelete.id }), {
+        deleteForm.submit(destroy({ facility: facilityToDelete.id }), {
             onSuccess: () => {
                 setIsDeleteModalOpen(false);
             },
@@ -134,28 +251,28 @@ export default function Sports({ sports }: SportsProps) {
     };
 
     // Filter Logic
-    const filteredSports = useMemo(() => {
-        let result = [...sports];
+    const filteredFacilities = useMemo(() => {
+        let result = [...facilities];
 
         if (searchTerm) {
             const query = searchTerm.toLowerCase();
-            result = result.filter((sport) =>
-                sport.name.toLowerCase().includes(query),
+            result = result.filter((facility) =>
+                facility.name.toLowerCase().includes(query)
             );
         }
 
-        if (filterOption === 'has_bookings') {
-            result = result.filter((sport) => sport.bookings_count > 0);
-        } else if (filterOption === 'no_bookings') {
-            result = result.filter((sport) => sport.bookings_count === 0);
+        if (filterOption === 'has_venues') {
+            result = result.filter((facility) => facility.venues_count > 0);
+        } else if (filterOption === 'no_venues') {
+            result = result.filter((facility) => facility.venues_count === 0);
         }
 
         return result;
-    }, [sports, searchTerm, filterOption]);
+    }, [facilities, searchTerm, filterOption]);
 
     // Sorting Logic
-    const filteredAndSortedSports = useMemo(() => {
-        let result = [...filteredSports];
+    const filteredAndSortedFacilities = useMemo(() => {
+        let result = [...filteredFacilities];
 
         if (sortConfig !== null) {
             result.sort((a, b) => {
@@ -178,14 +295,14 @@ export default function Sports({ sports }: SportsProps) {
         }
 
         return result;
-    }, [filteredSports, sortConfig]);
+    }, [filteredFacilities, sortConfig]);
 
     // Pagination Logic
-    const totalPages = Math.ceil(filteredAndSortedSports.length / linesPerPage);
-    const paginatedSports = useMemo(() => {
+    const totalPages = Math.ceil(filteredAndSortedFacilities.length / linesPerPage);
+    const paginatedFacilities = useMemo(() => {
         const start = (currentPage - 1) * linesPerPage;
-        return filteredAndSortedSports.slice(start, start + linesPerPage);
-    }, [filteredAndSortedSports, currentPage, linesPerPage]);
+        return filteredAndSortedFacilities.slice(start, start + linesPerPage);
+    }, [filteredAndSortedFacilities, currentPage, linesPerPage]);
 
     const handleSort = (key: SortKey) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -213,26 +330,21 @@ export default function Sports({ sports }: SportsProps) {
     };
 
     // Calculate aggregated stats
-    const totalCourts = sports.reduce(
-        (sum, sport) => sum + sport.courts_count,
-        0,
-    );
-    const avgCourts =
-        sports.length > 0 ? (totalCourts / sports.length).toFixed(1) : '0';
-    const totalBookings = sports.reduce(
-        (sum, sport) => sum + sport.bookings_count,
+    const totalFacilities = facilities.length;
+    const totalLinkedVenues = facilities.reduce(
+        (sum, facility) => sum + facility.venues_count,
         0,
     );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Analitik Olahraga" />
+            <Head title="Analitik Fasilitas" />
 
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-1 flex-col gap-4 bg-white p-4 md:gap-6 md:p-8">
                 {/* ═══════════ Header Stats Section ═══════════ */}
                 <div className="flex flex-col gap-2">
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        Analitik Olahraga
+                        Analitik Fasilitas
                     </h1>
                     <p className="text-sm font-medium text-slate-500">
                         Navigasi Data untuk Keputusan Produk yang Terinformasi{' '}
@@ -262,57 +374,31 @@ export default function Sports({ sports }: SportsProps) {
                     )}
                 >
                     <div className="min-h-0">
-                        <div className="grid grid-cols-1 gap-6 border-t border-b border-slate-200 py-6 md:grid-cols-4 md:gap-8">
+                        <div className="grid grid-cols-1 gap-6 border-t border-b border-slate-200 py-6 md:grid-cols-2 md:gap-8">
                             <div className="flex flex-col">
                                 <span className="mb-2 text-xs font-semibold text-slate-500">
-                                    Total Olahraga
+                                    Total Fasilitas
                                 </span>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                                        {sports.length}
+                                        {totalFacilities}
                                     </span>
                                 </div>
                                 <span className="mt-2 text-xs font-medium text-slate-400">
-                                    Semua olahraga terdaftar
+                                    Semua fasilitas terdaftar
                                 </span>
                             </div>
                             <div className="flex flex-col border-t border-slate-100 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-8">
                                 <span className="mb-2 text-xs font-semibold text-slate-500">
-                                    Total Lapangan
+                                    Total Tempat Terhubung
                                 </span>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                                        {totalCourts}
+                                        {totalLinkedVenues}
                                     </span>
                                 </div>
                                 <span className="mt-2 text-xs font-medium text-slate-400">
-                                    Di seluruh olahraga
-                                </span>
-                            </div>
-                            <div className="flex flex-col border-t border-slate-100 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-8">
-                                <span className="mb-2 text-xs font-semibold text-slate-500">
-                                    Rata-rata Lapangan / Olahraga
-                                </span>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                                        {avgCourts}
-                                    </span>
-                                </div>
-                                <span className="mt-2 text-xs font-medium text-slate-400">
-                                    Per kategori
-                                </span>
-                            </div>
-                            <div className="flex flex-col border-t border-slate-100 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-8">
-                                <span className="mb-2 text-xs font-semibold text-slate-500">
-                                    Total Pemesanan
-                                </span>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                                        {totalBookings}
-                                    </span>
-                                </div>
-                                <span className="mt-2 text-xs font-medium text-slate-400">
-                                    Pemesanan sepanjang waktu
+                                    Total asosiasi tempat dengan fasilitas
                                 </span>
                             </div>
                         </div>
@@ -327,7 +413,7 @@ export default function Sports({ sports }: SportsProps) {
                             <Search className="absolute left-3 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Cari olahraga..."
+                                placeholder="Cari fasilitas..."
                                 value={searchTerm}
                                 onChange={(e) => {
                                     setSearchTerm(e.target.value);
@@ -348,11 +434,11 @@ export default function Sports({ sports }: SportsProps) {
                                     className="h-full w-full appearance-none rounded-full border border-slate-200/80 bg-white py-0 pr-8 pl-9 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 focus:border-padel-green-dark focus:ring-padel-green-dark sm:w-auto"
                                 >
                                     <option value="all">Semua Data</option>
-                                    <option value="has_bookings">
-                                        Ada Pemesanan
+                                    <option value="has_venues">
+                                        Ada Tempat
                                     </option>
-                                    <option value="no_bookings">
-                                        Belum Ada Pemesanan
+                                    <option value="no_venues">
+                                        Belum Ada Tempat
                                     </option>
                                 </select>
                                 <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-slate-400" />
@@ -370,22 +456,22 @@ export default function Sports({ sports }: SportsProps) {
                                 <DialogTrigger asChild>
                                     <button className="flex h-9 flex-1 items-center justify-center gap-2 rounded-full border border-padel-green bg-padel-green text-sm font-medium text-white shadow-sm transition-all hover:bg-padel-green-dark hover:shadow-md sm:flex-none sm:px-4">
                                         <Plus className="h-4 w-4" />
-                                        Buat Olahraga
+                                        Buat Fasilitas
                                     </button>
                                 </DialogTrigger>
                                 <DialogContent className="bg-white sm:max-w-[425px]">
                                     <DialogHeader>
                                         <DialogTitle className="font-heading text-xl">
-                                            Buat Olahraga Baru
+                                            Buat Fasilitas Baru
                                         </DialogTitle>
                                         <DialogDescription>
-                                            Tambahkan kategori olahraga baru ke
-                                            sistem. Nama olahraga harus unik.
+                                            Tambahkan kategori fasilitas baru ke
+                                            sistem. Nama fasilitas harus unik.
                                         </DialogDescription>
                                     </DialogHeader>
 
                                     <form
-                                        onSubmit={submitCreateSport}
+                                        onSubmit={submitCreateFacility}
                                         className="mt-4 flex flex-col gap-6"
                                     >
                                         <div className="group relative">
@@ -409,10 +495,24 @@ export default function Sports({ sports }: SportsProps) {
                                                 htmlFor="name"
                                                 className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                             >
-                                                Nama Olahraga
+                                                Nama Fasilitas
                                             </label>
                                             <InputError
                                                 message={form.errors.name}
+                                                className="mt-2"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[13px] font-semibold tracking-wide text-slate-500 uppercase">
+                                                Ikon Fasilitas
+                                            </label>
+                                            <IconPicker
+                                                value={form.data.icon}
+                                                onChange={(val) => form.setData('icon', val)}
+                                            />
+                                            <InputError
+                                                message={form.errors.icon}
                                                 className="mt-2"
                                             />
                                         </div>
@@ -436,7 +536,7 @@ export default function Sports({ sports }: SportsProps) {
                                                     {form.processing ? (
                                                         <Spinner className="h-5 w-5" />
                                                     ) : (
-                                                        'Simpan Olahraga'
+                                                        'Simpan Fasilitas'
                                                     )}
                                                 </span>
                                             </button>
@@ -459,30 +559,22 @@ export default function Sports({ sports }: SportsProps) {
                                             className="group flex items-center transition-colors hover:text-slate-900 focus:outline-none"
                                             onClick={() => handleSort('name')}
                                         >
-                                            Nama Olahraga
+                                            Nama Fasilitas
                                             {getSortIcon('name')}
                                         </button>
                                     </th>
                                     <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
-                                        <button
-                                            className="group flex items-center transition-colors hover:text-slate-900 focus:outline-none"
-                                            onClick={() =>
-                                                handleSort('courts_count')
-                                            }
-                                        >
-                                            Jumlah Lapangan
-                                            {getSortIcon('courts_count')}
-                                        </button>
+                                        Ikon
                                     </th>
                                     <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
                                         <button
                                             className="group flex items-center transition-colors hover:text-slate-900 focus:outline-none"
                                             onClick={() =>
-                                                handleSort('bookings_count')
+                                                handleSort('venues_count')
                                             }
                                         >
-                                            Total Pemesanan
-                                            {getSortIcon('bookings_count')}
+                                            Jumlah Tempat
+                                            {getSortIcon('venues_count')}
                                         </button>
                                     </th>
                                     <th className="px-5 py-4 text-right text-[10px] font-light tracking-wide text-slate-600">
@@ -506,33 +598,36 @@ export default function Sports({ sports }: SportsProps) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100/80">
-                                {paginatedSports.length > 0 ? (
-                                    paginatedSports.map((sport) => {
+                                {paginatedFacilities.length > 0 ? (
+                                    paginatedFacilities.map((facility) => {
                                         return (
                                             <tr
-                                                key={sport.id}
+                                                key={facility.id}
                                                 className="group transition-colors outline-none hover:bg-slate-50/40"
                                             >
                                                 <td className="min-w-[300px] px-5 py-4">
                                                     <span className="font-base truncate text-slate-700 transition-colors group-hover:text-slate-900">
-                                                        {sport.name}
+                                                        {facility.name}
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-4">
-                                                    <span className="font-base text-[14px] text-slate-700">
-                                                        {sport.courts_count}
-                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <DynamicIcon name={facility.icon} className="h-5 w-5 text-padel-green-dark" />
+                                                        <span className="font-base text-[14px] text-slate-700">
+                                                            {facility.icon || 'Tidak ada'}
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-5 py-4">
                                                     <span className="font-base rounded-md bg-padel-green-50 px-2.5 py-1 text-[14px] text-padel-green-dark">
-                                                        {sport.bookings_count}{' '}
-                                                        Pemesanan
+                                                        {facility.venues_count}{' '}
+                                                        Tempat
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-4 text-right text-[13px] font-medium text-slate-600">
                                                     {format(
                                                         new Date(
-                                                            sport.created_at,
+                                                            facility.created_at,
                                                         ),
                                                         'dd MMM yyyy',
                                                     )}
@@ -542,7 +637,7 @@ export default function Sports({ sports }: SportsProps) {
                                                         <button
                                                             onClick={() =>
                                                                 openEditModal(
-                                                                    sport,
+                                                                    facility,
                                                                 )
                                                             }
                                                             className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
@@ -553,7 +648,7 @@ export default function Sports({ sports }: SportsProps) {
                                                         <button
                                                             onClick={() =>
                                                                 openDeleteModal(
-                                                                    sport,
+                                                                    facility,
                                                                 )
                                                             }
                                                             className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
@@ -577,7 +672,7 @@ export default function Sports({ sports }: SportsProps) {
                                                     <Search className="h-5 w-5 text-slate-400" />
                                                 </div>
                                                 <h3 className="mb-1 text-sm font-semibold text-slate-900">
-                                                    Tidak ada olahraga ditemukan
+                                                    Tidak ada fasilitas ditemukan
                                                 </h3>
                                                 <p className="text-[13px] text-slate-500">
                                                     Sesuaikan pencarian atau
@@ -600,10 +695,10 @@ export default function Sports({ sports }: SportsProps) {
                                 {(currentPage - 1) * linesPerPage + 1} -{' '}
                                 {Math.min(
                                     currentPage * linesPerPage,
-                                    filteredAndSortedSports.length,
+                                    filteredAndSortedFacilities.length,
                                 )}
                             </span>{' '}
-                            of {filteredAndSortedSports.length}
+                            of {filteredAndSortedFacilities.length}
                         </span>
 
                         <div className="flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row sm:gap-6">
@@ -637,7 +732,7 @@ export default function Sports({ sports }: SportsProps) {
                                                 if (
                                                     pageNumber === 2 ||
                                                     pageNumber ===
-                                                        totalPages - 1
+                                                    totalPages - 1
                                                 ) {
                                                     return (
                                                         <span
@@ -709,7 +804,7 @@ export default function Sports({ sports }: SportsProps) {
                     </div>
                 </div>
 
-                {/* Edit Sport Modal */}
+                {/* Edit Facility Modal */}
                 <Dialog
                     open={isEditModalOpen}
                     onOpenChange={(open) => {
@@ -723,15 +818,15 @@ export default function Sports({ sports }: SportsProps) {
                     <DialogContent className="bg-white sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle className="font-heading text-xl">
-                                Edit Olahraga
+                                Edit Fasilitas
                             </DialogTitle>
                             <DialogDescription>
-                                Perbarui nama kategori olahraga ini.
+                                Perbarui nama kategori fasilitas ini.
                             </DialogDescription>
                         </DialogHeader>
 
                         <form
-                            onSubmit={submitEditSport}
+                            onSubmit={submitEditFacility}
                             className="mt-4 flex flex-col gap-6"
                         >
                             <div className="group relative">
@@ -752,10 +847,24 @@ export default function Sports({ sports }: SportsProps) {
                                     htmlFor="edit-name"
                                     className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                 >
-                                    Nama Olahraga
+                                    Nama Fasilitas
                                 </label>
                                 <InputError
                                     message={editForm.errors.name}
+                                    className="mt-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-[13px] font-semibold tracking-wide text-slate-500 uppercase">
+                                    Ikon Fasilitas
+                                </label>
+                                <IconPicker
+                                    value={editForm.data.icon}
+                                    onChange={(val) => editForm.setData('icon', val)}
+                                />
+                                <InputError
+                                    message={editForm.errors.icon}
                                     className="mt-2"
                                 />
                             </div>
@@ -786,7 +895,7 @@ export default function Sports({ sports }: SportsProps) {
                     </DialogContent>
                 </Dialog>
 
-                {/* Delete Sport Modal */}
+                {/* Delete Facility Modal */}
                 <Dialog
                     open={isDeleteModalOpen}
                     onOpenChange={setIsDeleteModalOpen}
@@ -794,18 +903,18 @@ export default function Sports({ sports }: SportsProps) {
                     <DialogContent className="bg-white sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle className="font-heading text-xl text-red-600">
-                                Hapus Olahraga
+                                Hapus Fasilitas
                             </DialogTitle>
                             <DialogDescription>
                                 Apakah Anda yakin ingin menghapus{' '}
-                                <strong>{sportToDelete?.name}</strong>? Tindakan
+                                <strong>{facilityToDelete?.name}</strong>? Tindakan
                                 ini dapat dibatalkan, namun gagal jika masih
                                 memiliki lapangan atau pemesanan yang aktif.
                             </DialogDescription>
                         </DialogHeader>
 
                         <form
-                            onSubmit={submitDeleteSport}
+                            onSubmit={submitDeleteFacility}
                             className="mt-4 flex flex-col gap-6"
                         >
                             <DialogFooter className="mt-2 flex-col gap-3 sm:flex-row sm:gap-2">

@@ -22,7 +22,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             asChild
                             isActive={isCurrentUrl(item.href)}
                             tooltip={{ children: item.title }}
-                            className="transition-colors duration-200 data-[active=true]:bg-padel-green/10 data-[active=true]:font-semibold data-[active=true]:text-padel-green-dark"
+                            className="transition-all duration-300 group-data-[collapsible=icon]:!p-2 data-[active=true]:bg-white data-[active=true]:font-semibold data-[active=true]:text-padel-green-dark data-[active=true]:shadow-sm data-[active=true]:ring-1 data-[active=true]:ring-slate-900/5"
                         >
                             <Link href={item.href} prefetch>
                                 {item.icon && <item.icon />}

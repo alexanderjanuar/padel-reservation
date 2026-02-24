@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Trophy } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, MapPin, Trophy, Box } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import sports from '@/routes/sports';
+import venues from '@/routes/venues';
+import facilities from '@/routes/facilities';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 
@@ -24,20 +26,30 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Sports',
+        title: 'Olahraga',
         href: sports.index(),
         icon: Trophy,
+    },
+    {
+        title: 'Tempat',
+        href: venues.index(),
+        icon: MapPin,
+    },
+    {
+        title: 'Fasilitas',
+        href: facilities.index(),
+        icon: Box,
     },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
+        title: 'Repositori',
         href: 'https://github.com/laravel/react-starter-kit',
         icon: Folder,
     },
     {
-        title: 'Documentation',
+        title: 'Dokumentasi',
         href: 'https://laravel.com/docs/starter-kits#react',
         icon: BookOpen,
     },
