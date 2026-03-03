@@ -11,8 +11,8 @@ import {
     CheckCircle2,
     ChevronRight,
 } from 'lucide-react';
-import { dashboard, login, register } from '@/routes';
 import HeroSection from '@/components/Welcome/HeroSection';
+import { dashboard, login, register } from '@/routes';
 
 // Mock Interfaces based on database schema
 interface Sport {

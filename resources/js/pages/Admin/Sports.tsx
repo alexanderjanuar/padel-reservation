@@ -1,6 +1,5 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { BreadcrumbItem } from '@/types';
+import { format } from 'date-fns';
 import {
     ChevronUp,
     ChevronDown,
@@ -15,8 +14,7 @@ import {
     Trash2,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import InputError from '@/components/input-error';
 import {
     Dialog,
     DialogContent,
@@ -27,8 +25,10 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import InputError from '@/components/input-error';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { store, update, destroy } from '@/routes/sports';
+import type { BreadcrumbItem } from '@/types';
 
 interface Sport {
     id: number;
@@ -155,7 +155,7 @@ export default function Sports({ sports }: SportsProps) {
 
     // Sorting Logic
     const filteredAndSortedSports = useMemo(() => {
-        let result = [...filteredSports];
+        const result = [...filteredSports];
 
         if (sortConfig !== null) {
             result.sort((a, b) => {

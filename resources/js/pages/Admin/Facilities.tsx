@@ -1,6 +1,5 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { BreadcrumbItem } from '@/types';
+import { format } from 'date-fns';
 import {
     ChevronUp,
     ChevronDown,
@@ -17,8 +16,7 @@ import {
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import InputError from '@/components/input-error';
 import {
     Dialog,
     DialogContent,
@@ -29,8 +27,10 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import InputError from '@/components/input-error';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { store, update, destroy } from '@/routes/facilities';
+import type { BreadcrumbItem } from '@/types';
 
 interface Facility {
     id: number;
@@ -272,7 +272,7 @@ export default function Facilities({ facilities }: FacilitiesProps) {
 
     // Sorting Logic
     const filteredAndSortedFacilities = useMemo(() => {
-        let result = [...filteredFacilities];
+        const result = [...filteredFacilities];
 
         if (sortConfig !== null) {
             result.sort((a, b) => {
@@ -613,9 +613,6 @@ export default function Facilities({ facilities }: FacilitiesProps) {
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center gap-2">
                                                         <DynamicIcon name={facility.icon} className="h-5 w-5 text-padel-green-dark" />
-                                                        <span className="font-base text-[14px] text-slate-700">
-                                                            {facility.icon || 'Tidak ada'}
-                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-4">

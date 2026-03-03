@@ -22,6 +22,7 @@ class Court extends Model
         'type',
         'price_per_hour',
         'is_active',
+        'images',
     ];
 
     /**
@@ -32,6 +33,7 @@ class Court extends Model
         return [
             'price_per_hour' => 'integer',
             'is_active' => 'boolean',
+            'images' => 'array',
         ];
     }
 

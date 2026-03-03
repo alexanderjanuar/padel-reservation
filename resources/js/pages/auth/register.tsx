@@ -1,12 +1,26 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import type { FormEventHandler } from 'react';
 import InputError from '@/components/input-error';
 import { Spinner } from '@/components/ui/spinner';
-import { login } from '@/routes';
-import { home } from '@/routes';
+import { login, home } from '@/routes';
 import { store } from '@/routes/register';
 
 export default function Register() {
+    const form = useForm({
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+    });
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        form.submit(store(), {
+            onFinish: () => form.reset('password', 'password_confirmation'),
+        });
+    };
+
     return (
         <div className="flex min-h-dvh w-full bg-white font-sans text-slate-900">
             <Head title="Daftar — VibePadel" />
@@ -41,160 +55,163 @@ export default function Register() {
                         </p>
                     </div>
 
-                    <Form
-                        {...store.form()}
-                        resetOnSuccess={['password', 'password_confirmation']}
+                    <form
+                        onSubmit={submit}
                         className="flex flex-col gap-6"
                     >
-                        {({ processing, errors }) => (
-                            <>
-                                <div className="login-form-stagger flex flex-col gap-6">
-                                    {/* Name Field */}
-                                    <div className="group relative">
-                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
-                                            <User className="h-[18px] w-[18px]" />
-                                        </div>
-                                        <input
-                                            id="name"
-                                            type="text"
-                                            name="name"
-                                            required
-                                            autoFocus
-                                            tabIndex={1}
-                                            autoComplete="name"
-                                            placeholder=" "
-                                            className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
-                                        />
-                                        <label
-                                            htmlFor="name"
-                                            className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
-                                        >
-                                            Nama Lengkap
-                                        </label>
-                                        <InputError
-                                            message={errors.name}
-                                            className="mt-2"
-                                        />
-                                    </div>
-
-                                    {/* Email Field */}
-                                    <div className="group relative">
-                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
-                                            <Mail className="h-[18px] w-[18px]" />
-                                        </div>
-                                        <input
-                                            id="email"
-                                            type="email"
-                                            name="email"
-                                            required
-                                            tabIndex={2}
-                                            autoComplete="email"
-                                            placeholder=" "
-                                            className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
-                                        />
-                                        <label
-                                            htmlFor="email"
-                                            className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
-                                        >
-                                            Alamat Email
-                                        </label>
-                                        <InputError
-                                            message={errors.email}
-                                            className="mt-2"
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {/* Password Field */}
-                                        <div className="group relative">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
-                                                <Lock className="h-[18px] w-[18px]" />
-                                            </div>
-                                            <input
-                                                id="password"
-                                                type="password"
-                                                name="password"
-                                                required
-                                                tabIndex={3}
-                                                autoComplete="new-password"
-                                                placeholder=" "
-                                                className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
-                                            />
-                                            <label
-                                                htmlFor="password"
-                                                className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
-                                            >
-                                                Password
-                                            </label>
-                                            <InputError
-                                                message={errors.password}
-                                                className="mt-2"
-                                            />
-                                        </div>
-
-                                        {/* Confirm Password Field */}
-                                        <div className="group relative">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
-                                                <Lock className="h-[18px] w-[18px]" />
-                                            </div>
-                                            <input
-                                                id="password_confirmation"
-                                                type="password"
-                                                name="password_confirmation"
-                                                required
-                                                tabIndex={4}
-                                                autoComplete="new-password"
-                                                placeholder=" "
-                                                className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
-                                            />
-                                            <label
-                                                htmlFor="password_confirmation"
-                                                className="pointer-events-none absolute top-1/2 left-11 max-w-[calc(100%-3rem)] -translate-y-1/2 truncate text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
-                                            >
-                                                Konfirmasi
-                                            </label>
-                                            <InputError
-                                                message={
-                                                    errors.password_confirmation
-                                                }
-                                                className="mt-2"
-                                            />
-                                        </div>
-                                    </div>
+                        <div className="login-form-stagger flex flex-col gap-6">
+                            {/* Name Field */}
+                            <div className="group relative">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
+                                    <User className="h-[18px] w-[18px]" />
                                 </div>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    name="name"
+                                    value={form.data.name}
+                                    onChange={(e) => form.setData('name', e.target.value)}
+                                    required
+                                    autoFocus
+                                    tabIndex={1}
+                                    autoComplete="name"
+                                    placeholder=" "
+                                    className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
+                                />
+                                <label
+                                    htmlFor="name"
+                                    className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                >
+                                    Nama Lengkap
+                                </label>
+                                <InputError
+                                    message={form.errors.name}
+                                    className="mt-2"
+                                />
+                            </div>
 
-                                {/* Interactive Submit Button */}
-                                <div className="login-form-stagger mt-8">
-                                    <button
-                                        type="submit"
-                                        className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-padel-green px-6 py-4 text-[15px] font-semibold tracking-wide text-white shadow-lg shadow-padel-green/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-padel-green-dark hover:shadow-xl hover:shadow-padel-green/40 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:hover:-translate-y-0 disabled:active:scale-100"
-                                        tabIndex={5}
-                                        disabled={processing}
-                                        data-test="register-button"
+                            {/* Email Field */}
+                            <div className="group relative">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
+                                    <Mail className="h-[18px] w-[18px]" />
+                                </div>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    value={form.data.email}
+                                    onChange={(e) => form.setData('email', e.target.value)}
+                                    required
+                                    tabIndex={2}
+                                    autoComplete="email"
+                                    placeholder=" "
+                                    className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
+                                />
+                                <label
+                                    htmlFor="email"
+                                    className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                >
+                                    Alamat Email
+                                </label>
+                                <InputError
+                                    message={form.errors.email}
+                                    className="mt-2"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Password Field */}
+                                <div className="group relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
+                                        <Lock className="h-[18px] w-[18px]" />
+                                    </div>
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        name="password"
+                                        value={form.data.password}
+                                        onChange={(e) => form.setData('password', e.target.value)}
+                                        required
+                                        tabIndex={3}
+                                        autoComplete="new-password"
+                                        placeholder=" "
+                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
+                                    />
+                                    <label
+                                        htmlFor="password"
+                                        className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                     >
-                                        {/* Animated shine effect */}
-                                        <div className="absolute inset-0 -translate-x-[150%] skew-x-[-15deg] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-[800ms] ease-in-out group-hover:translate-x-[150%]" />
-
-                                        <span className="relative flex items-center justify-center text-center">
-                                            {processing ? (
-                                                <Spinner className="h-5 w-5" />
-                                            ) : (
-                                                <>
-                                                    <span className="translate-x-3 transition-transform duration-300 ease-out group-hover:translate-x-0">
-                                                        Buat Akun
-                                                    </span>
-                                                    <ArrowRight
-                                                        strokeWidth={2.5}
-                                                        className="absolute right-[-24px] h-[18px] w-[18px] -translate-x-4 opacity-0 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
-                                                    />
-                                                </>
-                                            )}
-                                        </span>
-                                    </button>
+                                        Password
+                                    </label>
+                                    <InputError
+                                        message={form.errors.password}
+                                        className="mt-2"
+                                    />
                                 </div>
-                            </>
-                        )}
-                    </Form>
+
+                                {/* Confirm Password Field */}
+                                <div className="group relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
+                                        <Lock className="h-[18px] w-[18px]" />
+                                    </div>
+                                    <input
+                                        id="password_confirmation"
+                                        type="password"
+                                        name="password_confirmation"
+                                        value={form.data.password_confirmation}
+                                        onChange={(e) => form.setData('password_confirmation', e.target.value)}
+                                        required
+                                        tabIndex={4}
+                                        autoComplete="new-password"
+                                        placeholder=" "
+                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
+                                    />
+                                    <label
+                                        htmlFor="password_confirmation"
+                                        className="pointer-events-none absolute top-1/2 left-11 max-w-[calc(100%-3rem)] -translate-y-1/2 truncate text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                    >
+                                        Konfirmasi
+                                    </label>
+                                    <InputError
+                                        message={
+                                            form.errors.password_confirmation
+                                        }
+                                        className="mt-2"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Interactive Submit Button */}
+                        <div className="login-form-stagger mt-8">
+                            <button
+                                type="submit"
+                                className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-padel-green px-6 py-4 text-[15px] font-semibold tracking-wide text-white shadow-lg shadow-padel-green/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-padel-green-dark hover:shadow-xl hover:shadow-padel-green/40 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:hover:-translate-y-0 disabled:active:scale-100"
+                                tabIndex={5}
+                                disabled={form.processing}
+                                data-test="register-button"
+                            >
+                                {/* Animated shine effect */}
+                                <div className="absolute inset-0 -translate-x-[150%] skew-x-[-15deg] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-[800ms] ease-in-out group-hover:translate-x-[150%]" />
+
+                                <span className="relative flex items-center justify-center text-center">
+                                    {form.processing ? (
+                                        <Spinner className="h-5 w-5" />
+                                    ) : (
+                                        <>
+                                            <span className="translate-x-3 transition-transform duration-300 ease-out group-hover:translate-x-0">
+                                                Buat Akun
+                                            </span>
+                                            <ArrowRight
+                                                strokeWidth={2.5}
+                                                className="absolute right-[-24px] h-[18px] w-[18px] -translate-x-4 opacity-0 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+                                            />
+                                        </>
+                                    )}
+                                </span>
+                            </button>
+                        </div>
+                    </form>
 
                     <div className="login-form-stagger mt-8">
                         <div className="relative mb-6">

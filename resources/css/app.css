@@ -18,6 +18,18 @@
     --color-padel-light: #f8fafc;
     --color-padel-border: #e2e8f0;
     --color-padel-muted: #64748b;
+
+    /* Sidebar Variables */
+    --sidebar-width: 16rem;
+    --sidebar-width-icon: 3rem;
+    --color-sidebar: #ffffff;
+    --color-sidebar-foreground: var(--color-padel-dark);
+    --color-sidebar-primary: var(--color-padel-dark);
+    --color-sidebar-primary-foreground: #ffffff;
+    --color-sidebar-accent: #f1f5f9;
+    --color-sidebar-accent-foreground: var(--color-padel-dark);
+    --color-sidebar-border: var(--color-padel-border);
+    --color-sidebar-ring: var(--color-padel-green);
 }
 
 @layer base {

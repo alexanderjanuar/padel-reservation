@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
 import { CheckCircle, AlertCircle, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 export function GlobalToast() {
     const { flash = {} } = usePage().props as any;

@@ -61,10 +61,39 @@ Route::delete('facilities/{facility}', [\App\Http\Controllers\Admin\FacilityCont
     ->middleware(['auth', 'verified'])
     ->name('facilities.destroy');
 
+Route::get('users/search', [\App\Http\Controllers\Admin\UserController::class, 'search'])
+    ->middleware(['auth', 'verified'])
+    ->name('users.search');
+
+Route::post('users/quick-store', [\App\Http\Controllers\Admin\UserController::class, 'quickStore'])
+    ->middleware(['auth', 'verified'])
+    ->name('users.quick-store');
+
+Route::get('courts', [\App\Http\Controllers\Admin\CourtController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('courts.index');
+Route::post('courts', [\App\Http\Controllers\Admin\CourtController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('courts.store');
+Route::put('courts/{court}', [\App\Http\Controllers\Admin\CourtController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('courts.update');
+Route::delete('courts/{court}', [\App\Http\Controllers\Admin\CourtController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->name('courts.destroy');
+
+Route::get('bookings/recap', [\App\Http\Controllers\Admin\ReportController::class, 'recap'])
+    ->middleware(['auth', 'verified'])
+    ->name('bookings.recap');
+
+Route::post('bookings', [\App\Http\Controllers\Admin\BookingController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('bookings.store');
+
 Route::get('venue/{id}', function ($id) {
     return Inertia::render('Venue/Show', [
         'id' => $id,
     ]);
 })->name('venue.show');
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

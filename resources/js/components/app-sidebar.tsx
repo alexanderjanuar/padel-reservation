@@ -11,11 +11,13 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import courts from '@/routes/courts';
+import facilities from '@/routes/facilities';
 import sports from '@/routes/sports';
 import venues from '@/routes/venues';
-import facilities from '@/routes/facilities';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 
@@ -34,6 +36,11 @@ const mainNavItems: NavItem[] = [
         title: 'Tempat',
         href: venues.index(),
         icon: MapPin,
+    },
+    {
+        title: 'Lapangan',
+        href: courts.index(),
+        icon: Box,
     },
     {
         title: 'Fasilitas',
@@ -57,15 +64,18 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="sidebar">
             <SidebarHeader>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
+                    <SidebarMenuItem className="flex flex-row items-center justify-between">
+                        <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+                            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
+                                <Link href={dashboard()} prefetch>
+                                    <AppLogo />
+                                </Link>
+                            </SidebarMenuButton>
+                        </div>
+                        <SidebarTrigger className="shrink-0 text-slate-400 hover:text-padel-green group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8" />
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>

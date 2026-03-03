@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { ArrowRight, Calendar, Search, Users } from 'lucide-react';
+import { useState } from 'react';
 
 export default function HeroSection() {
     const [activeTab, setActiveTab] = useState('Padel');
