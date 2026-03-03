@@ -6,8 +6,15 @@ use App\Models\Payment;
 use App\Models\Sport;
 use App\Models\User;
 use App\Models\Venue;
+use App\Services\FonnteService;
+
+use function Pest\Laravel\mock;
 
 beforeEach(function () {
+    mock(FonnteService::class)
+        ->shouldReceive('sendBookingNotification')
+        ->andReturnNull();
+
     $this->user = User::factory()->create();
     $venue = Venue::factory()->create();
     $sport = Sport::factory()->create();

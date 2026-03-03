@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Services\FonnteService;
 use Illuminate\Http\JsonResponse;
 
 class BookingController extends Controller
 {
+    public function __construct(private FonnteService $fonnteService) {}
+
     public function store(StoreBookingRequest $request): JsonResponse
     {
         $validated = $request->validated();
@@ -46,6 +49,9 @@ class BookingController extends Controller
                 'paid_at' => now(),
             ]);
         }
+
+        $booking->load(['user', 'court.venue']);
+        $this->fonnteService->sendBookingNotification($booking);
 
         return response()->json([
             'message' => 'Booking berhasil dibuat.',
