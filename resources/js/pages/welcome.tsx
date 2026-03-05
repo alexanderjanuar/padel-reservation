@@ -370,8 +370,9 @@ function CheckoutModal({
             }
             setBookingIds(ids);
             setStep('qris');
-        } catch (err: any) {
-            setError(err.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.');
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            setError(e.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.');
         } finally {
             setSubmitting(false);
         }
@@ -392,9 +393,10 @@ function CheckoutModal({
                 await axios.post(`/bookings/${id}/upload-proof`, formData);
             }
             setStep('done');
-        } catch (err: any) {
-            console.error('Upload error:', err.response?.data);
-            setError(err.response?.data?.message ?? JSON.stringify(err.response?.data?.errors) ?? 'Upload gagal. Coba lagi.');
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string; errors?: unknown } } };
+            console.error('Upload error:', e.response?.data);
+            setError(e.response?.data?.message ?? JSON.stringify(e.response?.data?.errors) ?? 'Upload gagal. Coba lagi.');
         } finally {
             setUploadingProof(false);
         }
@@ -713,7 +715,7 @@ function UploadArea({ label, file, onChange }: { label: string; file?: File; onC
 
 /* ─────────────────────────── Main Page ─────────────────────────── */
 export default function Welcome({ canRegister = true, courts = [], sports = [], venues = [] }: WelcomeProps) {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage().props as { auth: { user?: { name: string } } | null };
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [startDate, setStartDate] = useState(new Date());
     const [selectedSport, setSelectedSport] = useState<number | null>(null);
@@ -833,23 +835,6 @@ export default function Welcome({ canRegister = true, courts = [], sports = [], 
                                 </div>
                             ))}
                         </div>
-                    )}
-                </div>
-            </section>
-
-            {/* ── How It Works ── */}
-            <section id="how" className="bg-white py-20">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="mb-16 text-center">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-padel-green">
-                            Cara Booking
-                        </span>
-                        <h2 className="mt-2 font-display text-4xl tracking-wider text-padel-dark md:text-5xl">
-                            3 LANGKAH MUDAH
-                        </h2>
-                        <p className="mx-auto mt-3 max-w-md text-padel-muted">
-                            Dari pencarian hingga bermain, prosesnya cepat dan mudah
-                        </p>
                     </div>
                 </div>
             </section>
