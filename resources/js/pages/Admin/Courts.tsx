@@ -13,7 +13,6 @@ import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import InputError from '@/components/input-error';
 import { Calendar } from '@/components/ui/calendar';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -23,18 +22,10 @@ import {
     DialogTrigger,
     DialogFooter,
 } from '@/components/ui/dialog';
-import {
-    DropdownMenu,
-    DropdownMenuItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-    Sheet,
-    SheetContent,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
+import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 
@@ -68,10 +59,18 @@ interface Customer {
 interface SlotMeta {
     booking_id: number;
     customer: string;
+    phone: string;
     start_time: string;
     end_time: string;
     status: string;
     total_price: number;
+}
+
+interface PricingRule {
+    days: number[];
+    start_time: string;
+    end_time: string;
+    price: number | '';
 }
 
 interface Court {
@@ -83,6 +82,7 @@ interface Court {
     price_per_hour: number;
     is_active: boolean;
     is_booked_now: boolean;
+    pricing_rules?: PricingRule[];
     venue: Venue;
     sport: Sport;
     images?: string[];
@@ -130,6 +130,38 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
     const [selectedRange, setSelectedRange] = useState<{ start: string | null, end: string | null }>({ start: '08:00', end: null });
     const [hoveredTime, setHoveredTime] = useState<string | null>(null);
 
+    const calculateTotalPrice = (court: Court, range: { start: string | null, end: string | null }, date: Date) => {
+        if (!range.start) return 0;
+
+        const startHour = parseInt(range.start.split(':')[0], 10);
+        let endHour = startHour + 1;
+        if (range.end) {
+            endHour = parseInt(range.end.split(':')[0], 10) + 1; // range.end is start of last slot, so +1 for actual end
+        }
+
+        const dayOfWeek = date.getDay();
+        let total = 0;
+
+        for (let h = startHour; h < endHour; h++) {
+            const currentSlotHour = `${h.toString().padStart(2, '0')}:00`;
+            let slotPrice = court.price_per_hour;
+
+            if (court.pricing_rules && court.pricing_rules.length > 0) {
+                for (const rule of court.pricing_rules) {
+                    if (rule.days.includes(dayOfWeek)) {
+                        if (currentSlotHour >= rule.start_time && currentSlotHour < rule.end_time) {
+                            slotPrice = Number(rule.price);
+                            break;
+                        }
+                    }
+                }
+            }
+            total += slotPrice;
+        }
+
+        return total;
+    };
+
     const getSelectedHoursCount = () => {
         if (!selectedRange.start) return 0;
         if (!selectedRange.end) return 1;
@@ -148,6 +180,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
     const [selectedCourtId, setSelectedCourtId] = useState<number | null>(courts.length > 0 ? courts[0].id : null);
     const [detailCourt, setDetailCourt] = useState<Court | null>(null);
     const [bookedSlotInfo, setBookedSlotInfo] = useState<{ court: Court; meta: SlotMeta } | null>(null);
+    const [slotActionLoading, setSlotActionLoading] = useState<'confirm' | 'cancel' | null>(null);
     const [expandedCourts, setExpandedCourts] = useState<number[]>([]);
 
     const toggleCourtExpanded = (id: number) => {
@@ -323,58 +356,41 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                 </div>
 
                 {/* Top Filters Row */}
-                <div className="flex items-center justify-center sm:justify-start gap-3 mb-2 w-full relative z-20 flex-wrap">
-                    {/* Sport (Olahraga) Pill Filter */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button className="inline-flex items-center gap-2 bg-white border border-slate-200/60 rounded-full px-5 py-2.5 transition-all hover:shadow-md hover:bg-slate-50 focus-visible:outline-none focus:ring-2 focus:ring-padel-green">
-                                <Activity className="h-4 w-4 text-slate-400 group-hover:text-padel-green transition-colors" />
-                                <span className={cn(
-                                    "text-sm font-semibold whitespace-nowrap transition-colors text-slate-700",
-                                    selectedSportIds.length > 0 && "text-padel-green"
-                                )}>
-                                    {selectedSportIds.length === 0
-                                        ? 'Semua Olahraga'
-                                        : `${selectedSportIds.length} Olahraga`}
-                                </span>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <button
+                        onClick={() => setSelectedSportIds([])}
+                        className={cn(
+                            "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-sm font-semibold transition-all",
+                            selectedSportIds.length === 0
+                                ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        )}
+                    >
+                        Semua
+                    </button>
+                    {sports.map((sport) => {
+                        const isSelected = selectedSportIds.includes(sport.id);
+                        return (
+                            <button
+                                key={sport.id}
+                                onClick={() => {
+                                    if (isSelected) {
+                                        setSelectedSportIds(selectedSportIds.filter(id => id !== sport.id));
+                                    } else {
+                                        setSelectedSportIds([...selectedSportIds, sport.id]);
+                                    }
+                                }}
+                                className={cn(
+                                    "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-sm font-semibold transition-all",
+                                    isSelected
+                                        ? "bg-padel-green border-padel-green text-white shadow-sm"
+                                        : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                                )}
+                            >
+                                {sport.name}
                             </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56 rounded-2xl border-slate-200/60 shadow-lg bg-white p-2">
-                            <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 px-2 pt-1 font-heading">
-                                Filter Olahraga
-                            </div>
-                            <div className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200">
-                                {sports.map((sport) => {
-                                    const isSelected = selectedSportIds.includes(sport.id);
-                                    return (
-                                        <DropdownMenuItem
-                                            key={sport.id}
-                                            onSelect={(e) => {
-                                                e.preventDefault();
-                                                if (isSelected) {
-                                                    setSelectedSportIds(selectedSportIds.filter(id => id !== sport.id));
-                                                } else {
-                                                    setSelectedSportIds([...selectedSportIds, sport.id]);
-                                                }
-                                            }}
-                                            className={cn(
-                                                "cursor-pointer flex items-center gap-3 py-2.5 px-3 mb-1 last:mb-0 rounded-xl transition-all",
-                                                isSelected
-                                                    ? "bg-emerald-50 text-padel-green font-semibold"
-                                                    : "text-slate-700 hover:bg-slate-50"
-                                            )}
-                                        >
-                                            <Checkbox
-                                                checked={isSelected}
-                                                className={cn("pointer-events-none transition-all", isSelected && "border-padel-green bg-padel-green text-white")}
-                                            />
-                                            <span className="truncate">{sport.name}</span>
-                                        </DropdownMenuItem>
-                                    );
-                                })}
-                            </div>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        );
+                    })}
                 </div>
 
                 {courts.length === 0 ? (
@@ -674,7 +690,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Ringkasan</p>
                                                                     <div className="flex items-baseline gap-2">
                                                                         <span className="text-2xl font-heading font-extrabold text-padel-green tracking-tight">
-                                                                            Rp {(getSelectedHoursCount() * court.price_per_hour).toLocaleString('id-ID')}
+                                                                            Rp {calculateTotalPrice(court, selectedRange, selectedDate).toLocaleString('id-ID')}
                                                                         </span>
                                                                         <span className="text-sm font-medium text-slate-500">untuk {getSelectedHoursCount()} jam ({selectedRange.start}{selectedRange.end ? ` – ${selectedRange.end}` : ''})</span>
                                                                     </div>
@@ -877,88 +893,118 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                 const { court: bc, meta } = bookedSlotInfo;
                 const durationHours = parseInt(meta.end_time.split(':')[0]) - parseInt(meta.start_time.split(':')[0]);
                 const fmt = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
-                const statusLabel: Record<string, string> = {
-                    confirmed: 'Terkonfirmasi', completed: 'Selesai',
-                    pending: 'Menunggu', cancelled: 'Dibatalkan',
+                const statusConfig: Record<string, { label: string; className: string }> = {
+                    confirmed: { label: 'Terkonfirmasi', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                    completed: { label: 'Selesai', className: 'bg-slate-100 text-slate-600 border-slate-200' },
+                    pending: { label: 'Menunggu Konfirmasi', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    cancelled: { label: 'Dibatalkan', className: 'bg-red-50 text-red-600 border-red-200' },
+                };
+                const status = statusConfig[meta.status] ?? { label: meta.status, className: 'bg-slate-100 text-slate-600 border-slate-200' };
+
+                const handleSlotAction = async (action: 'confirm' | 'cancel') => {
+                    setSlotActionLoading(action);
+                    try {
+                        await axios.patch(`/bookings/${meta.booking_id}/${action}`);
+                        setBookedSlotInfo(null);
+                        router.reload({ only: ['courts'] });
+                    } catch (err: any) {
+                        window.dispatchEvent(new CustomEvent('toast', {
+                            detail: { type: 'error', message: err.response?.data?.message ?? 'Terjadi kesalahan.' }
+                        }));
+                    } finally {
+                        setSlotActionLoading(null);
+                    }
                 };
 
+                const canConfirm = meta.status === 'pending';
+                const canCancel = !['cancelled', 'completed'].includes(meta.status);
+
                 return (
-                    <Dialog open={!!bookedSlotInfo} onOpenChange={(open) => !open && setBookedSlotInfo(null)}>
-                        <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden bg-white rounded-2xl border border-slate-200/80 shadow-[0_16px_48px_-8px_rgba(0,0,0,0.15)]">
+                    <Dialog open={!!bookedSlotInfo} onOpenChange={(open) => { if (!slotActionLoading) { !open && setBookedSlotInfo(null); } }}>
+                        <DialogContent hideClose className="w-[calc(100%-2rem)] sm:max-w-[480px] p-0 overflow-hidden bg-white rounded-2xl border border-slate-200/80 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.18)]">
 
                             {/* ── Header ── */}
-                            <div className="flex items-center justify-between px-5 pt-5 pb-0">
-                                <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Slot Terisi</p>
-                                    <h3 className="font-heading text-base font-bold text-slate-900 mt-0.5">{bc.name}</h3>
+                            <div className="px-5 pt-5 pb-4 border-b border-slate-100">
+                                <div className="flex items-center justify-between gap-3 mb-2">
+                                    <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-lg border shrink-0', status.className)}>
+                                        {status.label}
+                                    </span>
+                                    <button
+                                        onClick={() => setBookedSlotInfo(null)}
+                                        disabled={!!slotActionLoading}
+                                        className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shrink-0 disabled:opacity-50"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setBookedSlotInfo(null)}
-                                    className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-all shrink-0"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
+                                <h3 className="font-heading text-base font-bold text-slate-900 leading-tight">{bc.name}</h3>
+                                <p className="text-[12px] text-slate-400 mt-0.5">{bc.venue?.name}</p>
                             </div>
 
-                            {/* Thin divider */}
-                            <div className="mx-5 mt-4 border-t border-slate-100" />
-
-                            {/* ── Time Range ── */}
-                            <div className="px-5 py-4 flex items-center gap-3">
-                                <div className="flex-1 text-center bg-slate-50 rounded-xl py-3 border border-slate-100">
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Mulai</p>
-                                    <p className="font-heading text-2xl font-extrabold text-slate-900 leading-none">{meta.start_time}</p>
+                            {/* ── Time band ── */}
+                            <div className="px-6 py-4 flex items-center gap-3 bg-slate-50 border-b border-slate-100">
+                                <div className="flex-1 text-center">
+                                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Mulai</p>
+                                    <p className="font-heading text-3xl font-black text-slate-900 leading-none">{meta.start_time}</p>
                                 </div>
                                 <div className="flex flex-col items-center gap-0.5 shrink-0">
-                                    <ArrowRight className="h-4 w-4 text-slate-300" />
-                                    <span className="text-[10px] font-semibold text-slate-400">{durationHours}j</span>
+                                    <div className="flex items-center gap-1">
+                                        <div className="h-px w-8 bg-slate-200" />
+                                        <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
+                                    </div>
+                                    <span className="text-[10px] font-semibold text-slate-400">{durationHours} jam</span>
                                 </div>
-                                <div className="flex-1 text-center bg-slate-50 rounded-xl py-3 border border-slate-100">
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Selesai</p>
-                                    <p className="font-heading text-2xl font-extrabold text-slate-900 leading-none">{meta.end_time}</p>
+                                <div className="flex-1 text-center">
+                                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Selesai</p>
+                                    <p className="font-heading text-3xl font-black text-slate-900 leading-none">{meta.end_time}</p>
                                 </div>
                             </div>
 
                             {/* ── Details ── */}
-                            <div className="px-5 pb-4 space-y-2.5">
-                                {[
-                                    { label: 'Penyewa', value: meta.customer },
-                                    { label: 'Lapangan', value: bc.name },
-                                    { label: 'Venue', value: bc.venue?.name ?? '—' },
-                                    { label: 'Olahraga', value: bc.sport?.name ?? '—' },
-                                    { label: 'Durasi', value: `${durationHours} jam` },
-                                    { label: 'ID Booking', value: `#${meta.booking_id}` },
-                                ].map(({ label, value }) => (
-                                    <div key={label} className="flex items-baseline justify-between gap-4">
-                                        <span className="text-[12px] text-slate-400 shrink-0">{label}</span>
-                                        <span className="text-[13px] font-semibold text-slate-800 text-right">{value}</span>
+                            <div className="px-6 py-4 space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                        <span className="text-[11px] font-black text-slate-500">{meta.customer.charAt(0).toUpperCase()}</span>
                                     </div>
-                                ))}
-
-                                {/* Status row */}
-                                <div className="flex items-baseline justify-between gap-4">
-                                    <span className="text-[12px] text-slate-400 shrink-0">Status</span>
-                                    <span className={cn(
-                                        "text-[11px] font-bold px-2.5 py-0.5 rounded-md border",
-                                        meta.status === 'confirmed' ? 'bg-slate-100 text-slate-700 border-slate-200'
-                                            : meta.status === 'completed' ? 'bg-slate-100 text-slate-700 border-slate-200'
-                                                : meta.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                                    : 'bg-red-50 text-red-600 border-red-200'
-                                    )}>
-                                        {statusLabel[meta.status] ?? meta.status}
-                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="text-[13px] font-bold text-slate-900 truncate">{meta.customer}</p>
+                                        <p className="text-[12px] text-slate-400">{meta.phone}</p>
+                                    </div>
+                                    <div className="ml-auto text-right shrink-0">
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Total</p>
+                                        <p className="font-heading text-base font-extrabold text-slate-900">{fmt(meta.total_price)}</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* ── Price + Close ── */}
-                            <div className="mx-5 mb-5 border-t border-slate-100 pt-4 flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Total</p>
-                                    <p className="font-heading text-xl font-extrabold text-slate-900 leading-none">{fmt(meta.total_price)}</p>
+                            {/* ── Footer actions ── */}
+                            <div className="px-6 pb-6 pt-2 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    {canCancel && (
+                                        <button
+                                            onClick={() => handleSlotAction('cancel')}
+                                            disabled={!!slotActionLoading}
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-all active:scale-[0.97] disabled:opacity-50"
+                                        >
+                                            {slotActionLoading === 'cancel' ? <Spinner className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                                            Batalkan
+                                        </button>
+                                    )}
+                                    {canConfirm && (
+                                        <button
+                                            onClick={() => handleSlotAction('confirm')}
+                                            disabled={!!slotActionLoading}
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 text-white text-[12px] font-bold hover:bg-emerald-700 transition-all active:scale-[0.97] disabled:opacity-50"
+                                        >
+                                            {slotActionLoading === 'confirm' ? <Spinner className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                            Konfirmasi
+                                        </button>
+                                    )}
                                 </div>
                                 <button
                                     onClick={() => setBookedSlotInfo(null)}
-                                    className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-700 transition-all active:scale-95"
+                                    disabled={!!slotActionLoading}
+                                    className="px-4 py-2 rounded-lg text-[12px] font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-50"
                                 >
                                     Tutup
                                 </button>
@@ -971,7 +1017,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
 
             {/* Create Modal */}
             < Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} >
-                <DialogContent hideClose className="w-[95vw] sm:max-w-xl md:max-w-2xl p-0 bg-white border-0 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90dvh]">
+                <DialogContent hideClose className="w-[95vw] sm:max-w-xl md:max-w-4xl p-0 bg-white border-0 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90dvh]">
                     <DialogHeader className="px-6 sm:px-8 py-6 pb-4 border-b border-slate-100 flex-shrink-0 relative">
                         <DialogTitle className="text-xl md:text-2xl font-bold text-slate-900 pr-10">
                             Tambah Lapangan Baru
@@ -997,10 +1043,12 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
 
             {/* Edit Modal */}
             < Dialog open={isEditModalOpen} onOpenChange={(open) => {
-                setIsEditModalOpen(open);
-                if (!open) setTimeout(() => setEditingCourt(null), 200);
+                if (!open) {
+                    setIsEditModalOpen(false);
+                    setTimeout(() => setEditingCourt(null), 300);
+                }
             }}>
-                <DialogContent hideClose className="w-[95vw] sm:max-w-xl md:max-w-2xl p-0 bg-white border-0 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90dvh]">
+                <DialogContent hideClose className="w-[95vw] sm:max-w-xl md:max-w-4xl p-0 bg-white border-0 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90dvh]">
                     <DialogHeader className="px-6 sm:px-8 py-6 pb-4 border-b border-slate-100 flex-shrink-0 relative">
                         <DialogTitle className="text-xl md:text-2xl font-bold text-slate-900 pr-10">
                             Edit Lapangan
@@ -1406,7 +1454,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                         const selectedCourt = courts.find(c => c.id === selectedCourtId);
                                         if (!selectedCourt) return null;
                                         const hours = getSelectedHoursCount();
-                                        const total = hours * selectedCourt.price_per_hour;
+                                        const total = calculateTotalPrice(selectedCourt, selectedRange, selectedDate);
 
                                         return (
                                             <div className="flex flex-col gap-5 text-sm">
@@ -1447,18 +1495,38 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
 
                                 {/* Payment Block */}
                                 <div>
-                                    <h3 className="text-xs font-bold text-slate-400 mb-6 uppercase tracking-wider">Metode Pembayaran</h3>
-                                    <div className="space-y-6">
-                                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <input type="radio" name="payment_status" className="h-[18px] w-[18px] text-slate-900 border-slate-300 focus:ring-slate-900" checked={paymentStatus === 'paid'} onChange={() => setPaymentStatus('paid')} />
-                                                <span className="text-sm font-medium text-slate-900 group-hover:text-black">Sudah Dibayar</span>
-                                            </label>
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <input type="radio" name="payment_status" className="h-[18px] w-[18px] text-slate-900 border-slate-300 focus:ring-slate-900" checked={paymentStatus === 'unpaid'} onChange={() => setPaymentStatus('unpaid')} />
-                                                <span className="text-sm font-medium text-slate-900 group-hover:text-black">Belum Dibayar</span>
-                                            </label>
-                                        </div>
+                                    <h3 className="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">Status Pembayaran</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPaymentStatus('paid')}
+                                            className={cn(
+                                                "flex flex-col items-start gap-1 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-200",
+                                                paymentStatus === 'paid'
+                                                    ? "border-padel-green bg-padel-green/5 shadow-sm"
+                                                    : "border-slate-200 bg-white hover:border-slate-300"
+                                            )}
+                                        >
+                                            <span className={cn("text-sm font-bold", paymentStatus === 'paid' ? "text-padel-green" : "text-slate-700")}>
+                                                Sudah Dibayar
+                                            </span>
+                                            <span className="text-xs text-slate-400">Lunas saat ini</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPaymentStatus('unpaid')}
+                                            className={cn(
+                                                "flex flex-col items-start gap-1 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-200",
+                                                paymentStatus === 'unpaid'
+                                                    ? "border-amber-400 bg-amber-50 shadow-sm"
+                                                    : "border-slate-200 bg-white hover:border-slate-300"
+                                            )}
+                                        >
+                                            <span className={cn("text-sm font-bold", paymentStatus === 'unpaid' ? "text-amber-600" : "text-slate-700")}>
+                                                Belum Dibayar
+                                            </span>
+                                            <span className="text-xs text-slate-400">Bayar nanti</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1502,7 +1570,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                 (() => {
                     const selectedCourt = courts.find(c => c.id === selectedCourtId);
                     const hours = getSelectedHoursCount();
-                    const total = hours * (selectedCourt?.price_per_hour ?? 0);
+                    const total = selectedCourt ? calculateTotalPrice(selectedCourt, selectedRange, selectedDate) : 0;
 
                     const handleSubmitBooking = async () => {
                         if (!selectedCourt || !selectedCustomer) return;
@@ -1520,7 +1588,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                 user_id: selectedCustomer.id,
                                 court_id: selectedCourt.id,
                                 date: format(selectedDate, 'yyyy-MM-dd'),
-                                start_time: selectedRange.start,
+                                start_time: selectedRange.start!,
                                 end_time: endTime,
                                 total_price: total,
                                 payment_status: paymentStatus,
@@ -1541,6 +1609,8 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                         } catch (err: any) {
                             setBookingError(err.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.');
                             setIsConfirmModalOpen(false);
+                            setSelectedRange({ start: null, end: null });
+                            router.reload({ only: ['courts'] });
                         } finally {
                             setIsSubmittingBooking(false);
                         }
@@ -1629,6 +1699,152 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
 }
 
 // ----------------------------------------------------------------------
+// PRICING RULES EDITOR COMPONENT
+// ----------------------------------------------------------------------
+function PricingRulesEditor({ rules, onChange }: { rules: PricingRule[], onChange: (newRules: PricingRule[]) => void }) {
+    const daysOfWeek = [
+        { id: 1, name: 'Sen' },
+        { id: 2, name: 'Sel' },
+        { id: 3, name: 'Rab' },
+        { id: 4, name: 'Kam' },
+        { id: 5, name: 'Jum' },
+        { id: 6, name: 'Sab' },
+        { id: 0, name: 'Min' },
+    ];
+
+    const addRule = () => {
+        onChange([...rules, { days: [], start_time: '06:00', end_time: '18:00', price: '' }]);
+    };
+
+    const removeRule = (index: number) => {
+        const newRules = [...rules];
+        newRules.splice(index, 1);
+        onChange(newRules);
+    };
+
+    const updateRule = (index: number, field: keyof PricingRule, value: any) => {
+        const newRules = [...rules];
+        newRules[index] = { ...newRules[index], [field]: value };
+        onChange(newRules);
+    };
+
+    const toggleDay = (ruleIndex: number, day: number) => {
+        const rule = rules[ruleIndex];
+        const newDays = rule.days.includes(day)
+            ? rule.days.filter(d => d !== day)
+            : [...rule.days, day].sort();
+        updateRule(ruleIndex, 'days', newDays);
+    };
+
+    const handlePriceChange = (index: number, rawValue: string) => {
+        if (!rawValue) { updateRule(index, 'price', ''); return; }
+        const numericValue = rawValue.replace(/\D/g, '');
+        updateRule(index, 'price', numericValue ? Number(numericValue) : '');
+    };
+
+    return (
+        <div className="col-span-full space-y-3 pt-2">
+            {/* Section header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-[13px] font-bold text-slate-900">Harga Khusus <span className="text-[11px] font-semibold text-slate-400 ml-1">Opsional</span></p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Tarif berdasarkan hari & jam. Aturan teratas diprioritaskan jika tumpang tindih.</p>
+                </div>
+                <button
+                    type="button"
+                    onClick={addRule}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-[12px] font-semibold text-slate-700 hover:border-padel-green hover:text-padel-green hover:bg-emerald-50 transition-all shrink-0"
+                >
+                    <Plus className="w-3.5 h-3.5" />
+                    Tambah
+                </button>
+            </div>
+
+            {rules.length > 0 && (
+                <div className="space-y-2">
+                    {rules.map((rule, index) => (
+                        <div key={index} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                            {/* Rule header */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aturan {index + 1}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => removeRule(index)}
+                                    className="h-6 w-6 flex items-center justify-center rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+
+                            {/* Days */}
+                            <div className="flex flex-wrap gap-1.5">
+                                {daysOfWeek.map((day) => {
+                                    const isSelected = rule.days.includes(day.id);
+                                    return (
+                                        <button
+                                            key={day.id}
+                                            type="button"
+                                            onClick={() => toggleDay(index, day.id)}
+                                            className={cn(
+                                                "px-2.5 py-1 text-[12px] font-bold rounded-lg border transition-all active:scale-95",
+                                                isSelected
+                                                    ? "border-padel-green bg-padel-green text-white"
+                                                    : "border-slate-200 bg-white text-slate-500 hover:border-padel-green/50 hover:text-padel-green"
+                                            )}
+                                        >
+                                            {day.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {rule.days.length === 0 && (
+                                <p className="text-[11px] font-medium text-red-500">Pilih minimal satu hari</p>
+                            )}
+
+                            {/* Time + Price row */}
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mulai</label>
+                                    <Input
+                                        type="time"
+                                        value={rule.start_time}
+                                        onChange={(e) => updateRule(index, 'start_time', e.target.value)}
+                                        className="h-9 text-[13px] font-semibold border-slate-200 focus-visible:ring-padel-green rounded-lg text-center bg-white"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selesai</label>
+                                    <Input
+                                        type="time"
+                                        value={rule.end_time}
+                                        onChange={(e) => updateRule(index, 'end_time', e.target.value)}
+                                        className="h-9 text-[13px] font-semibold border-slate-200 focus-visible:ring-padel-green rounded-lg text-center bg-white"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tarif/Jam</label>
+                                    <div className="relative">
+                                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400 pointer-events-none">Rp</span>
+                                        <Input
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={rule.price ? rule.price.toLocaleString('id-ID') : ''}
+                                            onChange={(e) => handlePriceChange(index, e.target.value)}
+                                            className="h-9 pl-8 pr-2 text-[13px] font-semibold text-slate-900 border-slate-200 focus-visible:ring-padel-green rounded-lg bg-white"
+                                            placeholder="200.000"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ----------------------------------------------------------------------
 // FORM COMPONENTS
 // ----------------------------------------------------------------------
 
@@ -1641,6 +1857,7 @@ function CreateCourtForm({ venues, sports, onSuccess, onCancel }: { venues: Venu
         price_per_hour: '',
         is_active: true,
         images: [] as File[],
+        pricing_rules: [] as PricingRule[],
     });
 
     const submit = (e: React.FormEvent) => {
@@ -1807,6 +2024,9 @@ function CreateCourtForm({ venues, sports, onSuccess, onCancel }: { venues: Venu
                         <InputError message={form.errors.price_per_hour} />
                     </div>
 
+                    {/* Pricing Rules Editor */}
+                    <PricingRulesEditor rules={form.data.pricing_rules} onChange={(rules) => form.setData('pricing_rules', rules)} />
+
                     {/* Input: is_active Toggle */}
                     <div className="md:col-span-2 mt-2">
                         <label className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100/80 transition-colors group">
@@ -1860,6 +2080,7 @@ function EditCourtForm({ court, venues, sports, onSuccess, onCancel }: { court: 
         is_active: court.is_active,
         images: [] as File[],
         images_to_delete: [] as string[],
+        pricing_rules: court.pricing_rules || [] as PricingRule[],
     });
 
     const [existingImages, setExistingImages] = useState<string[]>(court.images || []);
@@ -2051,8 +2272,11 @@ function EditCourtForm({ court, venues, sports, onSuccess, onCancel }: { court: 
                         <InputError message={form.errors.price_per_hour} />
                     </div>
 
+                    {/* Pricing Rules Editor */}
+                    <PricingRulesEditor rules={form.data.pricing_rules} onChange={(rules) => form.setData('pricing_rules', rules)} />
+
                     {/* Input: is_active Toggle */}
-                    <div className="md:col-span-2 mt-4">
+                    <div className="md:col-span-2 mt-2">
                         <label className="flex items-center justify-between p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-colors group shadow-sm">
                             <div className="space-y-1 pr-6">
                                 <span className="block text-sm font-bold text-slate-900 uppercase tracking-widest">Aktifkan Lapangan</span>

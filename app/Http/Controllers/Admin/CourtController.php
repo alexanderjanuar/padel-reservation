@@ -23,8 +23,8 @@ class CourtController extends Controller
             'sport',
             'bookings' => function ($query) use ($date) {
                 $query->where('date', $date)
-                    ->whereIn('status', ['confirmed', 'completed'])
-                    ->with('user:id,name')
+                    ->whereIn('status', ['pending', 'confirmed', 'completed'])
+                    ->with('user:id,name,phone')
                     ->select('id', 'court_id', 'user_id', 'start_time', 'end_time', 'status', 'total_price');
             },
         ])
@@ -33,7 +33,7 @@ class CourtController extends Controller
                     $query->where('date', $date)
                         ->where('start_time', '<=', now()->toTimeString())
                         ->where('end_time', '>', now()->toTimeString())
-                        ->whereIn('status', ['confirmed', 'completed']);
+                        ->whereIn('status', ['pending', 'confirmed', 'completed']);
                 },
             ])
             ->orderBy('created_at', 'desc')
@@ -53,6 +53,7 @@ class CourtController extends Controller
                         $slotMeta[$slot] = [
                             'booking_id' => $booking->id,
                             'customer' => $booking->user?->name ?? 'Guest',
+                            'phone' => $booking->user?->phone ?? '—',
                             'start_time' => substr($booking->start_time, 0, 5),
                             'end_time' => substr($booking->end_time, 0, 5),
                             'status' => $booking->status,

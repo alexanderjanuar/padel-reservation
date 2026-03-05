@@ -90,10 +90,18 @@ Route::post('bookings', [\App\Http\Controllers\Admin\BookingController::class, '
     ->middleware(['auth', 'verified'])
     ->name('bookings.store');
 
+Route::patch('bookings/{booking}/confirm', [\App\Http\Controllers\Admin\BookingController::class, 'confirm'])
+    ->middleware(['auth', 'verified'])
+    ->name('bookings.confirm');
+
+Route::patch('bookings/{booking}/cancel', [\App\Http\Controllers\Admin\BookingController::class, 'cancel'])
+    ->middleware(['auth', 'verified'])
+    ->name('bookings.cancel');
+
 Route::get('venue/{id}', function ($id) {
     return Inertia::render('Venue/Show', [
         'id' => $id,
     ]);
 })->name('venue.show');
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

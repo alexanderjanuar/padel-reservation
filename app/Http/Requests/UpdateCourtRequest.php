@@ -32,6 +32,12 @@ class UpdateCourtRequest extends FormRequest
             'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'images_to_delete' => ['nullable', 'array'],
             'images_to_delete.*' => ['string'],
+            'pricing_rules' => ['nullable', 'array'],
+            'pricing_rules.*.days' => ['required', 'array'],
+            'pricing_rules.*.days.*' => ['integer', 'min:0', 'max:6'],
+            'pricing_rules.*.start_time' => ['required', 'date_format:H:i'],
+            'pricing_rules.*.end_time' => ['required', 'date_format:H:i', 'after:pricing_rules.*.start_time'],
+            'pricing_rules.*.price' => ['required', 'numeric', 'min:0'],
         ];
     }
 }

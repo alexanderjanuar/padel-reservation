@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, MapPin, Trophy, Box } from 'lucide-react';
+import { BookOpen, Dumbbell, ExternalLink, Github, Grid2x2, LayoutGrid, MapPin, Sparkles } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -30,7 +30,7 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Olahraga',
         href: sports.index(),
-        icon: Trophy,
+        icon: Dumbbell,
     },
     {
         title: 'Tempat',
@@ -40,12 +40,12 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Lapangan',
         href: courts.index(),
-        icon: Box,
+        icon: Grid2x2,
     },
     {
         title: 'Fasilitas',
         href: facilities.index(),
-        icon: Box,
+        icon: Sparkles,
     },
 ];
 
@@ -53,7 +53,7 @@ const footerNavItems: NavItem[] = [
     {
         title: 'Repositori',
         href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
+        icon: Github,
     },
     {
         title: 'Dokumentasi',
@@ -81,11 +81,26 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
+
+                {/* Lapangan CTA Button */}
+                <div className="px-3 py-2 group-data-[collapsible=icon]:px-2">
+                    <Link
+                        href={courts.index()}
+                        prefetch
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-padel-green px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:brightness-110 active:scale-95 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-2"
+                    >
+                        <Grid2x2 className="size-4 shrink-0" />
+                        <span className="group-data-[collapsible=icon]:hidden">
+                            Buat Reservasi
+                        </span>
+                        <ExternalLink className="size-3 shrink-0 opacity-60 group-data-[collapsible=icon]:hidden" />
+                    </Link>
+                </div>
                 <NavMain items={mainNavItems} />
+
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

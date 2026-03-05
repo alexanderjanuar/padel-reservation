@@ -23,6 +23,7 @@ class Court extends Model
         'price_per_hour',
         'is_active',
         'images',
+        'pricing_rules',
     ];
 
     /**
@@ -34,6 +35,7 @@ class Court extends Model
             'price_per_hour' => 'integer',
             'is_active' => 'boolean',
             'images' => 'array',
+            'pricing_rules' => 'array',
         ];
     }
 
