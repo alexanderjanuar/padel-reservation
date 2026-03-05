@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\User;
 use App\Services\FonnteService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
@@ -16,6 +19,21 @@ class BookingController extends Controller
     public function store(StoreBookingRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
+        // Resolve user: existing or create a guest user
+        if (! empty($validated['user_id'])) {
+            $userId = $validated['user_id'];
+        } else {
+            $guestUser = User::firstOrCreate(
+                ['email' => $validated['guest_email']],
+                [
+                    'name' => $validated['guest_name'],
+                    'phone' => $validated['guest_phone'] ?? null,
+                    'password' => Hash::make(Str::random(16)),
+                ]
+            );
+            $userId = $guestUser->id;
+        }
 
         // Prevent double-booking: check if the slot is already taken
         $conflict = Booking::where('court_id', $validated['court_id'])
@@ -66,33 +84,65 @@ class BookingController extends Controller
             ], 422);
         }
 
+        $isPaid = $validated['payment_status'] === 'paid';
+
         $booking = Booking::create([
-            'user_id' => $validated['user_id'],
+            'user_id' => $userId,
             'court_id' => $validated['court_id'],
             'date' => $validated['date'],
             'start_time' => $validated['start_time'],
             'end_time' => $validated['end_time'],
-            'total_price' => $calculatedPrice, // Use backend calculation just to be sure
-            'status' => $validated['payment_status'] === 'paid' ? 'confirmed' : 'pending',
+            'total_price' => $calculatedPrice,
+            'status' => $isPaid ? 'confirmed' : 'pending',
         ]);
 
-        if ($validated['payment_status'] === 'paid') {
-            Payment::create([
-                'booking_id' => $booking->id,
-                'method' => 'cash',
-                'amount' => $booking->total_price,
-                'status' => 'paid',
-                'paid_at' => now(),
-            ]);
-        }
+        Payment::create([
+            'booking_id' => $booking->id,
+            'method' => $isPaid ? 'cash' : 'qris',
+            'amount' => $booking->total_price,
+            'status' => $isPaid ? 'paid' : 'pending',
+            'paid_at' => $isPaid ? now() : null,
+        ]);
 
         $booking->load(['user', 'court.venue']);
-        $this->fonnteService->sendBookingNotification($booking);
+
+        if ($isPaid) {
+            $this->fonnteService->sendBookingNotification($booking);
+        }
 
         return response()->json([
             'message' => 'Booking berhasil dibuat.',
             'booking' => $booking,
         ], 201);
+    }
+
+    public function uploadProof(Booking $booking, \Illuminate\Http\Request $request): JsonResponse
+    {
+        $request->validate([
+            'proof' => ['required', 'file', 'image', 'max:10240'],
+        ]);
+
+        $path = $request->file('proof')->store('payment-proofs', 'public');
+
+        $payment = $booking->payment;
+
+        if ($payment) {
+            // Delete old file if exists
+            if ($payment->proof_of_payment) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($payment->proof_of_payment);
+            }
+            $payment->update(['proof_of_payment' => $path]);
+        } else {
+            Payment::create([
+                'booking_id' => $booking->id,
+                'method' => 'qris',
+                'amount' => $booking->total_price,
+                'status' => 'pending',
+                'proof_of_payment' => $path,
+            ]);
+        }
+
+        return response()->json(['message' => 'Bukti pembayaran berhasil diupload.']);
     }
 
     public function confirm(Booking $booking): JsonResponse
@@ -103,7 +153,9 @@ class BookingController extends Controller
 
         $booking->update(['status' => 'confirmed']);
 
-        if (! $booking->payment) {
+        if ($booking->payment) {
+            $booking->payment->update(['status' => 'paid', 'paid_at' => now()]);
+        } else {
             Payment::create([
                 'booking_id' => $booking->id,
                 'method' => 'cash',
@@ -112,6 +164,9 @@ class BookingController extends Controller
                 'paid_at' => now(),
             ]);
         }
+
+        $booking->load(['user', 'court.venue']);
+        $this->fonnteService->sendConfirmationNotification($booking);
 
         return response()->json(['message' => 'Booking berhasil dikonfirmasi.']);
     }

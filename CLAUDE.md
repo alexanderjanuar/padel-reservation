@@ -9,7 +9,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.4.18
+- php - 8.4.8
 - inertiajs/inertia-laravel (INERTIA_LARAVEL) - v2
 - laravel/fortify (FORTIFY) - v1
 - laravel/framework (LARAVEL) - v12
@@ -39,6 +39,8 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `pest-testing` — Tests applications using the Pest 4 PHP framework. Activates when writing tests, creating unit or feature tests, adding assertions, testing Livewire components, browser testing, debugging test failures, working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion, coverage, or needs to verify functionality works.
 - `inertia-react-development` — Develops Inertia.js v2 React client-side applications. Activates when creating React pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
+- `developing-with-fortify` — Laravel Fortify headless authentication backend development. Activate when implementing authentication features including login, registration, password reset, email verification, two-factor authentication (2FA/TOTP), profile updates, headless auth, authentication scaffolding, or auth guards in Laravel applications.
+- `laravel-permission-development` — Build and work with Spatie Laravel Permission features, including roles, permissions, middleware, policies, teams, and Blade directives.
 
 ## Conventions
 
@@ -151,7 +153,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
 
-=== inertia-laravel/v2 rules ===
+=== inertia-laravel/core rules ===
 
 # Inertia
 
@@ -163,7 +165,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 # Inertia v2
 
 - Use all Inertia features from v1 and v2. Check the documentation before making changes to ensure the correct approach.
-- New features: deferred props, infinite scrolling (merging props + `WhenVisible`), lazy loading on scroll, polling, prefetching.
+- New features: deferred props, infinite scroll, merging props, polling, prefetching, once props, flash data.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
 
 === laravel/core rules ===
@@ -289,4 +291,254 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 - IMPORTANT: Always use `search-docs` tool for version-specific Tailwind CSS documentation and updated code examples. Never rely on training data.
 - IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
 
+=== laravel/fortify rules ===
+
+# Laravel Fortify
+
+- Fortify is a headless authentication backend that provides authentication routes and controllers for Laravel applications.
+- IMPORTANT: Always use the `search-docs` tool for detailed Laravel Fortify patterns and documentation.
+- IMPORTANT: Activate `developing-with-fortify` skill when working with Fortify authentication features.
+
 </laravel-boost-guidelines>
+
+# Admin Panel UI/UX Design System
+
+Dokumentasi ini mendeskripsikan pola desain yang digunakan di seluruh halaman admin panel agar tampilan tetap konsisten.
+
+## Typografi & Font
+
+- **Heading font**: `font-heading` (Outfit) — digunakan untuk judul halaman, nama lapangan, harga, dan teks bold yang menonjol.
+- **Body font**: `font-sans` (Inter) — digunakan untuk semua teks konten, label, dan deskripsi.
+- **Judul halaman (h1)**: `text-2xl sm:text-3xl font-heading font-semibold text-slate-900` atau `text-3xl font-bold tracking-tight text-slate-900`
+- **Sub-judul / deskripsi halaman**: `text-xs sm:text-sm text-slate-500` atau `text-sm font-medium text-slate-500`
+- **Label tabel header**: `text-[10px] font-light tracking-wide text-slate-600`
+- **Badge / pill label kecil**: `text-[10px] font-bold uppercase tracking-widest`
+
+## Palet Warna (Custom Tokens)
+
+Warna utama didefinisikan di `resources/css/app.css` dan digunakan via Tailwind:
+
+| Token | Hex | Kegunaan |
+|---|---|---|
+| `padel-green` | `#10b981` | CTA utama, tombol primary, border aktif |
+| `padel-green-dark` | `#059669` | Hover state tombol primary |
+| `padel-green-50` | `#ecfdf5` | Badge background, highlight ringan |
+| `padel-dark` | `#0f172a` | Teks utama, sidebar text |
+| `padel-light` | `#f8fafc` | Background body |
+| `padel-border` | `#e2e8f0` | Border default seluruh elemen |
+| `padel-muted` | `#64748b` | Teks sekunder / placeholder |
+
+**Warna Semantik untuk Status:**
+- `confirmed` → `bg-emerald-100 text-emerald-700 ring-emerald-600/20`
+- `pending` → `bg-amber-100 text-amber-700 ring-amber-600/20`
+- `completed` → `bg-blue-100 text-blue-700 ring-blue-600/20`
+- `cancelled` → `bg-red-100 text-red-700 ring-red-600/20`
+
+## Layout & Struktur Halaman
+
+- Wrapper halaman: `mx-auto flex min-h-screen w-full max-w-[1400px] flex-1 flex-col gap-4 bg-white p-4 md:gap-6 md:p-8`
+- Khusus Courts (lebih lebar): `flex flex-col gap-6 p-6 w-full max-w-[1600px] mx-auto`
+- Dashboard: `mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 p-4 md:p-8`
+- **Header section** selalu: judul (`h1`) + deskripsi (`p`) di kiri, tombol aksi di kanan, menggunakan `flex flex-col md:flex-row md:items-end justify-between gap-4`
+
+## Tombol
+
+### Primary (CTA)
+```
+rounded-lg sm:rounded-xl bg-padel-green px-3 sm:px-4 md:px-5 py-2 sm:py-2.5
+text-xs sm:text-sm font-semibold text-white shadow-sm
+hover:bg-padel-green-dark transition-all
+focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-padel-green
+disabled:opacity-50
+```
+
+### Secondary / Outline
+```
+rounded-lg sm:rounded-xl bg-white border border-slate-200 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5
+text-xs sm:text-sm font-semibold text-slate-700 shadow-sm
+hover:bg-slate-50 transition-all
+```
+
+### Primary dalam Modal (dengan animasi hover)
+```
+rounded-lg bg-padel-green px-6 h-10 text-sm font-medium text-white
+shadow-sm shadow-padel-green/30
+transition-all duration-300
+hover:-translate-y-0.5 hover:bg-padel-green-dark hover:shadow-md hover:shadow-padel-green/40
+active:translate-y-0 active:scale-[0.98]
+disabled:opacity-50 disabled:hover:-translate-y-0
+```
+
+### Cancel / Ghost
+```
+h-10 rounded-lg px-4 text-sm font-medium text-slate-600
+hover:bg-slate-100 hover:text-slate-900 transition-colors
+```
+
+### Tombol Rounded (pill / filter chip)
+```
+inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-sm font-semibold transition-all
+```
+- Aktif: `bg-slate-900 border-slate-900 text-white shadow-sm`
+- Aktif (padel-green): `bg-padel-green border-padel-green text-white shadow-sm`
+- Tidak aktif: `bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700`
+
+### Icon Button (Edit / Delete)
+```
+flex h-8 w-8 items-center justify-center rounded-md text-slate-400
+transition-colors hover:bg-slate-100 hover:text-slate-900   /* edit */
+transition-colors hover:bg-red-50 hover:text-red-600         /* delete */
+```
+
+## Kartu (Cards)
+
+### Stat Card (Dashboard)
+```
+group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5
+shadow-sm transition-all hover:border-{color}-200 hover:shadow-md
+```
+- Memiliki area chart kecil sebagai background dekoratif (opacity 30%)
+- Icon dekoratif di pojok kanan atas dengan `absolute top-0 right-0 -mt-4 -mr-4 rounded-full bg-{color}-50/50 p-8`
+
+### Court Card (Accordion)
+```
+bg-white rounded-2xl border shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] overflow-hidden transition-all duration-300
+```
+- Aktif/dipilih: `border-padel-green ring-1 ring-padel-green/30`
+- Default: `border-slate-100 hover:border-slate-200 hover:shadow-md`
+
+## Tabel Data
+
+```html
+<!-- Table wrapper -->
+<div class="overflow-x-auto">
+  <table class="w-full text-left text-sm whitespace-nowrap">
+    <thead class="bg-slate-50">
+      <tr class="border-b border-slate-200/80">
+        <th class="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">...</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100/80">
+      <tr class="group transition-colors outline-none hover:bg-slate-50/40">
+        <td class="px-5 py-4">...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+```
+
+## Form Input (Floating Label Style)
+
+Digunakan di dalam modal untuk field teks:
+```
+<!-- Input wrapper -->
+<div class="group relative">
+  <input
+    placeholder=" "
+    class="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent
+           px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent
+           transition-all duration-300
+           hover:border-slate-300
+           focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
+  />
+  <label class="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500
+                transition-all duration-300
+                peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
+                peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase
+                peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase">
+    Label
+  </label>
+</div>
+```
+
+## Search & Filter Bar
+
+```
+<!-- Search input -->
+<div class="group relative flex items-center">
+  <Search class="absolute left-3 h-4 w-4 text-slate-400" />
+  <input class="h-9 w-full rounded-full border border-slate-200/80 bg-white pr-4 pl-9 text-sm
+                focus:border-padel-green-dark focus:ring-padel-green-dark sm:w-64" />
+</div>
+
+<!-- Filter select -->
+<div class="relative flex h-9 items-center">
+  <Filter class="pointer-events-none absolute left-3 h-4 w-4 text-slate-400" />
+  <select class="h-full appearance-none rounded-full border border-slate-200/80 bg-white py-0 pr-8 pl-9
+                 text-sm font-medium text-slate-600 hover:bg-slate-50
+                 focus:border-padel-green-dark focus:ring-padel-green-dark" />
+  <ChevronDown class="pointer-events-none absolute right-3 h-4 w-4 text-slate-400" />
+</div>
+```
+
+## Empty State
+
+```
+<div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300
+            bg-white p-12 text-center animate-in fade-in duration-500">
+  <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mb-4">
+    <Icon class="h-8 w-8 text-slate-400" />
+  </div>
+  <h2 class="text-lg font-semibold text-slate-900 mb-1">Judul</h2>
+  <p class="text-sm text-slate-500 max-w-sm mb-6">Deskripsi</p>
+  <!-- optional CTA -->
+</div>
+```
+
+## Status Indicators (Dot)
+
+```
+<!-- Status dot -->
+<div class="w-2.5 h-2.5 rounded-full shadow-sm
+            {booked: bg-red-500 shadow-red-500/40}
+            {active: bg-padel-green shadow-padel-green/40}
+            {inactive: bg-slate-300 shadow-slate-400/40}" />
+```
+
+## Statistik Ringkasan (Summary Stats Row)
+
+Digunakan di halaman Sports/Facilities — baris statistik horizontal dengan border separator:
+```
+<div class="grid grid-cols-1 gap-6 border-t border-b border-slate-200 py-6 md:grid-cols-4 md:gap-8">
+  <div class="flex flex-col">
+    <span class="mb-2 text-xs font-semibold text-slate-500">Label</span>
+    <span class="text-3xl font-semibold tracking-tight text-slate-900">Nilai</span>
+    <span class="mt-2 text-xs font-medium text-slate-400">Sub-keterangan</span>
+  </div>
+  <!-- kolom berikutnya: md:border-l md:pl-8 -->
+</div>
+```
+
+## Animasi & Transisi
+
+- Default transition: `transition-all` atau `transition-colors`
+- Durasi custom: `duration-300`, `duration-500`
+- Hover scale efek dekoratif: `group-hover:scale-110`
+- Collapse/expand dengan grid trick: `grid-rows-[1fr] opacity-100` ↔ `grid-rows-[0fr] opacity-0`
+- Badge "live" / pulse indicator: `animate-ping` + `relative inline-flex rounded-full bg-padel-green`
+- Chevron accordion: `transition-transform duration-300` + `rotate-180`
+
+## Modal (Dialog)
+
+- Menggunakan komponen `Dialog` dari `@/components/ui/dialog`
+- `DialogContent` dengan `bg-white sm:max-w-[425px]`
+- `DialogTitle` dengan `font-heading text-xl`
+- Form di dalam dialog: `mt-4 flex flex-col gap-6`
+- Footer tombol: `mt-2 flex justify-end gap-3`
+
+## Pagination
+
+```
+<div class="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+  <span class="text-[13px] text-slate-500">
+    Menampilkan: <span class="font-semibold text-slate-700">X - Y</span> of Z
+  </span>
+  <!-- Navigasi halaman -->
+</div>
+```
+
+## Ikon
+
+- Library: **lucide-react** — konsisten di seluruh halaman
+- Ukuran standar: `h-4 w-4` (medium), `h-3.5 w-3.5` (kecil dalam tombol)
+- `Pencil` untuk edit, `Trash2` untuk hapus, `Plus` untuk tambah, `Search` untuk pencarian, `Filter` untuk filter, `ChevronDown/Up` untuk sort/toggle

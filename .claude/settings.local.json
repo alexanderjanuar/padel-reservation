@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install react-leaflet leaflet use-debounce react-day-picker)",
+      "Bash(npm list react-leaflet leaflet use-debounce react-day-picker radix-ui)",
+      "Bash(php artisan make:class App/Http/Controllers/WelcomeController --no-interaction)",
+      "Bash(php artisan make:controller WelcomeController --invokable --no-interaction)",
+      "Bash(vendor/bin/pint app/Http/Controllers/WelcomeController.php app/Http/Controllers/Admin/BookingController.php app/Http/Requests/StoreBookingRequest.php --format agent)",
+      "Bash(php artisan route:list --name=home)",
+      "Bash(npm run build)",
+      "mcp__laravel-boost__database-schema",
+      "Bash(php artisan migrate:fresh --seed)",
+      "Bash(php artisan tinker --execute=\"echo ''Courts: ''.App\\\\Models\\\\Court::count\\(\\).'', Bookings today: ''.App\\\\Models\\\\Booking::whereDate\\(''date'', today\\(\\)\\)->count\\(\\).'', Venues: ''.App\\\\Models\\\\Venue::count\\(\\).'', Sports: ''.App\\\\Models\\\\Sport::count\\(\\);\")",
+      "Bash(php artisan make:migration add_proof_of_payment_to_payments_table --no-interaction)",
+      "Bash(php artisan migrate --no-interaction)",
+      "Bash(php artisan make:migration add_guest_fields_to_bookings_table --no-interaction)",
+      "Bash(del \"d:\\\\Laravel\\\\padel-reservation\\\\database\\\\migrations\\\\2026_03_05_115214_add_guest_fields_to_bookings_table.php\")",
+      "Bash(php artisan make:migration add_qris_to_payments_method_enum --no-interaction)",
+      "Bash(vendor/bin/pint app/Http/Controllers/Admin/BookingController.php app/Http/Controllers/WelcomeController.php app/Models/Payment.php app/Services/FonnteService.php routes/web.php --format agent)",
+      "Bash(php artisan make:test --pest Admin/GuestBookingTest --no-interaction)",
+      "Bash(php artisan make:test --pest Admin/UploadProofTest --no-interaction)",
+      "Bash(php artisan make:test --pest Admin/ConfirmBookingTest --no-interaction)",
+      "Bash(php artisan test --compact tests/Feature/Admin/)",
+      "Bash(php -m)",
+      "Bash(php -r \":*)",
+      "Bash(php artisan test --compact tests/Feature/Admin/BookingControllerTest.php)",
+      "Bash(php artisan test --compact tests/Feature/Admin/GuestBookingTest.php tests/Feature/Admin/UploadProofTest.php tests/Feature/Admin/ConfirmBookingTest.php)",
+      "Bash(php artisan test --compact tests/Feature/Admin/ConfirmBookingTest.php)",
+      "mcp__laravel-boost__last-error",
+      "mcp__laravel-boost__browser-logs",
+      "Bash(php artisan wayfinder:generate)",
+      "Bash(vendor/bin/pint app/Services/FonnteService.php --format agent)",
+      "Bash(php artisan test --compact)",
+      "mcp__laravel-boost__read-log-entries",
+      "Bash(php artisan tinker --no-interaction --execute=\"use App\\\\Models\\\\Booking; $b = Booking::find\\(59\\); echo json_encode\\([''status'' => $b?->status, ''payment'' => $b?->payment?->toArray\\(\\)]\\);\")",
+      "mcp__laravel-boost__tinker",
+      "Bash(php -r \"echo php_ini_loaded_file\\(\\);\")",
+      "Bash(sed -i 's/^upload_max_filesize = 2M/upload_max_filesize = 10M/' /c/PHP/php.ini)",
+      "Bash(sed -i 's/^post_max_size = 8M/post_max_size = 12M/' /c/PHP/php.ini)"
+    ]
+  }
+}

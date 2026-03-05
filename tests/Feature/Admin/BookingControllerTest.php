@@ -13,6 +13,8 @@ use function Pest\Laravel\mock;
 beforeEach(function () {
     mock(FonnteService::class)
         ->shouldReceive('sendBookingNotification')
+        ->andReturnNull()
+        ->shouldReceive('sendConfirmationNotification')
         ->andReturnNull();
 
     $this->user = User::factory()->create();
@@ -22,9 +24,9 @@ beforeEach(function () {
     $this->customer = User::factory()->create();
 });
 
-it('creates a booking and payment when paid', function () {
+it('creates a booking with confirmed status and paid payment when paid', function () {
     $this->actingAs($this->user)
-        ->post('/bookings', [
+        ->postJson('/bookings', [
             'user_id' => $this->customer->id,
             'court_id' => $this->court->id,
             'date' => '2026-12-01',
@@ -40,12 +42,15 @@ it('creates a booking and payment when paid', function () {
     expect($booking)->not->toBeNull()
         ->and($booking->status)->toBe('confirmed');
 
-    expect(Payment::where('booking_id', $booking->id)->exists())->toBeTrue();
+    $payment = Payment::where('booking_id', $booking->id)->first();
+    expect($payment)->not->toBeNull()
+        ->and($payment->status)->toBe('paid')
+        ->and($payment->method)->toBe('cash');
 });
 
-it('creates a booking without payment when unpaid', function () {
+it('creates a booking with pending status and pending qris payment when unpaid', function () {
     $this->actingAs($this->user)
-        ->post('/bookings', [
+        ->postJson('/bookings', [
             'user_id' => $this->customer->id,
             'court_id' => $this->court->id,
             'date' => '2026-12-01',
@@ -58,14 +63,18 @@ it('creates a booking without payment when unpaid', function () {
 
     $booking = Booking::where('user_id', $this->customer->id)->first();
     expect($booking->status)->toBe('pending');
-    expect(Payment::where('booking_id', $booking->id)->exists())->toBeFalse();
+
+    $payment = Payment::where('booking_id', $booking->id)->first();
+    expect($payment)->not->toBeNull()
+        ->and($payment->status)->toBe('pending')
+        ->and($payment->method)->toBe('qris');
 });
 
 it('returns 422 when required fields are missing', function () {
     $this->actingAs($this->user)
         ->postJson('/bookings', [])
         ->assertStatus(422)
-        ->assertJsonValidationErrors(['user_id', 'court_id', 'date', 'start_time', 'end_time', 'total_price', 'payment_status']);
+        ->assertJsonValidationErrors(['court_id', 'date', 'start_time', 'end_time', 'total_price', 'payment_status']);
 });
 
 it('returns 422 when the slot is already booked', function () {
@@ -91,6 +100,6 @@ it('returns 422 when the slot is already booked', function () {
         ->assertJson(['message' => 'Slot waktu ini sudah dibooking. Silakan pilih waktu lain.']);
 });
 
-it('returns 401 for unauthenticated requests', function () {
+it('returns 401 for unauthenticated requests to admin booking endpoint', function () {
     $this->postJson('/bookings', [])->assertStatus(401);
 });

@@ -17,7 +17,10 @@ class StoreBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'guest_name' => ['nullable', 'string', 'max:255', 'required_without:user_id'],
+            'guest_email' => ['nullable', 'email', 'max:255', 'required_without:user_id'],
+            'guest_phone' => ['nullable', 'string', 'max:30', 'required_without:user_id'],
             'court_id' => ['required', 'integer', 'exists:courts,id'],
             'date' => ['required', 'date', 'date_format:Y-m-d'],
             'start_time' => ['required', 'date_format:H:i'],
@@ -33,7 +36,9 @@ class StoreBookingRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'user_id.required' => 'Kustomer harus dipilih.',
+            'guest_name.required_without' => 'Nama wajib diisi untuk pemesanan tanpa akun.',
+            'guest_email.required_without' => 'Email wajib diisi untuk pemesanan tanpa akun.',
+            'guest_phone.required_without' => 'Nomor telepon wajib diisi untuk pemesanan tanpa akun.',
             'court_id.required' => 'Lapangan harus dipilih.',
             'date.required' => 'Tanggal booking harus diisi.',
             'start_time.required' => 'Waktu mulai harus dipilih.',

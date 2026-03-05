@@ -3,13 +3,8 @@
 use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Laravel\Fortify\Features;
 
-Route::get('/', function () {
-    return Inertia::render('welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
-})->name('home');
+Route::get('/', \App\Http\Controllers\WelcomeController::class)->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
@@ -89,6 +84,12 @@ Route::get('bookings/recap', [\App\Http\Controllers\Admin\ReportController::clas
 Route::post('bookings', [\App\Http\Controllers\Admin\BookingController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('bookings.store');
+
+Route::post('bookings/guest', [\App\Http\Controllers\Admin\BookingController::class, 'store'])
+    ->name('bookings.guest');
+
+Route::post('bookings/{booking}/upload-proof', [\App\Http\Controllers\Admin\BookingController::class, 'uploadProof'])
+    ->name('bookings.upload-proof');
 
 Route::patch('bookings/{booking}/confirm', [\App\Http\Controllers\Admin\BookingController::class, 'confirm'])
     ->middleware(['auth', 'verified'])

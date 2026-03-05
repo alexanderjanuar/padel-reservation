@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class FonnteService
 {
-    private string $token;
+    private ?string $token;
 
     private string $apiUrl = 'https://api.fonnte.com/send';
 
@@ -33,10 +33,74 @@ class FonnteService
     }
 
     /**
+     * Send a WhatsApp booking confirmation to the customer after admin verifies payment.
+     */
+    public function sendConfirmationNotification(Booking $booking): void
+    {
+        if (empty($this->token)) {
+            Log::info('FonnteService: Token not configured, skipping WA confirmation.');
+
+            return;
+        }
+
+        $user = $booking->user;
+        $court = $booking->court;
+        $venue = $court->venue;
+
+        if (empty($user->phone)) {
+            Log::warning('FonnteService: User has no phone number.', ['user_id' => $user->id]);
+
+            return;
+        }
+
+        $phone = $this->normalisePhone($user->phone);
+        $date = $booking->date->format('d-m-Y');
+        $price = 'Rp '.number_format($booking->total_price, 0, ',', '.');
+
+        $message = "Halo {$user->name}! Pembayaran Anda telah *DIKONFIRMASI* ✅\n\n"
+            ."Booking Anda resmi tercatat:\n"
+            ."📅 Tanggal  : {$date}\n"
+            ."⏰ Waktu    : {$booking->start_time} - {$booking->end_time}\n"
+            ."🏟️ Lapangan : {$court->name}\n"
+            ."📍 Venue    : {$venue->name}\n"
+            ."💰 Total    : {$price}\n\n"
+            .'Sampai jumpa di lapangan! 🎾';
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => $this->token,
+            ])->asMultipart()->post($this->apiUrl, [
+                ['name' => 'target', 'contents' => $phone],
+                ['name' => 'message', 'contents' => $message],
+                ['name' => 'countryCode', 'contents' => '62'],
+                ['name' => 'delay', 'contents' => '2'],
+                ['name' => 'schedule', 'contents' => '0'],
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('FonnteService: Failed to send WA confirmation.', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('FonnteService: Exception when sending WA confirmation.', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Send a WhatsApp booking notification to the customer.
      */
     public function sendBookingNotification(Booking $booking): void
     {
+        if (empty($this->token)) {
+            Log::info('FonnteService: Token not configured, skipping WA notification.');
+
+            return;
+        }
+
         $user = $booking->user;
         $court = $booking->court;
         $venue = $court->venue;
