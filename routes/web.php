@@ -6,8 +6,59 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
+    $sports = \App\Models\Sport::orderBy('name')->get(['id', 'name', 'slug', 'icon']);
+
+    $featuredVenues = \App\Models\Venue::query()
+        ->where('is_active', true)
+        ->with([
+            'courts' => fn ($q) => $q->where('is_active', true)->select('id', 'venue_id', 'sport_id', 'price_per_hour'),
+            'courts.sport' => fn ($q) => $q->select('id', 'name', 'slug'),
+            'facilities:id,name',
+            'reviews:id,venue_id,rating',
+        ])
+        ->latest()
+        ->limit(6)
+        ->get(['id', 'name', 'slug', 'city', 'address', 'image_url', 'images'])
+        ->map(function ($venue) {
+            $activeCourts = $venue->courts;
+
+            return [
+                'id' => $venue->id,
+                'name' => $venue->name,
+                'slug' => $venue->slug,
+                'city' => $venue->city,
+                'address' => $venue->address,
+                'image_url' => $venue->image_url,
+                'images' => $venue->images,
+                'min_price' => $activeCourts->min('price_per_hour'),
+                'avg_rating' => $venue->reviews->count() ? round($venue->reviews->avg('rating'), 1) : null,
+                'review_count' => $venue->reviews->count(),
+                'sports' => $activeCourts->pluck('sport.name')->unique()->filter()->values()->all(),
+                'facilities' => $venue->facilities->pluck('name')->all(),
+                'courts_count' => $activeCourts->count(),
+            ];
+        });
+
+    $cities = \App\Models\Venue::query()
+        ->where('is_active', true)
+        ->distinct()
+        ->pluck('city')
+        ->filter()
+        ->values()
+        ->all();
+
+    $stats = [
+        'venues' => \App\Models\Venue::where('is_active', true)->count(),
+        'courts' => \App\Models\Court::where('is_active', true)->count(),
+        'bookings' => \App\Models\Booking::count(),
+    ];
+
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
+        'sports' => $sports,
+        'featuredVenues' => $featuredVenues,
+        'cities' => $cities,
+        'stats' => $stats,
     ]);
 })->name('home');
 

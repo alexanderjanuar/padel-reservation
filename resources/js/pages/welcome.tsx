@@ -1,252 +1,542 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import type { Auth } from '@/types/auth';
 import {
+    Activity,
     ArrowRight,
     Calendar,
+    CheckCircle,
+    ChevronRight,
+    Mail,
     MapPin,
+    Phone,
     Search,
+    Shield,
     Star,
     Trophy,
-    Activity,
-    Clock,
-    CheckCircle2,
-    ChevronRight,
+    TrendingUp,
+    Users,
+    Zap,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import HeroSection from '@/components/Welcome/HeroSection';
 import { dashboard, login, register } from '@/routes';
 
-// Mock Interfaces based on database schema
+/* ─── Types ─────────────────────────────────────────────── */
 interface Sport {
     id: number;
     name: string;
     slug: string;
-    icon: any; // Lucide icon reference
+    icon: string | null;
 }
 
-interface Venue {
+interface FeaturedVenue {
     id: number;
     name: string;
     slug: string;
-    address: string;
     city: string;
-    price: string;
-    rating: number;
-    image_url: string;
-    is_active: boolean;
+    address: string;
+    image_url: string | null;
+    images: string[] | null;
+    min_price: number | null;
+    avg_rating: number | null;
+    review_count: number;
+    sports: string[];
+    facilities: string[];
+    courts_count: number;
 }
 
-export default function Welcome({
-    canRegister = true,
+interface Stats {
+    venues: number;
+    courts: number;
+    bookings: number;
+}
+
+interface PageProps {
+    canRegister: boolean;
+    sports: Sport[];
+    featuredVenues: FeaturedVenue[];
+    cities: string[];
+    stats: Stats;
+}
+
+/* ─── Helpers ────────────────────────────────────────────── */
+function formatIDR(amount: number): string {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(amount);
+}
+
+function getVenueImage(venue: FeaturedVenue): string | null {
+    return venue.images?.[0] ?? venue.image_url ?? null;
+}
+
+/* ─── Navbar ─────────────────────────────────────────────── */
+function SiteNavbar({
+    auth,
+    canRegister,
 }: {
-    canRegister?: boolean;
+    auth: Auth;
+    canRegister: boolean;
 }) {
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 60);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    const textColor = scrolled ? 'text-padel-dark' : 'text-white';
+    const mutedColor = scrolled ? 'text-padel-muted hover:text-padel-dark' : 'text-white/70 hover:text-white';
+
+    return (
+        <header
+            className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+                scrolled ? 'border-b border-padel-border bg-white/95 shadow-sm backdrop-blur-md' : ''
+            }`}
+        >
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+                {/* Logo */}
+                <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-padel-green shadow-sm">
+                        <Zap className="h-4 w-4 text-white" />
+                    </div>
+                    <span className={`font-display text-xl tracking-wider ${textColor}`}>
+                        COURTHUB
+                    </span>
+                </div>
+
+                {/* Desktop nav links */}
+                <nav className="hidden items-center gap-7 md:flex">
+                    {[
+                        { label: 'Olahraga', href: '#sports' },
+                        { label: 'Venue', href: '#venues' },
+                        { label: 'Cara Pesan', href: '#how' },
+                    ].map(({ label, href }) => (
+                        <a
+                            key={href}
+                            href={href}
+                            className={`text-sm font-medium transition-colors ${mutedColor}`}
+                        >
+                            {label}
+                        </a>
+                    ))}
+                </nav>
+
+                {/* Auth buttons */}
+                <div className="flex items-center gap-3">
+                    {auth.user ? (
+                        <Link
+                            href={dashboard().url}
+                            className={`hidden items-center gap-1.5 text-sm font-semibold transition-colors md:flex ${mutedColor}`}
+                        >
+                            Dashboard
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </Link>
+                    ) : (
+                        <>
+                            <Link
+                                href={login().url}
+                                className={`hidden text-sm font-semibold transition-colors md:block ${mutedColor}`}
+                            >
+                                Masuk
+                            </Link>
+                            {canRegister && (
+                                <Link
+                                    href={register().url}
+                                    className="rounded-lg bg-padel-green px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-padel-green-dark active:scale-95"
+                                >
+                                    Daftar Gratis
+                                </Link>
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
+        </header>
+    );
+}
+
+/* ─── Venue Card ─────────────────────────────────────────── */
+function VenueCard({ venue }: { venue: FeaturedVenue }) {
+    const imageUrl = getVenueImage(venue);
+
+    return (
+        <Link
+            href={`/venue/${venue.id}`}
+            className="group block overflow-hidden rounded-2xl border border-padel-border bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-padel-green/30 hover:shadow-lg"
+        >
+            {/* Image */}
+            <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                {imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt={venue.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-padel-green/15 to-slate-200">
+                        <MapPin className="h-10 w-10 text-padel-green/40" />
+                    </div>
+                )}
+
+                {/* Rating badge */}
+                {venue.avg_rating !== null && (
+                    <div className="absolute right-3 top-3 flex items-center gap-1 rounded-lg bg-white/95 px-2.5 py-1 shadow-sm backdrop-blur-sm">
+                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                        <span className="text-xs font-bold text-slate-800">{venue.avg_rating}</span>
+                        {venue.review_count > 0 && (
+                            <span className="text-xs text-slate-400">({venue.review_count})</span>
+                        )}
+                    </div>
+                )}
+
+                {/* Courts count pill */}
+                <div className="absolute bottom-3 left-3 rounded-md bg-padel-dark/75 px-2.5 py-1 backdrop-blur-sm">
+                    <span className="text-[11px] font-semibold text-white">
+                        {venue.courts_count} lapangan
+                    </span>
+                </div>
+            </div>
+
+            {/* Card body */}
+            <div className="p-5">
+                {/* Sport pills */}
+                {venue.sports.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-1.5">
+                        {venue.sports.slice(0, 3).map((sport) => (
+                            <span
+                                key={sport}
+                                className="rounded-md bg-padel-green-50 px-2 py-0.5 text-[11px] font-semibold text-padel-green-dark"
+                            >
+                                {sport}
+                            </span>
+                        ))}
+                        {venue.sports.length > 3 && (
+                            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+                                +{venue.sports.length - 3}
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                <h3 className="font-heading text-base font-bold text-padel-dark">{venue.name}</h3>
+
+                <div className="mt-1 flex items-center gap-1.5 text-sm text-padel-muted">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{venue.city}</span>
+                </div>
+
+                {/* Facilities */}
+                {venue.facilities.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                        {venue.facilities.slice(0, 3).map((f) => (
+                            <span
+                                key={f}
+                                className="flex items-center gap-1 rounded-md border border-padel-border bg-padel-light px-2 py-0.5 text-[11px] text-padel-muted"
+                            >
+                                <CheckCircle className="h-3 w-3 text-padel-green" />
+                                {f}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Price + CTA */}
+                <div className="mt-4 flex items-end justify-between border-t border-padel-border pt-4">
+                    <div>
+                        {venue.min_price !== null ? (
+                            <>
+                                <p className="text-[11px] text-padel-muted">Mulai dari</p>
+                                <p className="font-heading text-lg font-bold text-padel-dark">
+                                    {formatIDR(venue.min_price)}
+                                </p>
+                                <p className="text-[11px] text-padel-muted">/ jam</p>
+                            </>
+                        ) : (
+                            <p className="text-sm font-medium text-padel-muted">Cek ketersediaan</p>
+                        )}
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-padel-green transition-all group-hover:gap-2">
+                        Lihat Jadwal
+                        <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                </div>
+            </div>
+        </Link>
+    );
+}
+
+/* ─── Main Page ──────────────────────────────────────────── */
+export default function Welcome({ canRegister = true, sports, featuredVenues, cities, stats }: PageProps) {
     const { auth } = usePage().props;
-
-    // Mock data for sports
-    const sports: Sport[] = [
-        { id: 1, name: 'Padel', slug: 'padel', icon: Activity },
-        { id: 2, name: 'Tennis', slug: 'tennis', icon: Trophy },
-        { id: 3, name: 'Badminton', slug: 'badminton', icon: Activity },
-        { id: 4, name: 'Mini Soccer', slug: 'mini-soccer', icon: Activity },
-        { id: 5, name: 'Basketball', slug: 'basketball', icon: Trophy },
-    ];
-
-    // Mock data for venues based on the new schema structure
-    const featuredVenues: Venue[] = [
-        {
-            id: 1,
-            name: 'The Padel Garden',
-            slug: 'the-padel-garden',
-            address: 'Jl. Senopati No. 45',
-            city: 'Jakarta Selatan',
-            price: 'Rp 350.000 / jam',
-            rating: 4.8,
-            image_url: 'https://images.unsplash.com/photo-1622228514930-cbcfef9405b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-            is_active: true,
-        },
-        {
-            id: 2,
-            name: 'Oasis Courts',
-            slug: 'oasis-courts',
-            address: 'Kawasan Gelora Bung Karno',
-            city: 'Jakarta Pusat',
-            price: 'Rp 450.000 / jam',
-            rating: 4.9,
-            image_url: 'https://images.unsplash.com/photo-1698656005701-4ec1e1dcf638?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-            is_active: true,
-        },
-        {
-            id: 3,
-            name: 'Arena 7 Sports Club',
-            slug: 'arena-7-sports-club',
-            address: 'Pantai Indah Kapuk',
-            city: 'Jakarta Utara',
-            price: 'Rp 400.000 / jam',
-            rating: 4.7,
-            image_url: 'https://images.unsplash.com/photo-1644781702528-7aa6fd386fb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-            is_active: true,
-        },
-        {
-            id: 4,
-            name: 'South Quarter Arena',
-            slug: 'south-quarter-arena',
-            address: 'Cilandak',
-            city: 'Jakarta Selatan',
-            price: 'Rp 300.000 / jam',
-            rating: 4.6,
-            image_url: 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-            is_active: true,
-        },
-    ];
 
     const steps = [
         {
-            id: 1,
-            title: 'Find Your Sport',
-            description: 'Choose from padel, tennis, and more at top-rated venues near you.',
+            num: '01',
+            title: 'Cari Venue',
+            description: 'Pilih olahraga dan kota favoritmu. Filter berdasarkan harga, fasilitas, dan jadwal tersedia.',
             icon: Search,
         },
         {
-            id: 2,
-            title: 'Pick a Time',
-            description: 'Check real-time availability and secure your preferred time slot instantly.',
-            icon: Clock,
+            num: '02',
+            title: 'Pilih Jadwal',
+            description: 'Cek ketersediaan real-time. Tentukan tanggal, jam mulai, dan durasi bermain.',
+            icon: Calendar,
         },
         {
-            id: 3,
-            title: 'Play & Dominate',
-            description: 'Show up, checking in seamlessly, and focus on the game.',
-            icon: CheckCircle2,
+            num: '03',
+            title: 'Main & Menang',
+            description: 'Datang ke venue, check-in mudah dengan kode booking, dan nikmati sesimu.',
+            icon: Trophy,
+        },
+    ];
+
+    const displayStats = [
+        {
+            label: 'Venue Aktif',
+            value: stats?.venues > 0 ? `${stats.venues}+` : '50+',
+            icon: MapPin,
+            color: 'text-padel-green',
+            bg: 'bg-padel-green/15',
+        },
+        {
+            label: 'Lapangan',
+            value: stats?.courts > 0 ? `${stats.courts}+` : '200+',
+            icon: Activity,
+            color: 'text-blue-400',
+            bg: 'bg-blue-400/15',
+        },
+        {
+            label: 'Sesi Terbooking',
+            value: stats?.bookings > 0 ? `${stats.bookings}+` : '10K+',
+            icon: TrendingUp,
+            color: 'text-amber-400',
+            bg: 'bg-amber-400/15',
+        },
+        {
+            label: 'Pengguna Aktif',
+            value: '5K+',
+            icon: Users,
+            color: 'text-purple-400',
+            bg: 'bg-purple-400/15',
         },
     ];
 
     return (
-        <div className="min-h-screen bg-padel-light font-sans text-padel-dark selection:bg-padel-green selection:text-white">
-            <Head title="Book Sports Venues" />
+        <div className="min-h-screen bg-padel-light font-sans text-padel-dark">
+            <Head title="CourtHub — Reservasi Lapangan Olahraga" />
 
-            {/* Top Navigation */}
-            <nav className="border-b border-padel-border bg-white sticky top-0 z-50">
-                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center bg-padel-dark text-white">
-                            <Trophy className="h-4 w-4" />
-                        </div>
-                        <span className="font-heading text-xl font-bold tracking-tight text-padel-dark">
-                            RESERVE
-                        </span>
-                    </div>
+            <SiteNavbar auth={auth} canRegister={canRegister} />
 
-                    <div className="flex items-center gap-6">
-                        {auth.user ? (
-                            <Link
-                                href={dashboard()}
-                                className="inline-flex h-10 items-center justify-center bg-padel-dark px-6 text-sm font-semibold text-white transition-colors hover:bg-black"
-                            >
-                                Dashboard
-                            </Link>
-                        ) : (
-                            <>
-                                <Link
-                                    href={login()}
-                                    className="text-sm font-semibold text-padel-dark transition-colors hover:text-padel-green-dark hidden sm:block"
-                                >
-                                    Log In
-                                </Link>
-                                {canRegister && (
-                                    <Link
-                                        href={register()}
-                                        className="inline-flex h-10 items-center justify-center bg-padel-green px-6 text-sm font-bold text-white transition-colors hover:bg-padel-green-dark"
-                                    >
-                                        Sign Up
-                                    </Link>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </div>
-            </nav>
+            {/* ── Hero ── */}
+            <HeroSection sports={sports ?? []} popularLocations={cities ?? []} />
 
-            {/* Hero Section */}
-            <HeroSection />
-
-            {/* Sports Selection Grid */}
-            <section className="relative z-0 border-y border-padel-border bg-white pt-32 pb-16">
+            {/* ── Sports Categories ── */}
+            <section id="sports" className="bg-white py-20">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div>
-                            <h2 className="font-heading text-3xl font-extrabold text-padel-dark mb-2">CHOOSE YOUR SPORT</h2>
-                            <p className="text-padel-muted text-lg">We partner with the best facilities across multiple disciplines.</p>
-                        </div>
+                    <div className="mb-12 text-center">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-padel-green">
+                            Kategori Olahraga
+                        </span>
+                        <h2 className="mt-2 font-display text-4xl tracking-wider text-padel-dark md:text-5xl">
+                            PILIH OLAHRAGAMU
+                        </h2>
+                        <p className="mx-auto mt-3 max-w-md text-padel-muted">
+                            Temukan venue terbaik untuk olahraga favoritmu
+                        </p>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        {sports.map((sport) => {
-                            const Icon = sport.icon;
-                            return (
-                                <Link
+                    {sports && sports.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                            {sports.map((sport) => (
+                                <button
                                     key={sport.id}
-                                    href={`/sports/${sport.slug}`}
-                                    className="group flex flex-col items-center justify-center border border-padel-border bg-padel-light p-8 transition-all hover:border-padel-dark hover:bg-padel-dark hover:text-white"
+                                    type="button"
+                                    className="group flex flex-col items-center gap-3 rounded-2xl border border-padel-border bg-white p-6 text-center shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-padel-green hover:shadow-md"
                                 >
-                                    <Icon className="h-10 w-10 mb-4 text-padel-dark transition-colors group-hover:text-white" />
-                                    <span className="font-bold text-lg">{sport.name}</span>
-                                </Link>
+                                    <span className="text-4xl transition-transform duration-200 group-hover:scale-110">
+                                        {sport.icon ?? '🏆'}
+                                    </span>
+                                    <span className="text-sm font-semibold text-padel-dark transition-colors group-hover:text-padel-green">
+                                        {sport.name}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="py-8 text-center text-padel-muted">
+                            Belum ada kategori olahraga.
+                        </p>
+                    )}
+                </div>
+            </section>
+
+            {/* ── Featured Venues ── */}
+            <section id="venues" className="bg-padel-light py-20">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    {/* Section header */}
+                    <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-padel-green">
+                                Venue Unggulan
+                            </span>
+                            <h2 className="mt-2 font-display text-4xl tracking-wider text-padel-dark md:text-5xl">
+                                VENUE TERPOPULER
+                            </h2>
+                            <p className="mt-2 text-padel-muted">
+                                Venue pilihan komunitas dengan fasilitas terlengkap
+                            </p>
+                        </div>
+                        <a
+                            href="#venues"
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-padel-green transition-colors hover:text-padel-green-dark"
+                        >
+                            Lihat Semua
+                            <ChevronRight className="h-4 w-4" />
+                        </a>
+                    </div>
+
+                    {featuredVenues && featuredVenues.length > 0 ? (
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            {featuredVenues.map((venue) => (
+                                <VenueCard key={venue.id} venue={venue} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-padel-border py-20 text-center">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-padel-green/10">
+                                <MapPin className="h-8 w-8 text-padel-green/50" />
+                            </div>
+                            <p className="font-heading text-base font-bold text-padel-dark">Belum ada venue aktif</p>
+                            <p className="mt-1 text-sm text-padel-muted">Venue sedang dalam proses pendaftaran</p>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* ── How It Works ── */}
+            <section id="how" className="bg-white py-20">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="mb-16 text-center">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-padel-green">
+                            Cara Booking
+                        </span>
+                        <h2 className="mt-2 font-display text-4xl tracking-wider text-padel-dark md:text-5xl">
+                            3 LANGKAH MUDAH
+                        </h2>
+                        <p className="mx-auto mt-3 max-w-md text-padel-muted">
+                            Dari pencarian hingga bermain, prosesnya cepat dan mudah
+                        </p>
+                    </div>
+
+                    <div className="relative grid gap-8 md:grid-cols-3">
+                        {/* Connector line */}
+                        <div className="absolute left-[calc(33%+2rem)] right-[calc(33%+2rem)] top-10 hidden h-0.5 bg-gradient-to-r from-padel-green/30 via-padel-green to-padel-green/30 md:block" />
+
+                        {steps.map((step, i) => {
+                            const Icon = step.icon;
+                            return (
+                                <div key={i} className="relative flex flex-col items-center text-center">
+                                    {/* Icon circle */}
+                                    <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-padel-green/25 bg-padel-green/8 ring-4 ring-padel-green/8">
+                                        <Icon className="h-8 w-8 text-padel-green" />
+                                        <div className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-padel-green font-display text-sm text-white shadow-sm">
+                                            {i + 1}
+                                        </div>
+                                    </div>
+
+                                    <h3 className="font-heading text-lg font-bold text-padel-dark">
+                                        {step.title}
+                                    </h3>
+                                    <p className="mt-2 max-w-xs text-sm leading-relaxed text-padel-muted">
+                                        {step.description}
+                                    </p>
+                                </div>
                             );
                         })}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="mt-14 text-center">
+                        <Link
+                            href={auth.user ? dashboard().url : canRegister ? register().url : login().url}
+                            className="inline-flex items-center gap-2.5 rounded-xl bg-padel-green px-8 py-4 font-bold text-white shadow-sm transition-all hover:bg-padel-green-dark active:scale-95"
+                        >
+                            {auth.user ? 'Ke Dashboard' : 'Mulai Gratis Sekarang'}
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                        {!auth.user && (
+                            <p className="mt-3 text-xs text-padel-muted">
+                                Sudah punya akun?{' '}
+                                <Link href={login().url} className="font-semibold text-padel-green hover:underline">
+                                    Masuk di sini
+                                </Link>
+                            </p>
+                        )}
                     </div>
                 </div>
             </section>
 
-            {/* Featured Venues */}
-            <section className="bg-padel-light py-20">
+            {/* ── Trust & Stats ── */}
+            <section className="bg-padel-dark py-20">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div>
-                            <h2 className="font-heading text-3xl font-extrabold text-padel-dark mb-2">PREMIUM VENUES</h2>
-                            <p className="text-padel-muted text-lg">Top-rated courts available for booking right now.</p>
-                        </div>
-                        <Link href="/venues" className="inline-flex items-center font-bold text-padel-dark hover:text-padel-green transition-colors group">
-                            View All Directory <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Link>
+                    <div className="mb-14 text-center">
+                        <h2 className="font-display text-4xl tracking-wider text-white md:text-5xl">
+                            DIPERCAYA RIBUAN PEMAIN
+                        </h2>
+                        <p className="mt-3 text-white/50">
+                            Bergabung dengan komunitas olahragawan terbesar di platform kami
+                        </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {featuredVenues.map((venue) => (
-                            <div key={venue.id} className="group flex flex-col bg-white border border-padel-border transition-all hover:shadow-lg">
-                                {/* Image Box */}
-                                <div className="relative h-48 overflow-hidden bg-padel-dark">
-                                    <img
-                                        src={venue.image_url}
-                                        alt={venue.name}
-                                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100"
-                                    />
-                                    <div className="absolute top-3 left-3 bg-white px-2 py-1 text-xs font-bold text-padel-dark flex items-center gap-1">
-                                        <Star className="h-3 w-3 fill-padel-dark text-padel-dark" />
-                                        {venue.rating}
+                    <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+                        {displayStats.map((stat, i) => {
+                            const Icon = stat.icon;
+                            return (
+                                <div key={i} className="flex flex-col items-center text-center">
+                                    <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl ${stat.bg}`}>
+                                        <Icon className={`h-7 w-7 ${stat.color}`} />
+                                    </div>
+                                    <div className={`font-display text-5xl tracking-wider ${stat.color}`}>
+                                        {stat.value}
+                                    </div>
+                                    <div className="mt-2 text-sm font-medium text-white/50">
+                                        {stat.label}
                                     </div>
                                 </div>
+                            );
+                        })}
+                    </div>
 
-                                {/* Content Box */}
-                                <div className="p-5 flex flex-col flex-grow">
-                                    <h3 className="font-heading text-xl font-bold text-padel-dark mb-1 leading-tight group-hover:text-padel-green-dark transition-colors">
-                                        {venue.name}
-                                    </h3>
-                                    <div className="flex items-start gap-1.5 text-sm text-padel-muted mb-4">
-                                        <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                                        <span>{venue.city}</span>
-                                    </div>
-
-                                    <div className="mt-auto pt-4 border-t border-padel-border flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-padel-muted font-medium mb-0.5">Starting from</p>
-                                            <p className="font-bold text-padel-dark">{venue.price}</p>
-                                        </div>
-                                        <Link
-                                            href={`/venue/${venue.id}`}
-                                            className="h-10 w-10 flex items-center justify-center bg-padel-light border border-padel-border text-padel-dark transition-colors group-hover:bg-padel-green group-hover:border-padel-green group-hover:text-white"
-                                        >
-                                            <ChevronRight className="h-5 w-5" />
-                                        </Link>
-                                    </div>
+                    {/* Trust badges */}
+                    <div className="mt-16 grid grid-cols-1 gap-4 border-t border-white/10 pt-12 sm:grid-cols-3">
+                        {[
+                            {
+                                icon: Shield,
+                                title: 'Booking Aman & Terjamin',
+                                desc: 'Semua transaksi diproteksi dengan enkripsi terkini',
+                            },
+                            {
+                                icon: Zap,
+                                title: 'Konfirmasi Instan',
+                                desc: 'Dapatkan konfirmasi booking dalam hitungan detik',
+                            },
+                            {
+                                icon: Users,
+                                title: 'Komunitas Aktif',
+                                desc: 'Bergabung dengan ribuan pengguna aktif setiap harinya',
+                            },
+                        ].map(({ icon: Icon, title, desc }, i) => (
+                            <div key={i} className="flex items-start gap-4">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-padel-green/15">
+                                    <Icon className="h-5 w-5 text-padel-green" />
+                                </div>
+                                <div>
+                                    <p className="font-heading text-sm font-bold text-white">{title}</p>
+                                    <p className="mt-0.5 text-xs leading-relaxed text-white/45">{desc}</p>
                                 </div>
                             </div>
                         ))}
@@ -254,45 +544,89 @@ export default function Welcome({
                 </div>
             </section>
 
-            {/* How It Works */}
-            <section className="border-t border-padel-border bg-white py-24">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-                    <h2 className="font-heading text-3xl font-extrabold text-padel-dark mb-16">HOW IT WORKS</h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-8 relative">
-                        {/* Connecting Line for Desktop */}
-                        <div className="hidden md:block absolute top-[45px] left-[15%] right-[15%] h-px bg-padel-border"></div>
-
-                        {steps.map((step) => {
-                            const Icon = step.icon;
-                            return (
-                                <div key={step.id} className="relative flex flex-col items-center">
-                                    <div className="h-24 w-24 bg-white border-2 border-padel-dark flex items-center justify-center mb-6 relative z-10 transition-transform hover:-translate-y-1">
-                                        <Icon className="h-8 w-8 text-padel-dark" />
-                                        <div className="absolute -top-3 -right-3 h-8 w-8 bg-padel-green text-white font-bold flex items-center justify-center text-sm">
-                                            {step.id}
-                                        </div>
-                                    </div>
-                                    <h3 className="font-bold text-xl text-padel-dark mb-3">{step.title}</h3>
-                                    <p className="text-padel-muted max-w-xs">{step.description}</p>
+            {/* ── Footer ── */}
+            <footer className="border-t border-white/10 bg-padel-dark">
+                <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+                    <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+                        {/* Brand */}
+                        <div className="col-span-2 md:col-span-1">
+                            <div className="mb-4 flex items-center gap-2.5">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-padel-green">
+                                    <Zap className="h-4 w-4 text-white" />
                                 </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
+                                <span className="font-display text-xl tracking-wider text-white">COURTHUB</span>
+                            </div>
+                            <p className="max-w-[200px] text-sm leading-relaxed text-white/40">
+                                Platform reservasi lapangan olahraga terpercaya di Indonesia.
+                            </p>
+                        </div>
 
-            {/* Footer */}
-            <footer className="bg-padel-dark text-white py-12 border-t-4 border-padel-green">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-2">
-                        <Trophy className="h-6 w-6 text-padel-green" />
-                        <span className="font-heading text-xl font-bold tracking-widest text-white">
-                            RESERVE
-                        </span>
+                        {/* Layanan */}
+                        <div>
+                            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                                Layanan
+                            </p>
+                            <ul className="space-y-3">
+                                {['Cari Venue', 'Olahraga Kami', 'Pricing', 'Partnerships'].map((item) => (
+                                    <li key={item}>
+                                        <a href="#" className="text-sm text-white/55 transition-colors hover:text-white">
+                                            {item}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Perusahaan */}
+                        <div>
+                            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                                Perusahaan
+                            </p>
+                            <ul className="space-y-3">
+                                {['Tentang Kami', 'Cara Kerja', 'FAQ', 'Blog'].map((item) => (
+                                    <li key={item}>
+                                        <a href="#" className="text-sm text-white/55 transition-colors hover:text-white">
+                                            {item}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Kontak */}
+                        <div>
+                            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                                Kontak
+                            </p>
+                            <ul className="space-y-3">
+                                <li className="flex items-center gap-2 text-sm text-white/55">
+                                    <Mail className="h-4 w-4 shrink-0" />
+                                    hello@courthub.id
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-white/55">
+                                    <Phone className="h-4 w-4 shrink-0" />
+                                    +62 812 3456 7890
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-white/55">
+                                    <MapPin className="h-4 w-4 shrink-0" />
+                                    Jakarta, Indonesia
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <div className="text-padel-muted text-sm font-medium">
-                        &copy; {new Date().getFullYear()} Reserve Booking Systems. All rights reserved.
+
+                    {/* Bottom bar */}
+                    <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
+                        <p className="text-xs text-white/30">
+                            © 2026 CourtHub. All rights reserved.
+                        </p>
+                        <div className="flex items-center gap-6">
+                            {['Kebijakan Privasi', 'Syarat & Ketentuan', 'Cookie'].map((item) => (
+                                <a key={item} href="#" className="text-xs text-white/30 transition-colors hover:text-white/60">
+                                    {item}
+                                </a>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </footer>
