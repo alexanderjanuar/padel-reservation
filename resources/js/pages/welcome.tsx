@@ -833,6 +833,23 @@ export default function Welcome({ canRegister = true, courts = [], sports = [], 
                                 </div>
                             ))}
                         </div>
+                    )}
+                </div>
+            </section>
+
+            {/* ── How It Works ── */}
+            <section id="how" className="bg-white py-20">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="mb-16 text-center">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-padel-green">
+                            Cara Booking
+                        </span>
+                        <h2 className="mt-2 font-display text-4xl tracking-wider text-padel-dark md:text-5xl">
+                            3 LANGKAH MUDAH
+                        </h2>
+                        <p className="mx-auto mt-3 max-w-md text-padel-muted">
+                            Dari pencarian hingga bermain, prosesnya cepat dan mudah
+                        </p>
                     </div>
                 </div>
             </section>
