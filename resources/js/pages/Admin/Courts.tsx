@@ -1874,8 +1874,8 @@ function CreateCourtForm({ venues, sports, onSuccess, onCancel }: { venues: Venu
     };
 
     return (
-        <form onSubmit={submit} className="flex flex-col h-full max-h-[85vh]">
-            <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-slate-200">
+        <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-slate-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Input: Name */}
                     <div className="md:col-span-2 space-y-2">
