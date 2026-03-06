@@ -63,7 +63,7 @@ export default function VenueShow({ id }: { id: string }) {
     const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
     return (
-        <div className="min-h-screen bg-padel-light pb-32 font-sans text-padel-dark selection:bg-padel-green selection:text-white lg:pb-0">
+        <div className="min-h-screen bg-padel-light pb-32 font-sans text-padel-dark selection:bg-pink-500 selection:text-white lg:pb-0">
             <Head title={`${MOCK_VENUE.name} | Reservasi Padel`} />
 
             {/* Navigation Bar */}
@@ -131,7 +131,7 @@ export default function VenueShow({ id }: { id: string }) {
                                         key={i}
                                         className="flex items-center gap-1.5 rounded-lg border border-padel-border bg-padel-light px-3 py-1.5 text-sm font-medium text-padel-dark"
                                     >
-                                        <ShieldCheck className="h-4 w-4 text-padel-green-dark" />
+                                        <ShieldCheck className="h-4 w-4 text-pink-600" />
                                         {facility}
                                     </span>
                                 ))}
@@ -149,7 +149,7 @@ export default function VenueShow({ id }: { id: string }) {
                                 <div className="mb-1 text-xs font-medium text-padel-muted">
                                     Harga Standar / Jam
                                 </div>
-                                <div className="font-heading text-xl font-bold text-padel-green-dark">
+                                <div className="font-heading text-xl font-bold text-pink-600">
                                     {MOCK_VENUE.price}
                                 </div>
                             </div>
@@ -177,7 +177,7 @@ export default function VenueShow({ id }: { id: string }) {
                                                 onClick={() =>
                                                     setSelectedDate(dateConfig)
                                                 }
-                                                className={`shrink-0 rounded-xl border px-5 py-4 transition-all duration-200 ${isSelected ? 'border-padel-green bg-padel-green text-white shadow-md' : 'border-padel-border bg-white text-padel-muted hover:border-padel-green hover:text-padel-dark'}`}
+                                                className={`shrink-0 rounded-xl border px-5 py-4 transition-all duration-200 ${isSelected ? 'border-pink-500 bg-pink-500 text-white shadow-md' : 'border-padel-border bg-white text-padel-muted hover:border-pink-500 hover:text-padel-dark'}`}
                                             >
                                                 <div
                                                     className={`mb-1 text-xs font-medium ${isSelected ? 'text-white/90' : ''}`}
@@ -229,7 +229,7 @@ export default function VenueShow({ id }: { id: string }) {
                                 </label>
                                 <div className="flex items-center gap-3 text-xs font-semibold text-padel-muted">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="h-3 w-3 rounded-sm border border-padel-green bg-padel-green/20"></span>{' '}
+                                        <span className="h-3 w-3 rounded-sm border border-pink-500 bg-pink-500/20"></span>{' '}
                                         Tersedia
                                     </div>
                                     <div className="flex items-center gap-1.5">
@@ -250,10 +250,10 @@ export default function VenueShow({ id }: { id: string }) {
                                             'bg-padel-light border-transparent text-padel-muted/50 cursor-not-allowed';
                                     else if (isSelected)
                                         slotClasses +=
-                                            'bg-padel-green border-padel-green text-white shadow-md transform scale-105 z-10';
+                                            'bg-pink-500 border-pink-500 text-white shadow-md transform scale-105 z-10';
                                     else
                                         slotClasses +=
-                                            'bg-white border-padel-border text-padel-dark hover:border-padel-green hover:bg-padel-green/5';
+                                            'bg-white border-padel-border text-padel-dark hover:border-pink-500 hover:bg-pink-500/5';
 
                                     return (
                                         <button

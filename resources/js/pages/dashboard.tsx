@@ -32,7 +32,12 @@ type Booking = {
         name: string;
         type: string;
         sport: { name: string; icon: string | null };
-        venue: { id: number; name: string; city: string; image_url: string | null };
+        venue: {
+            id: number;
+            name: string;
+            city: string;
+            image_url: string | null;
+        };
     };
 };
 
@@ -72,7 +77,9 @@ const STATUS_CONFIG = {
 function StatusBadge({ status }: { status: Booking['status'] }) {
     const cfg = STATUS_CONFIG[status];
     return (
-        <span className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-0.5 text-[11px] font-bold ${cfg.className}`}>
+        <span
+            className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-0.5 text-[11px] font-bold ${cfg.className}`}
+        >
             {cfg.label}
         </span>
     );
@@ -90,7 +97,11 @@ function formatCurrency(amount: number) {
     }).format(amount);
 }
 
-export default function Dashboard({ stats, upcomingBookings, pastBookings }: Props) {
+export default function Dashboard({
+    stats,
+    upcomingBookings,
+    pastBookings,
+}: Props) {
     const { auth } = usePage().props;
 
     return (
@@ -98,11 +109,10 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
             <Head title="Dashboard" />
 
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 p-4 md:p-8">
-
                 {/* ── Header ── */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div className="space-y-1">
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                             Selamat datang kembali
                         </p>
                         <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl">
@@ -114,7 +124,7 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                     </div>
                     <Link
                         href={home().url}
-                        className="inline-flex items-center gap-2 self-start rounded-xl bg-padel-green px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-padel-green-dark transition-all active:scale-95 sm:self-auto"
+                        className="inline-flex items-center gap-2 self-start rounded-xl bg-pink-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-pink-600 active:scale-95 sm:self-auto"
                     >
                         Pesan Lapangan
                         <ArrowRight className="h-4 w-4" />
@@ -126,16 +136,18 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                                <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                     Total Bermain
                                 </p>
                                 <p className="mt-2 font-heading text-4xl font-bold text-slate-900">
                                     {stats.totalBookings}
                                 </p>
-                                <p className="mt-0.5 text-xs font-medium text-slate-400">sesi</p>
+                                <p className="mt-0.5 text-xs font-medium text-slate-400">
+                                    sesi
+                                </p>
                             </div>
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-padel-green/10">
-                                <Trophy className="h-5 w-5 text-padel-green" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-500/10">
+                                <Trophy className="h-5 w-5 text-pink-500" />
                             </div>
                         </div>
                     </div>
@@ -143,13 +155,15 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                                <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                     Jadwal Mendatang
                                 </p>
                                 <p className="mt-2 font-heading text-4xl font-bold text-slate-900">
                                     {stats.upcomingBookingsCount}
                                 </p>
-                                <p className="mt-0.5 text-xs font-medium text-slate-400">pertandingan</p>
+                                <p className="mt-0.5 text-xs font-medium text-slate-400">
+                                    pertandingan
+                                </p>
                             </div>
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
                                 <CalendarDays className="h-5 w-5 text-blue-500" />
@@ -160,13 +174,17 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-start justify-between">
                             <div className="min-w-0">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                                <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                     Venue Favorit
                                 </p>
                                 <p className="mt-2 truncate pr-2 font-heading text-lg font-bold text-slate-900">
-                                    {stats.favoriteVenue === '-' ? '—' : stats.favoriteVenue}
+                                    {stats.favoriteVenue === '-'
+                                        ? '—'
+                                        : stats.favoriteVenue}
                                 </p>
-                                <p className="mt-0.5 text-xs font-medium text-slate-400">paling sering dipesan</p>
+                                <p className="mt-0.5 text-xs font-medium text-slate-400">
+                                    paling sering dipesan
+                                </p>
                             </div>
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
                                 <Star className="h-5 w-5 text-amber-500" />
@@ -177,7 +195,6 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
 
                 {/* ── Main Content ── */}
                 <div className="grid gap-8 lg:grid-cols-3">
-
                     {/* Upcoming Bookings */}
                     <div className="flex flex-col gap-4 lg:col-span-2">
                         <div className="flex items-center justify-between">
@@ -200,47 +217,75 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                                         >
                                             {/* Date chip */}
                                             <div className="flex w-20 shrink-0 flex-col items-center justify-center border-r border-slate-100 bg-slate-50 py-5">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                    {format(parsedDate, 'MMM', { locale: id })}
+                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                    {format(parsedDate, 'MMM', {
+                                                        locale: id,
+                                                    })}
                                                 </span>
-                                                <span className="font-heading text-3xl font-black text-slate-900 leading-none mt-0.5">
+                                                <span className="mt-0.5 font-heading text-3xl leading-none font-black text-slate-900">
                                                     {format(parsedDate, 'dd')}
                                                 </span>
-                                                <span className="mt-1.5 text-[11px] font-bold text-padel-green">
-                                                    {formatTime(booking.start_time)}
+                                                <span className="mt-1.5 text-[11px] font-bold text-pink-500">
+                                                    {formatTime(
+                                                        booking.start_time,
+                                                    )}
                                                 </span>
                                             </div>
 
                                             {/* Details */}
-                                            <div className="flex flex-1 flex-col justify-center gap-2 px-5 py-4 min-w-0">
+                                            <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-5 py-4">
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="min-w-0">
-                                                        <p className="font-heading text-sm font-bold text-slate-900 truncate">
+                                                        <p className="truncate font-heading text-sm font-bold text-slate-900">
                                                             {booking.court.name}
                                                         </p>
-                                                        <div className="flex items-center gap-1 mt-0.5">
+                                                        <div className="mt-0.5 flex items-center gap-1">
                                                             <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
                                                             <p className="truncate text-[12px] text-slate-500">
-                                                                {booking.court.venue.name}
-                                                                {booking.court.venue.city ? ` · ${booking.court.venue.city}` : ''}
+                                                                {
+                                                                    booking
+                                                                        .court
+                                                                        .venue
+                                                                        .name
+                                                                }
+                                                                {booking.court
+                                                                    .venue.city
+                                                                    ? ` · ${booking.court.venue.city}`
+                                                                    : ''}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <StatusBadge status={booking.status} />
+                                                    <StatusBadge
+                                                        status={booking.status}
+                                                    />
                                                 </div>
 
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-1 text-[12px] text-slate-400">
                                                         <Clock className="h-3 w-3" />
-                                                        {formatTime(booking.start_time)} – {formatTime(booking.end_time)}
-                                                        {booking.court.sport?.name && (
+                                                        {formatTime(
+                                                            booking.start_time,
+                                                        )}{' '}
+                                                        –{' '}
+                                                        {formatTime(
+                                                            booking.end_time,
+                                                        )}
+                                                        {booking.court.sport
+                                                            ?.name && (
                                                             <span className="ml-2 rounded-md border border-slate-100 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
-                                                                {booking.court.sport.name}
+                                                                {
+                                                                    booking
+                                                                        .court
+                                                                        .sport
+                                                                        .name
+                                                                }
                                                             </span>
                                                         )}
                                                     </div>
                                                     <span className="text-[12px] font-bold text-slate-700">
-                                                        {formatCurrency(booking.total_price)}
+                                                        {formatCurrency(
+                                                            booking.total_price,
+                                                        )}
                                                     </span>
                                                 </div>
                                             </div>
@@ -253,11 +298,15 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
                                     <CalendarDays className="h-6 w-6 text-slate-400" />
                                 </div>
-                                <p className="text-sm font-bold text-slate-700">Belum ada jadwal mendatang</p>
-                                <p className="mt-1 text-xs text-slate-400">Yuk, pesan lapangan untuk sesi berikutnya!</p>
+                                <p className="text-sm font-bold text-slate-700">
+                                    Belum ada jadwal mendatang
+                                </p>
+                                <p className="mt-1 text-xs text-slate-400">
+                                    Yuk, pesan lapangan untuk sesi berikutnya!
+                                </p>
                                 <Link
                                     href={home().url}
-                                    className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:border-padel-green hover:text-padel-green transition-colors"
+                                    className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-colors hover:border-pink-500 hover:text-pink-500"
                                 >
                                     Cari Lapangan
                                     <ArrowRight className="h-3.5 w-3.5" />
@@ -281,26 +330,43 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                             {pastBookings.length > 0 ? (
                                 <div className="divide-y divide-slate-100">
                                     {pastBookings.map((booking) => {
-                                        const parsedDate = parseISO(booking.date);
+                                        const parsedDate = parseISO(
+                                            booking.date,
+                                        );
                                         return (
-                                            <div key={booking.id} className="flex items-center gap-3 px-4 py-3.5">
-                                                <div className="flex h-8 w-8 shrink-0 flex-col items-center justify-center rounded-lg bg-slate-50 border border-slate-100">
-                                                    <span className="text-[9px] font-bold uppercase text-slate-400 leading-none">
-                                                        {format(parsedDate, 'MMM', { locale: id })}
+                                            <div
+                                                key={booking.id}
+                                                className="flex items-center gap-3 px-4 py-3.5"
+                                            >
+                                                <div className="flex h-8 w-8 shrink-0 flex-col items-center justify-center rounded-lg border border-slate-100 bg-slate-50">
+                                                    <span className="text-[9px] leading-none font-bold text-slate-400 uppercase">
+                                                        {format(
+                                                            parsedDate,
+                                                            'MMM',
+                                                            { locale: id },
+                                                        )}
                                                     </span>
-                                                    <span className="font-heading text-sm font-black text-slate-700 leading-none">
-                                                        {format(parsedDate, 'dd')}
+                                                    <span className="font-heading text-sm leading-none font-black text-slate-700">
+                                                        {format(
+                                                            parsedDate,
+                                                            'dd',
+                                                        )}
                                                     </span>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="truncate text-[13px] font-semibold text-slate-800">
-                                                        {booking.court.venue.name}
+                                                        {
+                                                            booking.court.venue
+                                                                .name
+                                                        }
                                                     </p>
                                                     <p className="text-[11px] text-slate-400">
                                                         {booking.court.name}
                                                     </p>
                                                 </div>
-                                                <StatusBadge status={booking.status} />
+                                                <StatusBadge
+                                                    status={booking.status}
+                                                />
                                             </div>
                                         );
                                     })}
@@ -308,7 +374,9 @@ export default function Dashboard({ stats, upcomingBookings, pastBookings }: Pro
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-10 text-center">
                                     <Clock className="mb-2 h-7 w-7 text-slate-300" />
-                                    <p className="text-xs font-medium text-slate-400">Belum ada riwayat.</p>
+                                    <p className="text-xs font-medium text-slate-400">
+                                        Belum ada riwayat.
+                                    </p>
                                 </div>
                             )}
                         </div>

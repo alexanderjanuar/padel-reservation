@@ -30,7 +30,7 @@
     --color-sidebar-accent: #f1f5f9;
     --color-sidebar-accent-foreground: var(--color-padel-dark);
     --color-sidebar-border: var(--color-padel-border);
-    --color-sidebar-ring: var(--color-padel-green);
+    --color-sidebar-ring: var(--color-pink-500, #ec4899);
 }
 
 @layer base {
@@ -147,4 +147,36 @@
 .welcome-line-grow {
     animation: welcomeLineGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
     transform-origin: left;
+}
+
+/* ── Welcome Gallery Animations ──────────────────── */
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(calc(-50% - 1rem));
+        /* Account for gap */
+    }
+}
+
+@keyframes bump {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes bump-reverse {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(20px);
+    }
 }

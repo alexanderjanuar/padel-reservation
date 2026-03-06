@@ -25,7 +25,7 @@ class CourtController extends Controller
                 $query->where('date', $date)
                     ->whereIn('status', ['pending', 'confirmed', 'completed'])
                     ->with('user:id,name,phone')
-                    ->select('id', 'court_id', 'user_id', 'start_time', 'end_time', 'status', 'total_price');
+                    ->select('id', 'court_id', 'user_id', 'start_time', 'end_time', 'status', 'total_price', 'notes');
             },
         ])
             ->withExists([
@@ -58,6 +58,7 @@ class CourtController extends Controller
                             'end_time' => substr($booking->end_time, 0, 5),
                             'status' => $booking->status,
                             'total_price' => $booking->total_price,
+                            'notes' => $booking->notes,
                         ];
                     }
                 }
@@ -145,7 +146,7 @@ class CourtController extends Controller
      */
     public function destroy(Court $court): RedirectResponse
     {
-        if (! empty($court->images)) {
+        if (!empty($court->images)) {
             foreach ($court->images as $image) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($image);
             }

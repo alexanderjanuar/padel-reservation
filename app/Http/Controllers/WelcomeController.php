@@ -11,9 +11,9 @@ use Laravel\Fortify\Features;
 
 class WelcomeController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(\Illuminate\Http\Request $request): Response
     {
-        $date = now()->toDateString();
+        $date = $request->input('date', now()->toDateString());
 
         $courts = Court::with(['venue:id,name,images', 'sport:id,name'])
             ->withExists([
@@ -57,6 +57,7 @@ class WelcomeController extends Controller
             'courts' => $courts,
             'sports' => $sports,
             'venues' => $venues,
+            'filters' => ['date' => $date],
         ]);
     }
 }

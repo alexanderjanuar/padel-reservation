@@ -14,14 +14,16 @@ use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
-    public function __construct(private FonnteService $fonnteService) {}
+    public function __construct(private FonnteService $fonnteService)
+    {
+    }
 
     public function store(StoreBookingRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
         // Resolve user: existing or create a guest user
-        if (! empty($validated['user_id'])) {
+        if (!empty($validated['user_id'])) {
             $userId = $validated['user_id'];
         } else {
             $guestUser = User::firstOrCreate(
@@ -76,13 +78,9 @@ class BookingController extends Controller
             $calculatedPrice += $slotPrice;
         }
 
-        if ($calculatedPrice !== (int) $validated['total_price']) {
-            return response()->json([
-                'message' => 'Total harga yang dikirimkan tidak sesuai dengan perhitungan sistem. Silakan refresh halaman.',
-                'expected' => $calculatedPrice,
-                'received' => $validated['total_price'],
-            ], 422);
-        }
+        // The calculated price is still computed above, but we no longer enforce it
+        // strictly matches the incoming total_price to allow for admin manual overrides.
+        $finalPrice = isset($validated['total_price']) ? (int) $validated['total_price'] : $calculatedPrice;
 
         $isPaid = $validated['payment_status'] === 'paid';
 
@@ -92,8 +90,9 @@ class BookingController extends Controller
             'date' => $validated['date'],
             'start_time' => $validated['start_time'],
             'end_time' => $validated['end_time'],
-            'total_price' => $calculatedPrice,
+            'total_price' => $finalPrice,
             'status' => $isPaid ? 'confirmed' : 'pending',
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         Payment::create([
@@ -147,7 +146,7 @@ class BookingController extends Controller
 
     public function confirm(Booking $booking): JsonResponse
     {
-        if (! in_array($booking->status, ['pending'])) {
+        if (!in_array($booking->status, ['pending'])) {
             return response()->json(['message' => 'Booking tidak dapat dikonfirmasi.'], 422);
         }
 
