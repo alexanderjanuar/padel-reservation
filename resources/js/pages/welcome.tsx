@@ -21,6 +21,7 @@ import {
     Facebook,
     Phone,
     Mail,
+    Sparkles,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -1394,7 +1395,7 @@ export default function Welcome({
                           The wrapper has an infinite linear `animate-scroll` animation 
                           which creates the slider effect.
                         */}
-                        <div className="flex w-max shrink-0 animate-[scroll_40s_linear_infinite] items-start gap-4 px-2 hover:[animation-play-state:paused] md:gap-6 lg:gap-8">
+                        <div className="flex w-max shrink-0 animate-[scroll_40s_linear_infinite] items-start gap-4 px-2 md:gap-6 lg:gap-8">
                             {/* --- FIRST SET --- */}
 
                             <div className="mt-32 w-36 shrink-0 animate-[bump_6s_ease-in-out_infinite_alternate] md:w-48 lg:w-56">
