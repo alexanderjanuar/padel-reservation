@@ -26,7 +26,7 @@ class StoreBookingRequest extends FormRequest
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'total_price' => ['required', 'integer', 'min:0'],
-            'payment_status' => ['required', 'in:paid,unpaid'],
+            'payment_status' => ['required', $this->routeIs('bookings.guest') ? 'in:midtrans' : 'in:paid,unpaid'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }

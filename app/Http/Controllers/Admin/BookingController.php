@@ -8,22 +8,24 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\FonnteService;
+use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
-    public function __construct(private FonnteService $fonnteService)
-    {
-    }
+    public function __construct(
+        private FonnteService $fonnteService,
+        private MidtransService $midtransService,
+    ) {}
 
     public function store(StoreBookingRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
         // Resolve user: existing or create a guest user
-        if (!empty($validated['user_id'])) {
+        if (! empty($validated['user_id'])) {
             $userId = $validated['user_id'];
         } else {
             $guestUser = User::firstOrCreate(
@@ -82,7 +84,9 @@ class BookingController extends Controller
         // strictly matches the incoming total_price to allow for admin manual overrides.
         $finalPrice = isset($validated['total_price']) ? (int) $validated['total_price'] : $calculatedPrice;
 
-        $isPaid = $validated['payment_status'] === 'paid';
+        $paymentStatus = $validated['payment_status'];
+        $isPaid = $paymentStatus === 'paid';
+        $isMidtrans = $paymentStatus === 'midtrans';
 
         $booking = Booking::create([
             'user_id' => $userId,
@@ -94,6 +98,28 @@ class BookingController extends Controller
             'status' => $isPaid ? 'confirmed' : 'pending',
             'notes' => $validated['notes'] ?? null,
         ]);
+
+        if ($isMidtrans) {
+            $snapResult = $this->midtransService->createSnapToken($booking);
+
+            Payment::create([
+                'booking_id' => $booking->id,
+                'method' => 'midtrans',
+                'amount' => $booking->total_price,
+                'status' => 'pending',
+                'snap_token' => $snapResult['snap_token'],
+                'midtrans_order_id' => $snapResult['order_id'],
+                'expired_at' => now()->addMinutes(30),
+            ]);
+
+            $booking->load(['user', 'court.venue']);
+
+            return response()->json([
+                'message' => 'Booking berhasil dibuat. Silakan lanjutkan pembayaran.',
+                'booking' => $booking,
+                'snap_token' => $snapResult['snap_token'],
+            ], 201);
+        }
 
         Payment::create([
             'booking_id' => $booking->id,
@@ -146,7 +172,7 @@ class BookingController extends Controller
 
     public function confirm(Booking $booking): JsonResponse
     {
-        if (!in_array($booking->status, ['pending'])) {
+        if (! in_array($booking->status, ['pending'])) {
             return response()->json(['message' => 'Booking tidak dapat dikonfirmasi.'], 422);
         }
 

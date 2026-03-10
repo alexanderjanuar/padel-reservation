@@ -17,6 +17,7 @@
         "laravel/socialite": "^5.24",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
+        "midtrans/midtrans-php": "^2.6",
         "spatie/laravel-permission": "^7.2"
     },
     "require-dev": {

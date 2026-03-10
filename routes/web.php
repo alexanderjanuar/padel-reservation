@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', \App\Http\Controllers\WelcomeController::class)->name('home');
 
@@ -99,10 +98,19 @@ Route::patch('bookings/{booking}/cancel', [\App\Http\Controllers\Admin\BookingCo
     ->middleware(['auth', 'verified'])
     ->name('bookings.cancel');
 
-Route::get('venue/{id}', function ($id) {
-    return Inertia::render('Venue/Show', [
-        'id' => $id,
-    ]);
-})->name('venue.show');
+Route::patch('user/phone', function (\Illuminate\Http\Request $request) {
+    $request->validate(['phone' => ['required', 'string', 'max:30']]);
+    $request->user()->update(['phone' => $request->input('phone')]);
+
+    return response()->json(['message' => 'OK']);
+})->middleware('auth')->name('user.phone');
+
+// Midtrans
+Route::post('midtrans/snap-token/{booking}', [\App\Http\Controllers\MidtransController::class, 'createSnapToken'])
+    ->middleware(['auth', 'verified'])
+    ->name('midtrans.snap-token');
+
+Route::post('midtrans/notification', \App\Http\Controllers\MidtransWebhookController::class)
+    ->name('midtrans.notification');
 
 require __DIR__.'/settings.php';

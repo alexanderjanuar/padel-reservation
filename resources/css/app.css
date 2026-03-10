@@ -180,3 +180,13 @@
         transform: translateY(20px);
     }
 }
+
+/* ── Midtrans Snap overlay ────────────────────────── */
+#snap-midtrans {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(6px) !important;
+}
+
+#snap-midtrans > div:not(iframe) {
+    background-color: transparent !important;
+}

@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, Phone, ArrowRight } from 'lucide-react';
 import type { FormEventHandler } from 'react';
 import InputError from '@/components/input-error';
 import { Spinner } from '@/components/ui/spinner';
@@ -10,6 +10,7 @@ export default function Register() {
     const form = useForm({
         name: '',
         email: '',
+        phone: '',
         password: '',
         password_confirmation: '',
     });
@@ -119,6 +120,35 @@ export default function Register() {
                                 />
                             </div>
 
+                            {/* Phone Field */}
+                            <div className="group relative">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-padel-green">
+                                    <Phone className="h-[18px] w-[18px]" />
+                                </div>
+                                <input
+                                    id="phone"
+                                    type="tel"
+                                    name="phone"
+                                    value={form.data.phone}
+                                    onChange={(e) => form.setData('phone', e.target.value)}
+                                    required
+                                    tabIndex={3}
+                                    autoComplete="tel"
+                                    placeholder=" "
+                                    className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
+                                />
+                                <label
+                                    htmlFor="phone"
+                                    className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                >
+                                    Nomor WhatsApp
+                                </label>
+                                <InputError
+                                    message={form.errors.phone}
+                                    className="mt-2"
+                                />
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Password Field */}
                                 <div className="group relative">
@@ -132,7 +162,7 @@ export default function Register() {
                                         value={form.data.password}
                                         onChange={(e) => form.setData('password', e.target.value)}
                                         required
-                                        tabIndex={3}
+                                        tabIndex={4}
                                         autoComplete="new-password"
                                         placeholder=" "
                                         className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
@@ -161,7 +191,7 @@ export default function Register() {
                                         value={form.data.password_confirmation}
                                         onChange={(e) => form.setData('password_confirmation', e.target.value)}
                                         required
-                                        tabIndex={4}
+                                        tabIndex={5}
                                         autoComplete="new-password"
                                         placeholder=" "
                                         className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
@@ -187,7 +217,7 @@ export default function Register() {
                             <button
                                 type="submit"
                                 className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-padel-green px-6 py-4 text-[15px] font-semibold tracking-wide text-white shadow-lg shadow-padel-green/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-padel-green-dark hover:shadow-xl hover:shadow-padel-green/40 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:hover:-translate-y-0 disabled:active:scale-100"
-                                tabIndex={5}
+                                tabIndex={6}
                                 disabled={form.processing}
                                 data-test="register-button"
                             >
@@ -228,7 +258,7 @@ export default function Register() {
                         <a
                             href="/auth/google/redirect"
                             className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-100 bg-white px-6 py-4 text-[15px] font-semibold tracking-wide text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 hover:shadow-md focus:border-padel-green focus:ring-4 focus:ring-padel-green/10 focus:outline-none active:translate-y-0 active:scale-[0.98]"
-                            tabIndex={6}
+                            tabIndex={7}
                         >
                             <svg
                                 className="h-[18px] w-[18px] transition-transform duration-300 ease-out group-hover:scale-110"

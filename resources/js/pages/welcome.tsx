@@ -11,7 +11,6 @@ import {
     Plus,
     ShoppingCart,
     Trash2,
-    Trophy,
     X,
     CheckCircle2,
     AlertCircle,
@@ -21,7 +20,6 @@ import {
     Facebook,
     Phone,
     Mail,
-    Sparkles,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -472,130 +470,116 @@ function CartPanel({
 }
 
 /* ─────────────────────────── Checkout Modal ─────────────────────────── */
-// Steps: 'form' → 'qris' → 'upload' → 'done'
-type CheckoutStep = 'form' | 'qris' | 'upload' | 'done';
+// Steps: 'confirm' → Midtrans popup → 'done'
+type CheckoutStep = 'confirm' | 'done';
 
 function CheckoutModal({
     items,
     onClose,
     onSuccess,
+    user,
 }: {
     items: CartItem[];
     onClose: () => void;
     onSuccess: () => void;
+    user: { id: number; name: string; email: string; phone?: string };
 }) {
-    const [step, setStep] = useState<CheckoutStep>('form');
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
+    const [step, setStep] = useState<CheckoutStep>('confirm');
     const [submitting, setSubmitting] = useState(false);
+    const [snapOpen, setSnapOpen] = useState(false);
     const [error, setError] = useState('');
-    // IDs of created bookings (for proof upload)
-    const [bookingIds, setBookingIds] = useState<number[]>([]);
-    // Proof file per booking
-    const [proofFiles, setProofFiles] = useState<Record<number, File>>({});
-    const [uploadingProof, setUploadingProof] = useState(false);
+    const [phoneInput, setPhoneInput] = useState('');
+    const needsPhone = !user.phone;
     const total = items.reduce((s, i) => s + i.totalPrice, 0);
 
-    // Step 1: Submit booking data → receive booking IDs → go to QRIS
-    const handleSubmitForm = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const openSnapAt = (idx: number, tokens: string[]) => {
+        if (idx >= tokens.length) {
+            setSnapOpen(false);
+            setStep('done');
+            return;
+        }
+
+        if (!window.snap) {
+            setSnapOpen(false);
+            setError('Midtrans tidak tersedia. Refresh halaman dan coba lagi.');
+            return;
+        }
+
+        setSnapOpen(true);
+        window.snap.pay(tokens[idx], {
+            onSuccess: () => openSnapAt(idx + 1, tokens),
+            onPending: () => openSnapAt(idx + 1, tokens),
+            onError: () => {
+                setSnapOpen(false);
+                setError(
+                    `Pembayaran lapangan ke-${idx + 1} gagal. Silakan coba lagi.`,
+                );
+            },
+            onClose: () => {
+                setSnapOpen(false);
+                setError(
+                    'Pembayaran dibatalkan. Klik "Bayar Sekarang" untuk melanjutkan.',
+                );
+            },
+        });
+    };
+
+    const handlePay = async () => {
+        if (needsPhone && !phoneInput.trim()) {
+            setError('Nomor WhatsApp wajib diisi.');
+            return;
+        }
         setSubmitting(true);
         setError('');
-        const ids: number[] = [];
         try {
+            if (needsPhone) {
+                await axios.patch('/user/phone', { phone: phoneInput.trim() });
+            }
+            const tokens: string[] = [];
             for (const item of items) {
                 const res = await axios.post('/bookings/guest', {
-                    guest_name: name,
-                    guest_email: email,
-                    guest_phone: phone,
+                    user_id: user.id,
                     court_id: item.court.id,
                     date: format(item.date, 'yyyy-MM-dd'),
                     start_time: item.startTime,
                     end_time: item.endTime,
                     total_price: item.totalPrice,
-                    payment_status: 'unpaid',
+                    payment_status: 'midtrans',
                 });
-                ids.push(res.data.booking.id);
+                tokens.push(res.data.snap_token);
             }
-            setBookingIds(ids);
-            setStep('qris');
+            setSubmitting(false);
+            openSnapAt(0, tokens);
         } catch (err: unknown) {
             const e = err as { response?: { data?: { message?: string } } };
             setError(
                 e.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.',
             );
-        } finally {
             setSubmitting(false);
         }
     };
 
-    // Step 3: Upload proof for each booking
-    const handleUploadProof = async () => {
-        if (bookingIds.some((id) => !proofFiles[id])) {
-            setError('Harap upload bukti bayar untuk semua pesanan.');
-            return;
-        }
-        setUploadingProof(true);
-        setError('');
-        try {
-            for (const id of bookingIds) {
-                const formData = new FormData();
-                formData.append('proof', proofFiles[id]);
-                await axios.post(`/bookings/${id}/upload-proof`, formData);
-            }
-            setStep('done');
-        } catch (err: unknown) {
-            const e = err as {
-                response?: { data?: { message?: string; errors?: unknown } };
-            };
-            console.error('Upload error:', e.response?.data);
-            setError(
-                e.response?.data?.message ??
-                    JSON.stringify(e.response?.data?.errors) ??
-                    'Upload gagal. Coba lagi.',
-            );
-        } finally {
-            setUploadingProof(false);
-        }
-    };
-
-    const QRIS_IMAGE = '/images/qris.png'; // letakkan file QRIS di public/images/qris.png
-
     return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 backdrop-blur-sm sm:items-center">
+        <div className={cn('fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 backdrop-blur-sm sm:items-center', snapOpen && 'invisible')}>
             <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
-                {/* ── Step: Done ── */}
-                {step === 'done' && (
+                {step === 'done' ? (
+                    /* ── Done ── */
                     <div className="flex flex-col items-center p-10 text-center">
                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-pink-500/30 bg-pink-500/10">
                             <CheckCircle2 className="h-9 w-9 text-pink-500" />
                         </div>
                         <h2 className="mb-2 font-heading text-2xl font-black text-slate-900">
-                            Bukti Terkirim!
+                            Pembayaran Berhasil!
                         </h2>
                         <p className="mb-1 text-sm text-slate-400">
-                            Pembayaran akan diverifikasi admin dalam{' '}
-                            <span className="font-semibold text-slate-900">
-                                1×24 jam
-                            </span>
-                            .
+                            Booking Anda telah dikonfirmasi.
                         </p>
-                        <p className="mb-2 text-xs text-slate-500">
-                            Notifikasi konfirmasi akan dikirim via WhatsApp ke{' '}
+                        <p className="mb-6 text-xs text-slate-500">
+                            Notifikasi akan dikirim via WhatsApp ke{' '}
                             <span className="font-medium text-slate-900">
-                                {phone}
+                                {user.phone ?? (phoneInput || user.email)}
                             </span>
                         </p>
-                        <div className="my-4 w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-xs text-amber-700">
-                            ⏳ Status booking:{' '}
-                            <span className="font-bold">
-                                Menunggu Konfirmasi
-                            </span>
-                            <br />
-                            Setelah admin memverifikasi pembayaran, booking Anda
-                            akan aktif.
-                        </div>
                         <button
                             onClick={() => {
                                 onSuccess();
@@ -606,188 +590,13 @@ function CheckoutModal({
                             Selesai
                         </button>
                     </div>
-                )}
-
-                {/* ── Step: QRIS ── */}
-                {step === 'qris' && (
+                ) : (
+                    /* ── Confirm ── */
                     <>
                         <div className="flex items-center justify-between border-b border-slate-200 px-7 py-5">
                             <div>
                                 <h2 className="font-heading text-xl font-black text-slate-900">
-                                    Scan & Bayar
-                                </h2>
-                                <p className="mt-0.5 text-xs text-slate-500">
-                                    Scan QRIS lalu upload bukti bayar
-                                </p>
-                            </div>
-                            <button
-                                onClick={onClose}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-5 px-7 py-6">
-                            {/* QRIS Image */}
-                            <div className="rounded-2xl bg-white p-4 shadow-[0_0_40px_rgba(236,72,153,0.15)]">
-                                <img
-                                    src={QRIS_IMAGE}
-                                    alt="QRIS Payment"
-                                    className="h-56 w-56 object-contain"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src =
-                                            'https://api.qrserver.com/v1/create-qr-code/?size=224x224&data=RESERVE-BOOKING-QRIS-PLACEHOLDER';
-                                    }}
-                                />
-                            </div>
-
-                            {/* Amount */}
-                            <div className="text-center">
-                                <p className="mb-1 text-xs font-bold tracking-widest text-slate-500 uppercase">
-                                    Nominal Transfer
-                                </p>
-                                <p className="font-mono text-3xl font-black text-slate-900">
-                                    {fmt(total)}
-                                </p>
-                                <p className="mt-1 text-xs text-slate-400">
-                                    Transfer tepat sesuai nominal di atas
-                                </p>
-                            </div>
-
-                            {/* Instructions */}
-                            <div className="w-full space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                {[
-                                    'Buka aplikasi m-banking / e-wallet Anda',
-                                    'Pilih menu Scan QR / QRIS',
-                                    `Transfer tepat ${fmt(total)}`,
-                                    'Simpan bukti transfer / screenshot',
-                                    'Klik tombol di bawah untuk upload bukti',
-                                ].map((text, i) => (
-                                    <div
-                                        key={i}
-                                        className="flex items-start gap-3 text-sm"
-                                    >
-                                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500/20 text-[10px] font-black text-pink-500">
-                                            {i + 1}
-                                        </span>
-                                        <span className="text-slate-400">
-                                            {text}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={() => setStep('upload')}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-500 py-3.5 font-bold text-white shadow-[0_4px_24px_rgba(236,72,153,0.3)] transition-all hover:bg-pink-600"
-                            >
-                                <ArrowRight className="h-4 w-4" />
-                                Sudah Bayar – Upload Bukti
-                            </button>
-                        </div>
-                    </>
-                )}
-
-                {/* ── Step: Upload Proof ── */}
-                {step === 'upload' && (
-                    <>
-                        <div className="flex items-center justify-between border-b border-slate-200 px-7 py-5">
-                            <div>
-                                <h2 className="font-heading text-xl font-black text-slate-900">
-                                    Upload Bukti Bayar
-                                </h2>
-                                <p className="mt-0.5 text-xs text-slate-500">
-                                    {bookingIds.length} pesanan · {fmt(total)}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setStep('qris')}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4 px-7 py-6">
-                            <p className="text-xs text-slate-500">
-                                Upload screenshot / foto bukti transfer untuk
-                                setiap pesanan.
-                            </p>
-
-                            {bookingIds.length === 1 ? (
-                                /* Single booking — one upload area */
-                                <UploadArea
-                                    label={`Pesanan #${bookingIds[0]}`}
-                                    file={proofFiles[bookingIds[0]]}
-                                    onChange={(file) =>
-                                        setProofFiles((prev) => ({
-                                            ...prev,
-                                            [bookingIds[0]]: file,
-                                        }))
-                                    }
-                                />
-                            ) : (
-                                /* Multiple bookings */
-                                <div className="space-y-3">
-                                    {bookingIds.map((id, idx) => (
-                                        <UploadArea
-                                            key={id}
-                                            label={`Pesanan ${idx + 1} — ${items[idx]?.court.name ?? `#${id}`}`}
-                                            file={proofFiles[id]}
-                                            onChange={(file) =>
-                                                setProofFiles((prev) => ({
-                                                    ...prev,
-                                                    [id]: file,
-                                                }))
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            )}
-
-                            {error && (
-                                <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
-                                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                                    {error}
-                                </div>
-                            )}
-
-                            <button
-                                onClick={handleUploadProof}
-                                disabled={
-                                    uploadingProof ||
-                                    bookingIds.some((id) => !proofFiles[id])
-                                }
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-500 py-3.5 font-bold text-white shadow-[0_4px_24px_rgba(236,72,153,0.3)] transition-all hover:bg-pink-600 disabled:opacity-40"
-                            >
-                                {uploadingProof ? (
-                                    <>
-                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white" />{' '}
-                                        Mengupload...
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle2 className="h-4 w-4" />{' '}
-                                        Kirim Bukti Pembayaran
-                                    </>
-                                )}
-                            </button>
-                            <p className="text-center text-xs text-slate-700">
-                                Booking aktif setelah admin memverifikasi · Max
-                                1×24 jam
-                            </p>
-                        </div>
-                    </>
-                )}
-
-                {/* ── Step: Form ── */}
-                {step === 'form' && (
-                    <>
-                        <div className="flex items-center justify-between border-b border-slate-200 px-7 py-5">
-                            <div>
-                                <h2 className="font-heading text-xl font-black text-slate-900">
-                                    Lengkapi Pesanan
+                                    Konfirmasi Pesanan
                                 </h2>
                                 <p className="mt-0.5 text-xs text-slate-500">
                                     {items.length} lapangan · {fmt(total)}
@@ -802,7 +611,7 @@ function CheckoutModal({
                         </div>
 
                         {/* Order Summary */}
-                        <div className="max-h-40 space-y-2 overflow-y-auto border-b border-slate-200 px-7 py-4">
+                        <div className="max-h-48 space-y-2 overflow-y-auto border-b border-slate-200 px-7 py-4">
                             {items.map((item, i) => (
                                 <div
                                     key={i}
@@ -827,187 +636,90 @@ function CheckoutModal({
                             ))}
                         </div>
 
-                        <form
-                            onSubmit={handleSubmitForm}
-                            className="space-y-4 px-7 py-6"
-                        >
+                        {/* Pemesan Info */}
+                        <div className="border-b border-slate-200 px-7 py-4">
                             <p className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase">
-                                Data Pemesan
+                                Pemesan
                             </p>
-
-                            {[
-                                {
-                                    id: 'name',
-                                    label: 'Nama Lengkap',
-                                    type: 'text',
-                                    value: name,
-                                    set: setName,
-                                },
-                                {
-                                    id: 'email',
-                                    label: 'Alamat Email',
-                                    type: 'email',
-                                    value: email,
-                                    set: setEmail,
-                                },
-                                {
-                                    id: 'phone',
-                                    label: 'Nomor WhatsApp',
-                                    type: 'tel',
-                                    value: phone,
-                                    set: setPhone,
-                                },
-                            ].map(({ id, label, type, value, set }) => (
-                                <div key={id} className="group relative">
+                            <p className="text-sm font-medium text-slate-900">
+                                {user.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                                {user.email}
+                            </p>
+                            {user.phone ? (
+                                <p className="text-xs text-slate-500">
+                                    {user.phone}
+                                </p>
+                            ) : (
+                                <div className="mt-3 group relative">
                                     <input
-                                        id={id}
-                                        type={type}
+                                        id="checkout-phone"
+                                        type="tel"
                                         required
-                                        value={value}
-                                        onChange={(e) => set(e.target.value)}
+                                        value={phoneInput}
+                                        onChange={(e) =>
+                                            setPhoneInput(e.target.value)
+                                        }
                                         placeholder=" "
-                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-pink-500 focus:ring-0 focus:outline-none"
+                                        className="peer block w-full rounded-none border-0 border-b-2 border-amber-300 bg-transparent px-0 pt-5 pb-2 text-sm font-medium text-slate-900 placeholder-transparent transition-all duration-300 focus:border-pink-500 focus:ring-0 focus:outline-none"
                                     />
                                     <label
-                                        htmlFor={id}
-                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                        htmlFor="checkout-phone"
+                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-sm font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-1 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                     >
-                                        {label}
+                                        Nomor WhatsApp
                                     </label>
+                                    <p className="mt-1 text-[10px] text-amber-600">
+                                        Diperlukan untuk notifikasi booking
+                                    </p>
                                 </div>
-                            ))}
+                            )}
+                        </div>
+
+                        {/* Payment CTA */}
+                        <div className="px-7 py-6">
+                            <div className="mb-4 flex items-baseline justify-between">
+                                <span className="text-xs font-bold tracking-widest text-slate-500 uppercase">
+                                    Total Pembayaran
+                                </span>
+                                <span className="font-mono text-xl font-black text-slate-900">
+                                    {fmt(total)}
+                                </span>
+                            </div>
 
                             {error && (
-                                <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
+                                <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
                                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                                     {error}
                                 </div>
                             )}
 
-                            <div className="pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-500 py-3.5 font-bold text-white shadow-[0_4px_24px_rgba(236,72,153,0.3)] transition-all hover:bg-pink-600 disabled:opacity-50"
-                                >
-                                    {submitting ? (
-                                        <>
-                                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white" />{' '}
-                                            Memproses...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Lanjut ke Pembayaran · {fmt(total)}{' '}
-                                            <ArrowRight className="h-4 w-4" />
-                                        </>
-                                    )}
-                                </button>
-                                <p className="mt-3 text-center text-xs text-slate-700">
-                                    Pembayaran via QRIS · Verifikasi manual oleh
-                                    admin
-                                </p>
-                            </div>
-                        </form>
+                            <button
+                                onClick={handlePay}
+                                disabled={submitting}
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-500 py-3.5 font-bold text-white shadow-[0_4px_24px_rgba(236,72,153,0.3)] transition-all hover:bg-pink-600 disabled:opacity-50"
+                            >
+                                {submitting ? (
+                                    <>
+                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white" />
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="h-4 w-4" />
+                                        Bayar Sekarang · {fmt(total)}
+                                    </>
+                                )}
+                            </button>
+                            <p className="mt-3 text-center text-xs text-slate-700">
+                                Pembayaran aman via Midtrans · Berbagai metode
+                                tersedia
+                            </p>
+                        </div>
                     </>
                 )}
             </div>
-        </div>
-    );
-}
-
-/* ─────────────────────────── Upload Area ─────────────────────────── */
-function UploadArea({
-    label,
-    file,
-    onChange,
-}: {
-    label: string;
-    file?: File;
-    onChange: (f: File) => void;
-}) {
-    const [isDragging, setIsDragging] = useState(false);
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-        const dropped = e.dataTransfer.files?.[0];
-        if (dropped && dropped.type.startsWith('image/')) {
-            onChange(dropped);
-        }
-    };
-
-    return (
-        <div className="space-y-1.5">
-            <p className="text-[11px] font-bold tracking-wider text-slate-500 uppercase">
-                {label}
-            </p>
-            <label
-                className={cn(
-                    'flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-all',
-                    isDragging
-                        ? 'scale-[1.01] border-pink-500 bg-pink-500/10'
-                        : file
-                          ? 'border-pink-500/50 bg-pink-500/5'
-                          : 'border-slate-200 bg-slate-100/50 hover:border-slate-300 hover:bg-slate-100',
-                )}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-            >
-                <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) =>
-                        e.target.files?.[0] && onChange(e.target.files[0])
-                    }
-                />
-                {isDragging ? (
-                    <>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-pink-500/30 bg-pink-500/10">
-                            <Plus className="h-5 w-5 text-pink-500" />
-                        </div>
-                        <p className="text-xs font-medium text-pink-500">
-                            Lepas untuk upload
-                        </p>
-                    </>
-                ) : file ? (
-                    <>
-                        <CheckCircle2 className="h-6 w-6 text-pink-500" />
-                        <p className="max-w-[200px] truncate text-xs font-medium text-pink-500">
-                            {file.name}
-                        </p>
-                        <p className="text-[10px] text-slate-400">
-                            Klik atau drag untuk ganti
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
-                            <Plus className="h-5 w-5 text-slate-500" />
-                        </div>
-                        <p className="text-xs text-slate-500">
-                            Klik atau drag foto bukti bayar
-                        </p>
-                        <p className="text-[10px] text-slate-700">
-                            JPG, PNG, WEBP · Maks 10MB
-                        </p>
-                    </>
-                )}
-            </label>
         </div>
     );
 }
@@ -1021,7 +733,7 @@ export default function Welcome({
     filters,
 }: WelcomeProps & { filters?: { date?: string } }) {
     const { auth } = usePage().props as {
-        auth: { user?: { name: string } } | null;
+        auth: { user?: { id: number; name: string; email: string; phone?: string } } | null;
     };
     const [selectedDate, setSelectedDate] = useState(() => {
         if (filters?.date) {
@@ -1198,7 +910,7 @@ export default function Welcome({
             </nav>
 
             {/* ── Hero ── */}
-            <section className="relative mb-8 flex min-h-[90vh] w-full items-center justify-center overflow-hidden px-5 py-32 lg:px-8">
+            <section className="relative mb-8 flex min-h-[75vh] w-full items-center justify-center overflow-hidden px-5 py-32 lg:px-8">
                 {/* Full-width Background Video */}
                 <div className="absolute inset-0 z-0 bg-slate-900">
                     <video
@@ -1367,7 +1079,13 @@ export default function Welcome({
                             <CartPanel
                                 items={cartItems}
                                 onRemove={removeFromCart}
-                                onCheckout={() => setCheckoutOpen(true)}
+                                onCheckout={() => {
+                                    if (!auth?.user) {
+                                        router.visit(login());
+                                        return;
+                                    }
+                                    setCheckoutOpen(true);
+                                }}
                             />
                         </div>
                     </div>
@@ -1543,6 +1261,10 @@ export default function Welcome({
                             onRemove={removeFromCart}
                             onCheckout={() => {
                                 setCartOpen(false);
+                                if (!auth?.user) {
+                                    router.visit(login());
+                                    return;
+                                }
                                 setCheckoutOpen(true);
                             }}
                         />
@@ -1570,11 +1292,12 @@ export default function Welcome({
             )}
 
             {/* ── Checkout Modal ── */}
-            {checkoutOpen && (
+            {checkoutOpen && auth?.user && (
                 <CheckoutModal
                     items={cartItems}
                     onClose={() => setCheckoutOpen(false)}
                     onSuccess={() => setCartItems([])}
+                    user={auth.user}
                 />
             )}
 

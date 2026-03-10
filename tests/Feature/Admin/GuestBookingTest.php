@@ -5,15 +5,18 @@ use App\Models\Court;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\FonnteService;
+use App\Services\MidtransService;
 
 use function Pest\Laravel\mock;
 
 beforeEach(function () {
     mock(FonnteService::class)
-        ->shouldReceive('sendBookingNotification')
-        ->andReturnNull()
-        ->shouldReceive('sendConfirmationNotification')
-        ->andReturnNull();
+        ->shouldReceive('sendBookingNotification')->andReturnNull()
+        ->shouldReceive('sendConfirmationNotification')->andReturnNull();
+
+    mock(MidtransService::class)
+        ->shouldReceive('createSnapToken')
+        ->andReturn(['snap_token' => 'fake-token', 'order_id' => 'PADEL-1-00000']);
 
     $this->court = Court::factory()->create();
 });
@@ -28,10 +31,10 @@ it('allows guest to book a court without authentication', function () {
         'start_time' => '09:00',
         'end_time' => '10:00',
         'total_price' => $this->court->price_per_hour,
-        'payment_status' => 'unpaid',
+        'payment_status' => 'midtrans',
     ])
         ->assertStatus(201)
-        ->assertJson(['message' => 'Booking berhasil dibuat.']);
+        ->assertJson(['message' => 'Booking berhasil dibuat. Silakan lanjutkan pembayaran.']);
 });
 
 it('creates a user record from guest data when guest books', function () {
@@ -44,7 +47,7 @@ it('creates a user record from guest data when guest books', function () {
         'start_time' => '10:00',
         'end_time' => '11:00',
         'total_price' => $this->court->price_per_hour,
-        'payment_status' => 'unpaid',
+        'payment_status' => 'midtrans',
     ])->assertStatus(201);
 
     $user = User::where('email', 'rina@example.com')->first();
@@ -56,7 +59,7 @@ it('creates a user record from guest data when guest books', function () {
         ->and($booking->status)->toBe('pending');
 });
 
-it('creates a pending qris payment when guest books', function () {
+it('creates a pending midtrans payment when guest books', function () {
     $this->postJson('/bookings/guest', [
         'guest_name' => 'Agus Pratama',
         'guest_email' => 'agus@example.com',
@@ -66,7 +69,7 @@ it('creates a pending qris payment when guest books', function () {
         'start_time' => '11:00',
         'end_time' => '12:00',
         'total_price' => $this->court->price_per_hour,
-        'payment_status' => 'unpaid',
+        'payment_status' => 'midtrans',
     ])->assertStatus(201);
 
     $user = User::where('email', 'agus@example.com')->first();
@@ -75,7 +78,8 @@ it('creates a pending qris payment when guest books', function () {
 
     expect($payment)->not->toBeNull()
         ->and($payment->status)->toBe('pending')
-        ->and($payment->method)->toBe('qris')
+        ->and($payment->method)->toBe('midtrans')
+        ->and($payment->snap_token)->toBe('fake-token')
         ->and($payment->paid_at)->toBeNull();
 });
 
@@ -91,10 +95,9 @@ it('reuses existing user when same email books again', function () {
         'start_time' => '13:00',
         'end_time' => '14:00',
         'total_price' => $this->court->price_per_hour,
-        'payment_status' => 'unpaid',
+        'payment_status' => 'midtrans',
     ])->assertStatus(201);
 
-    // Should not create a duplicate user
     expect(User::where('email', 'siti@example.com')->count())->toBe(1);
 
     $booking = Booking::where('user_id', $existingUser->id)->first();
@@ -108,7 +111,7 @@ it('returns 422 when guest fields are missing without user_id', function () {
         'start_time' => '14:00',
         'end_time' => '15:00',
         'total_price' => $this->court->price_per_hour,
-        'payment_status' => 'unpaid',
+        'payment_status' => 'midtrans',
     ])->assertStatus(422)
         ->assertJsonValidationErrors(['guest_name', 'guest_email', 'guest_phone']);
 });
@@ -133,7 +136,22 @@ it('returns 422 when guest slot conflicts with existing booking', function () {
         'start_time' => '08:00',
         'end_time' => '09:00',
         'total_price' => $this->court->price_per_hour,
-        'payment_status' => 'unpaid',
+        'payment_status' => 'midtrans',
     ])->assertStatus(422)
         ->assertJson(['message' => 'Slot waktu ini sudah dibooking. Silakan pilih waktu lain.']);
+});
+
+it('returns 422 when payment_status is not midtrans on guest route', function () {
+    $this->postJson('/bookings/guest', [
+        'guest_name' => 'Test User',
+        'guest_email' => 'test@example.com',
+        'guest_phone' => '081111111111',
+        'court_id' => $this->court->id,
+        'date' => '2026-12-10',
+        'start_time' => '15:00',
+        'end_time' => '16:00',
+        'total_price' => $this->court->price_per_hour,
+        'payment_status' => 'unpaid',
+    ])->assertStatus(422)
+        ->assertJsonValidationErrors(['payment_status']);
 });

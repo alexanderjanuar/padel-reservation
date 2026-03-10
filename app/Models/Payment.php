@@ -22,6 +22,10 @@ class Payment extends Model
         'paid_at',
         'proof_of_payment',
         'notes',
+        'snap_token',
+        'midtrans_transaction_id',
+        'midtrans_order_id',
+        'expired_at',
     ];
 
     /**
@@ -32,6 +36,7 @@ class Payment extends Model
         return [
             'amount' => 'integer',
             'paid_at' => 'datetime',
+            'expired_at' => 'datetime',
         ];
     }
 

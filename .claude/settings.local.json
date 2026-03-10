@@ -36,7 +36,28 @@
       "mcp__laravel-boost__tinker",
       "Bash(php -r \"echo php_ini_loaded_file\\(\\);\")",
       "Bash(sed -i 's/^upload_max_filesize = 2M/upload_max_filesize = 10M/' /c/PHP/php.ini)",
-      "Bash(sed -i 's/^post_max_size = 8M/post_max_size = 12M/' /c/PHP/php.ini)"
+      "Bash(sed -i 's/^post_max_size = 8M/post_max_size = 12M/' /c/PHP/php.ini)",
+      "Bash(grep -E \"\\\\.\\(php\\)$\")",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(php artisan make:migration add_midtrans_fields_to_payments_table --no-interaction)",
+      "Bash(php artisan make:class Services/MidtransService --no-interaction)",
+      "Bash(php artisan make:controller MidtransController --no-interaction)",
+      "Bash(php artisan make:controller MidtransWebhookController --no-interaction)",
+      "Bash(php artisan wayfinder:generate --no-interaction)",
+      "Bash(php artisan make:test --pest MidtransControllerTest --no-interaction)",
+      "Bash(php artisan make:test --pest MidtransWebhookTest --no-interaction)",
+      "Bash(php artisan test --compact tests/Feature/MidtransControllerTest.php tests/Feature/MidtransWebhookTest.php)",
+      "Bash(php artisan migrate --env=testing --no-interaction)",
+      "Bash(vendor/bin/pint --dirty --format agent)",
+      "Bash(php artisan test --compact tests/Feature/Admin/GuestBookingTest.php tests/Feature/MidtransControllerTest.php tests/Feature/MidtransWebhookTest.php)",
+      "Bash(php artisan test --compact --filter=Midtrans)",
+      "Bash(php artisan test --compact --filter=GuestBooking)",
+      "Bash(xargs cat -n)",
+      "Bash(php artisan test --compact --filter=\"Midtrans|GuestBooking\")"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ]
 }
