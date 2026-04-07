@@ -88,7 +88,7 @@ export function AppSidebar() {
                                 </Link>
                             </SidebarMenuButton>
                         </div>
-                        <SidebarTrigger className="shrink-0 text-slate-400 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 hover:text-pink-500" />
+                        <SidebarTrigger className="shrink-0 text-slate-400 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 hover:text-emerald-500" />
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
@@ -99,7 +99,7 @@ export function AppSidebar() {
                     <Link
                         href={courts.index()}
                         prefetch
-                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-pink-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-2 hover:brightness-110 active:scale-95"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-2 hover:brightness-110 active:scale-95"
                     >
                         <Grid2x2 className="size-4 shrink-0" />
                         <span className="group-data-[collapsible=icon]:hidden">

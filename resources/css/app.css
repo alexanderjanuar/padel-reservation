@@ -30,7 +30,7 @@
     --color-sidebar-accent: #f1f5f9;
     --color-sidebar-accent-foreground: var(--color-padel-dark);
     --color-sidebar-border: var(--color-padel-border);
-    --color-sidebar-ring: var(--color-pink-500, #ec4899);
+    --color-sidebar-ring: var(--color-emerald-500, #10b981);
 }
 
 @layer base {

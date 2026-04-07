@@ -35,7 +35,7 @@ export default function Login({
 
     return (
         <div className="flex min-h-dvh w-full bg-white font-sans text-slate-900">
-            <Head title="Masuk — Aubry Padel" />
+            <Head title="Masuk — Sofiah Sport Center" />
 
             {/* ═══════════ Left Panel — The Functional Zone ═══════════ */}
             <div className="flex w-full flex-col p-8 sm:p-16 lg:w-1/2 lg:p-24 xl:p-32">
@@ -48,16 +48,16 @@ export default function Login({
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden">
                             <img
                                 src="/images/logo-removebg-preview.png"
-                                alt="Aubry Padel Logo"
+                                alt="Sofiah Sport Center Logo"
                                 className="h-full w-full object-contain"
                             />
                         </div>
-                        <span>Aubry Padel.</span>
+                        <span>Sofiah Sport Center.</span>
                     </Link>
                     {canRegister && (
                         <Link
                             href={register()}
-                            className="text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-pink-500"
+                            className="text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-emerald-500"
                         >
                             Buat Akun
                         </Link>
@@ -72,7 +72,7 @@ export default function Login({
                         </h1>
                         <p className="text-[15px] leading-relaxed tracking-wide text-slate-500">
                             Silakan masukkan detail Anda untuk mengakses
-                            platform Aubry Padel.
+                            platform Sofiah Sport Center.
                         </p>
                     </div>
 
@@ -86,7 +86,7 @@ export default function Login({
                         <div className="login-form-stagger flex flex-col gap-6">
                             {/* Interactive Email Field */}
                             <div className="group relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-pink-500">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-emerald-500">
                                     <Mail className="h-[18px] w-[18px]" />
                                 </div>
                                 <input
@@ -102,11 +102,11 @@ export default function Login({
                                     tabIndex={1}
                                     autoComplete="email"
                                     placeholder=" "
-                                    className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-pink-500 focus:bg-transparent focus:ring-0 focus:outline-none"
+                                    className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-emerald-500 focus:bg-transparent focus:ring-0 focus:outline-none"
                                 />
                                 <label
                                     htmlFor="email"
-                                    className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                    className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-emerald-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                 >
                                     Alamat Email
                                 </label>
@@ -118,7 +118,7 @@ export default function Login({
 
                             {/* Interactive Password Field */}
                             <div className="group relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-pink-500">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors duration-300 group-focus-within:text-emerald-500">
                                     <Lock className="h-[18px] w-[18px]" />
                                 </div>
                                 <input
@@ -133,11 +133,11 @@ export default function Login({
                                     tabIndex={2}
                                     autoComplete="current-password"
                                     placeholder=" "
-                                    className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pr-14 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-pink-500 focus:bg-transparent focus:ring-0 focus:outline-none"
+                                    className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-4 pt-6 pr-14 pb-2.5 pl-11 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-emerald-500 focus:bg-transparent focus:ring-0 focus:outline-none"
                                 />
                                 <label
                                     htmlFor="password"
-                                    className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                    className="pointer-events-none absolute top-1/2 left-11 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-3 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-emerald-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                 >
                                     Password
                                 </label>
@@ -145,7 +145,7 @@ export default function Login({
                                     <div className="absolute inset-y-0 right-1 z-10 flex items-center pr-4 opacity-60 transition-opacity peer-placeholder-shown:opacity-100 peer-focus:opacity-100">
                                         <Link
                                             href={request()}
-                                            className="text-[12px] font-bold tracking-wide text-slate-400 transition-colors hover:text-pink-600"
+                                            className="text-[12px] font-bold tracking-wide text-slate-400 transition-colors hover:text-emerald-600"
                                             tabIndex={5}
                                         >
                                             Lupa?
@@ -171,7 +171,7 @@ export default function Login({
                                         )
                                     }
                                     tabIndex={3}
-                                    className="h-[18px] w-[18px] rounded-[4px] border-slate-300 text-pink-500 focus:ring-pink-500"
+                                    className="h-[18px] w-[18px] rounded-[4px] border-slate-300 text-emerald-500 focus:ring-emerald-500"
                                 />
                                 <label
                                     htmlFor="remember"
@@ -186,7 +186,7 @@ export default function Login({
                         <div className="login-form-stagger mt-8">
                             <button
                                 type="submit"
-                                className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-pink-500 px-6 py-4 text-[15px] font-semibold tracking-wide text-white shadow-lg shadow-pink-500/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-pink-600 hover:shadow-xl hover:shadow-pink-500/40 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:hover:-translate-y-0 disabled:active:scale-100"
+                                className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-emerald-500 px-6 py-4 text-[15px] font-semibold tracking-wide text-white shadow-lg shadow-emerald-500/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-500/40 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:hover:-translate-y-0 disabled:active:scale-100"
                                 tabIndex={4}
                                 disabled={form.processing}
                                 data-test="login-button"
@@ -227,7 +227,7 @@ export default function Login({
 
                         <a
                             href="/auth/google/redirect"
-                            className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-100 bg-white px-6 py-4 text-[15px] font-semibold tracking-wide text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 hover:shadow-md focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 focus:outline-none active:translate-y-0 active:scale-[0.98]"
+                            className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-100 bg-white px-6 py-4 text-[15px] font-semibold tracking-wide text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 hover:shadow-md focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none active:translate-y-0 active:scale-[0.98]"
                         >
                             <svg
                                 className="h-[18px] w-[18px] transition-transform duration-300 ease-out group-hover:scale-110"
@@ -297,7 +297,7 @@ export default function Login({
                                 <br />
                                 Permainan Anda.
                             </h3>
-                            <div className="mt-4 h-1 w-12 rounded-full bg-pink-500" />
+                            <div className="mt-4 h-1 w-12 rounded-full bg-emerald-500" />
                         </div>
                     </div>
                 </div>

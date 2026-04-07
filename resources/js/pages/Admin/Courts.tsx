@@ -337,7 +337,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                         </button>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-pink-500 px-3 py-2 text-xs font-semibold whitespace-nowrap text-white shadow-sm transition-all hover:bg-pink-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500 disabled:opacity-50 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm md:flex-none md:px-5"
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold whitespace-nowrap text-white shadow-sm transition-all hover:bg-emerald-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:opacity-50 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm md:flex-none md:px-5"
                         >
                             <Plus className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                             Tambah Lapangan
@@ -409,8 +409,8 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                 >
                                     {isToday && isSelected && (
                                         <div className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center">
-                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pink-500 opacity-75"></span>
-                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-pink-500"></span>
+                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"></span>
+                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                                         </div>
                                     )}
                                     <span
@@ -482,7 +482,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                 className={cn(
                                     'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all',
                                     isSelected
-                                        ? 'border-pink-500 bg-pink-500 text-white shadow-sm'
+                                        ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
                                         : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700',
                                 )}
                             >
@@ -506,7 +506,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                         </p>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="inline-flex items-center gap-2 text-sm font-semibold text-pink-500 transition-colors hover:text-pink-600"
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-500 transition-colors hover:text-emerald-600"
                         >
                             <Plus className="h-4 w-4" />
                             Tambah Lapangan Pertama
@@ -617,7 +617,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                         className={cn(
                                             'overflow-hidden rounded-2xl border bg-white shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] transition-all duration-300',
                                             isSelected
-                                                ? 'border-pink-500 ring-1 ring-pink-500/30'
+                                                ? 'border-emerald-500 ring-1 ring-emerald-500/30'
                                                 : 'border-slate-100 hover:border-slate-200 hover:shadow-md',
                                         )}
                                     >
@@ -635,7 +635,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                         court.is_booked_now
                                                             ? 'bg-red-500 shadow-red-500/40'
                                                             : court.is_active
-                                                              ? 'bg-pink-500 shadow-pink-500/40'
+                                                              ? 'bg-emerald-500 shadow-emerald-500/40'
                                                               : 'bg-slate-300 shadow-slate-400/40',
                                                     )}
                                                 />
@@ -648,7 +648,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                             </div>
                                             <div className="flex items-center gap-4">
                                                 <div className="hidden text-right sm:block">
-                                                    <p className="font-heading text-base leading-none font-extrabold text-pink-500">
+                                                    <p className="font-heading text-base leading-none font-extrabold text-emerald-500">
                                                         {new Intl.NumberFormat(
                                                             'id-ID',
                                                             {
@@ -716,7 +716,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                     BOOKED
                                                                 </span>
                                                             ) : court.is_active ? (
-                                                                <span className="inline-flex items-center gap-1.5 rounded bg-pink-500/90 px-2 py-1 text-[9px] font-bold text-white shadow backdrop-blur-sm">
+                                                                <span className="inline-flex items-center gap-1.5 rounded bg-emerald-500/90 px-2 py-1 text-[9px] font-bold text-white shadow backdrop-blur-sm">
                                                                     <span className="relative flex h-1 w-1">
                                                                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-200 opacity-75"></span>
                                                                         <span className="relative inline-flex h-1 w-1 rounded-full bg-white"></span>
@@ -783,7 +783,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                         true,
                                                                     );
                                                                 }}
-                                                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-pink-500/30 hover:bg-emerald-50 hover:text-pink-500 active:scale-95"
+                                                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-emerald-500/30 hover:bg-emerald-50 hover:text-emerald-500 active:scale-95"
                                                                 title="Edit"
                                                             >
                                                                 <Pencil className="h-3.5 w-3.5" />
@@ -812,10 +812,10 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                         <div className="border-t border-slate-100 px-5 py-5">
                                             <div className="mb-4 flex items-center justify-between">
                                                 <h4 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                                                    <Clock className="h-4 w-4 text-pink-500" />
+                                                    <Clock className="h-4 w-4 text-emerald-500" />
                                                     Jadwal Ketersediaan
                                                 </h4>
-                                                <span className="rounded-lg border border-pink-200 bg-pink-50 px-2.5 py-1 text-[11px] font-bold tracking-wider text-pink-500 uppercase">
+                                                <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold tracking-wider text-emerald-500 uppercase">
                                                     {selectedDate.toLocaleDateString(
                                                         'id-ID',
                                                         {
@@ -982,13 +982,13 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                                 )
                                                                             }
                                                                             className={cn(
-                                                                                'flex flex-col items-center justify-center rounded-lg border py-2 text-xs transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-1',
+                                                                                'flex flex-col items-center justify-center rounded-lg border py-2 text-xs transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1',
                                                                                 isAvailable
                                                                                     ? isSlotSelected
-                                                                                        ? 'z-10 scale-[1.04] border-pink-500 bg-pink-500 font-bold text-white shadow-[0_4px_10px_rgba(34,197,94,0.25)]'
+                                                                                        ? 'z-10 scale-[1.04] border-emerald-500 bg-emerald-500 font-bold text-white shadow-[0_4px_10px_rgba(34,197,94,0.25)]'
                                                                                         : isHoveredRange
-                                                                                          ? 'scale-[1.02] border-pink-500/40 bg-emerald-50 font-semibold text-pink-600'
-                                                                                          : 'cursor-pointer border-slate-200 bg-white font-semibold text-slate-700 hover:border-pink-500 hover:bg-emerald-50/50 hover:text-pink-500 active:scale-95'
+                                                                                          ? 'scale-[1.02] border-emerald-500/40 bg-emerald-50 font-semibold text-emerald-600'
+                                                                                          : 'cursor-pointer border-slate-200 bg-white font-semibold text-slate-700 hover:border-emerald-500 hover:bg-emerald-50/50 hover:text-emerald-500 active:scale-95'
                                                                                     : 'relative cursor-pointer overflow-hidden border-red-200 bg-red-50 font-medium text-red-400 transition-colors hover:border-red-300 hover:bg-red-100 hover:text-red-500',
                                                                             )}
                                                                         >
@@ -1017,7 +1017,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                 </span>
                                                             </div>
                                                             <div className="flex items-center gap-1.5">
-                                                                <div className="h-2.5 w-2.5 rounded-full border border-pink-500 bg-pink-500"></div>
+                                                                <div className="h-2.5 w-2.5 rounded-full border border-emerald-500 bg-emerald-500"></div>
                                                                 <span className="text-slate-700">
                                                                     Dipilih
                                                                 </span>
@@ -1044,7 +1044,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                             Ringkasan
                                                                         </p>
                                                                         <div className="flex items-baseline gap-2">
-                                                                            <span className="font-heading text-2xl font-extrabold tracking-tight text-pink-500">
+                                                                            <span className="font-heading text-2xl font-extrabold tracking-tight text-emerald-500">
                                                                                 Rp{' '}
                                                                                 {calculateTotalPrice(
                                                                                     court,
@@ -1076,7 +1076,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                                 true,
                                                                             )
                                                                         }
-                                                                        className="flex w-full items-center justify-center gap-2 rounded-full bg-pink-500 px-7 py-3 text-sm font-semibold text-white shadow-pink-500/20 transition-all outline-none hover:bg-pink-600 hover:shadow-lg active:scale-[0.98] sm:w-auto"
+                                                                        className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-7 py-3 text-sm font-semibold text-white shadow-emerald-500/20 transition-all outline-none hover:bg-emerald-600 hover:shadow-lg active:scale-[0.98] sm:w-auto"
                                                                     >
                                                                         Buat
                                                                         Booking
@@ -1224,7 +1224,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                 <p className="mb-0.5 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
                                                     Tarif per Jam
                                                 </p>
-                                                <p className="font-heading text-3xl leading-none font-extrabold tracking-tight text-pink-500">
+                                                <p className="font-heading text-3xl leading-none font-extrabold tracking-tight text-emerald-500">
                                                     {fmt(dc.price_per_hour)}
                                                 </p>
                                             </div>
@@ -1313,9 +1313,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                         }) => (
                                                             <div
                                                                 key={label}
-                                                                className="group flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 transition-colors hover:border-pink-500/30 hover:bg-emerald-50/40"
+                                                                className="group flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 transition-colors hover:border-emerald-500/30 hover:bg-emerald-50/40"
                                                             >
-                                                                <Icon className="h-3.5 w-3.5 shrink-0 stroke-[1.5] text-slate-400 transition-colors group-hover:text-pink-500" />
+                                                                <Icon className="h-3.5 w-3.5 shrink-0 stroke-[1.5] text-slate-400 transition-colors group-hover:text-emerald-500" />
                                                                 <span className="text-[11px] leading-tight font-semibold text-slate-600">
                                                                     {label}
                                                                 </span>
@@ -1355,7 +1355,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                             dc.id,
                                                         );
                                                     }}
-                                                    className="inline-flex items-center gap-2 rounded-xl bg-pink-500 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm shadow-pink-500/20 transition-all hover:bg-pink-600 active:scale-95"
+                                                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-95"
                                                 >
                                                     <Clock className="h-3.5 w-3.5" />
                                                     Pilih Slot Waktu
@@ -1777,7 +1777,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                     onChange={(e) =>
                                         setRecapPeriod(e.target.value)
                                     }
-                                    className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-900 transition-all focus:border-transparent focus:ring-2 focus:ring-pink-500 focus:outline-none sm:text-sm"
+                                    className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-900 transition-all focus:border-transparent focus:ring-2 focus:ring-emerald-500 focus:outline-none sm:text-sm"
                                 >
                                     <option value="today">Hari Ini</option>
                                     <option value="week">Minggu Ini</option>
@@ -1806,7 +1806,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                     'flex h-11 w-full items-center justify-between rounded-xl border bg-white px-3 text-left text-sm font-medium text-slate-900 transition-all',
                                                     !recapStartDate
                                                         ? 'border-slate-200 text-slate-400'
-                                                        : 'border-pink-500 ring-1 ring-pink-500/20',
+                                                        : 'border-emerald-500 ring-1 ring-emerald-500/20',
                                                 )}
                                             >
                                                 {recapStartDate
@@ -1843,7 +1843,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                     'flex h-11 w-full items-center justify-between rounded-xl border bg-white px-3 text-left text-sm font-medium text-slate-900 transition-all',
                                                     !recapEndDate
                                                         ? 'border-slate-200 text-slate-400'
-                                                        : 'border-pink-500 ring-1 ring-pink-500/20',
+                                                        : 'border-emerald-500 ring-1 ring-emerald-500/20',
                                                 )}
                                             >
                                                 {recapEndDate
@@ -1897,7 +1897,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                 window.open(url, '_blank');
                                 setIsRecapModalOpen(false);
                             }}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-pink-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-pink-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Printer className="h-4 w-4" />
                             Export PDF
@@ -1940,7 +1940,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                     <div className="animate-in slide-in-from-left-4 fade-in duration-500">
                                         <div className="mb-8 flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-2 w-2 animate-pulse rounded-full bg-pink-500" />
+                                                <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
                                                 <h3 className="text-sm font-bold tracking-wide text-slate-900 uppercase">
                                                     Kustomer Terpilih
                                                 </h3>
@@ -2013,7 +2013,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                 className={cn(
                                                     'border-b-[3px] pb-3 text-sm font-bold transition-colors',
                                                     bookingUserMode === 'search'
-                                                        ? 'border-pink-500 text-pink-500'
+                                                        ? 'border-emerald-500 text-emerald-500'
                                                         : 'border-transparent text-slate-400 hover:text-slate-600',
                                                 )}
                                             >
@@ -2027,7 +2027,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                 className={cn(
                                                     'border-b-[3px] pb-3 text-sm font-bold transition-colors',
                                                     bookingUserMode === 'create'
-                                                        ? 'border-pink-500 text-pink-500'
+                                                        ? 'border-emerald-500 text-emerald-500'
                                                         : 'border-transparent text-slate-400 hover:text-slate-600',
                                                 )}
                                             >
@@ -2047,14 +2047,14 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                         )
                                                     }
                                                     placeholder="Ketik nama, email, atau telepon..."
-                                                    className="w-full border-0 border-b border-slate-200 bg-transparent py-3.5 text-base font-medium transition-all outline-none focus:border-pink-500 focus:ring-0"
+                                                    className="w-full border-0 border-b border-slate-200 bg-transparent py-3.5 text-base font-medium transition-all outline-none focus:border-emerald-500 focus:ring-0"
                                                 />
                                                 {searchQuery.trim().length >
                                                     0 && (
                                                     <div className="animate-in slide-in-from-top-2 fade-in flex flex-col pt-2 duration-200">
                                                         {isSearching ? (
                                                             <div className="flex items-center justify-center py-8">
-                                                                <Spinner className="h-5 w-5 text-pink-500" />
+                                                                <Spinner className="h-5 w-5 text-emerald-500" />
                                                             </div>
                                                         ) : searchResults.length >
                                                           0 ? (
@@ -2072,7 +2072,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                         className="group flex cursor-pointer items-center justify-between border-b border-slate-50 py-4 last:border-0"
                                                                     >
                                                                         <div className="min-w-0 pr-4">
-                                                                            <p className="truncate font-bold text-slate-900 transition-colors group-hover:text-pink-500">
+                                                                            <p className="truncate font-bold text-slate-900 transition-colors group-hover:text-emerald-500">
                                                                                 {
                                                                                     user.name
                                                                                 }
@@ -2108,7 +2108,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                                     )}
                                                                             </p>
                                                                         </div>
-                                                                        <ArrowRight className="h-5 w-5 shrink-0 transform text-pink-500 opacity-0 transition-opacity group-hover:translate-x-1 group-hover:opacity-100" />
+                                                                        <ArrowRight className="h-5 w-5 shrink-0 transform text-emerald-500 opacity-0 transition-opacity group-hover:translate-x-1 group-hover:opacity-100" />
                                                                     </div>
                                                                 ),
                                                             )
@@ -2139,11 +2139,11 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                             })
                                                         }
                                                         placeholder=" "
-                                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-pink-500 focus:bg-transparent focus:ring-0 focus:outline-none"
+                                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-emerald-500 focus:bg-transparent focus:ring-0 focus:outline-none"
                                                     />
                                                     <label
                                                         htmlFor="cust_name"
-                                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-emerald-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                                     >
                                                         Nama Lengkap
                                                     </label>
@@ -2164,11 +2164,11 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                             })
                                                         }
                                                         placeholder=" "
-                                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-pink-500 focus:bg-transparent focus:ring-0 focus:outline-none"
+                                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-emerald-500 focus:bg-transparent focus:ring-0 focus:outline-none"
                                                     />
                                                     <label
                                                         htmlFor="cust_email"
-                                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-emerald-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                                     >
                                                         Alamat Email
                                                     </label>
@@ -2189,11 +2189,11 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                             })
                                                         }
                                                         placeholder=" "
-                                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-pink-500 focus:bg-transparent focus:ring-0 focus:outline-none"
+                                                        className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-emerald-500 focus:bg-transparent focus:ring-0 focus:outline-none"
                                                     />
                                                     <label
                                                         htmlFor="cust_phone"
-                                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-emerald-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                                     >
                                                         Nomor Telepon
                                                     </label>
@@ -2345,7 +2345,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                         className="flex items-center justify-between font-medium text-slate-900"
                                                     >
                                                         <span>Total Harga</span>
-                                                        <span className="rounded-full bg-pink-50 px-2 py-0.5 text-[10px] font-semibold text-pink-500">
+                                                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-500">
                                                             Bisa diedit
                                                         </span>
                                                     </label>
@@ -2386,7 +2386,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                     );
                                                                 }
                                                             }}
-                                                            className="block w-full rounded-xl border-slate-200 py-2.5 pr-4 pl-10 text-lg font-bold text-slate-900 transition-all hover:border-slate-300 focus:border-pink-500 focus:ring-pink-500"
+                                                            className="block w-full rounded-xl border-slate-200 py-2.5 pr-4 pl-10 text-lg font-bold text-slate-900 transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
                                                         />
                                                     </div>
                                                     {customTotal !== null &&
@@ -2407,7 +2407,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                             null,
                                                                         )
                                                                     }
-                                                                    className="text-[11px] font-semibold text-pink-500 hover:underline"
+                                                                    className="text-[11px] font-semibold text-emerald-500 hover:underline"
                                                                 >
                                                                     Kembalikan
                                                                 </button>
@@ -2433,7 +2433,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                             className={cn(
                                                 'flex flex-col items-start gap-1 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-200',
                                                 paymentStatus === 'paid'
-                                                    ? 'border-pink-500 bg-pink-500/5 shadow-sm'
+                                                    ? 'border-emerald-500 bg-emerald-500/5 shadow-sm'
                                                     : 'border-slate-200 bg-white hover:border-slate-300',
                                             )}
                                         >
@@ -2441,7 +2441,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                 className={cn(
                                                     'text-sm font-bold',
                                                     paymentStatus === 'paid'
-                                                        ? 'text-pink-500'
+                                                        ? 'text-emerald-500'
                                                         : 'text-slate-700',
                                                 )}
                                             >
@@ -2495,7 +2495,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                         setBookingNotes(e.target.value)
                                     }
                                     placeholder="Tambahkan catatan khusus, request raket, atau info kustomer..."
-                                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-sm font-medium text-slate-900 transition-all placeholder:text-slate-400 hover:bg-white focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 focus:outline-none"
+                                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-sm font-medium text-slate-900 transition-all placeholder:text-slate-400 hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:outline-none"
                                     rows={3}
                                 />
                             </div>
@@ -2523,7 +2523,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                 setBookingError('');
                                 setIsConfirmModalOpen(true);
                             }}
-                            className="w-full rounded-lg bg-pink-500 px-6 py-2.5 text-center text-[13px] font-bold text-white shadow-sm shadow-pink-500/20 transition-all outline-none hover:bg-pink-600 focus-visible:ring-2 focus-visible:ring-pink-500 active:scale-95 sm:w-auto"
+                            className="w-full rounded-lg bg-emerald-500 px-6 py-2.5 text-center text-[13px] font-bold text-white shadow-sm shadow-emerald-500/20 transition-all outline-none hover:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-95 sm:w-auto"
                         >
                             Konfirmasi Reservasi
                         </button>
@@ -2686,7 +2686,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                         className={cn(
                                             'font-semibold',
                                             paymentStatus === 'paid'
-                                                ? 'text-pink-500'
+                                                ? 'text-emerald-500'
                                                 : 'text-amber-600',
                                         )}
                                     >
@@ -2737,7 +2737,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                     type="button"
                                     disabled={isSubmittingBooking}
                                     onClick={handleSubmitBooking}
-                                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-pink-500 px-6 py-2.5 text-[13px] font-bold text-white shadow-sm transition-all outline-none hover:bg-pink-600 focus-visible:ring-2 focus-visible:ring-pink-500 active:scale-95 disabled:opacity-70 sm:w-auto"
+                                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 px-6 py-2.5 text-[13px] font-bold text-white shadow-sm transition-all outline-none hover:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-95 disabled:opacity-70 sm:w-auto"
                                 >
                                     {isSubmittingBooking && (
                                         <Spinner className="h-4 w-4" />
@@ -2834,7 +2834,7 @@ function PricingRulesEditor({
                 <button
                     type="button"
                     onClick={addRule}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-700 transition-all hover:border-pink-500 hover:bg-emerald-50 hover:text-pink-500"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-700 transition-all hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-500"
                 >
                     <Plus className="h-3.5 w-3.5" />
                     Tambah
@@ -2878,8 +2878,8 @@ function PricingRulesEditor({
                                             className={cn(
                                                 'rounded-lg border px-2.5 py-1 text-[12px] font-bold transition-all active:scale-95',
                                                 isSelected
-                                                    ? 'border-pink-500 bg-pink-500 text-white'
-                                                    : 'border-slate-200 bg-white text-slate-500 hover:border-pink-500/50 hover:text-pink-500',
+                                                    ? 'border-emerald-500 bg-emerald-500 text-white'
+                                                    : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-500/50 hover:text-emerald-500',
                                             )}
                                         >
                                             {day.name}
@@ -2909,7 +2909,7 @@ function PricingRulesEditor({
                                                 e.target.value,
                                             )
                                         }
-                                        className="h-9 rounded-lg border-slate-200 bg-white text-center text-[13px] font-semibold focus-visible:ring-pink-500"
+                                        className="h-9 rounded-lg border-slate-200 bg-white text-center text-[13px] font-semibold focus-visible:ring-emerald-500"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -2926,7 +2926,7 @@ function PricingRulesEditor({
                                                 e.target.value,
                                             )
                                         }
-                                        className="h-9 rounded-lg border-slate-200 bg-white text-center text-[13px] font-semibold focus-visible:ring-pink-500"
+                                        className="h-9 rounded-lg border-slate-200 bg-white text-center text-[13px] font-semibold focus-visible:ring-emerald-500"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -2953,7 +2953,7 @@ function PricingRulesEditor({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="h-9 rounded-lg border-slate-200 bg-white pr-2 pl-8 text-[13px] font-semibold text-slate-900 focus-visible:ring-pink-500"
+                                            className="h-9 rounded-lg border-slate-200 bg-white pr-2 pl-8 text-[13px] font-semibold text-slate-900 focus-visible:ring-emerald-500"
                                             placeholder="200.000"
                                         />
                                     </div>
@@ -3036,7 +3036,7 @@ function CreateCourtForm({
                                 'flex h-11 w-full rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
                                 form.errors.name
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-pink-500 focus-visible:ring-pink-300',
+                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
                             )}
                         />
                         <InputError message={form.errors.name} />
@@ -3054,9 +3054,9 @@ function CreateCourtForm({
                                 className="group flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 transition-colors hover:bg-slate-100"
                             >
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <UploadCloud className="mb-2 h-8 w-8 text-slate-400 transition-colors group-hover:text-pink-500" />
+                                    <UploadCloud className="mb-2 h-8 w-8 text-slate-400 transition-colors group-hover:text-emerald-500" />
                                     <p className="mb-1 text-sm text-slate-500">
-                                        <span className="font-semibold text-pink-500">
+                                        <span className="font-semibold text-emerald-500">
                                             Klik untuk unggah
                                         </span>{' '}
                                         atau seret dan lepas
@@ -3147,7 +3147,7 @@ function CreateCourtForm({
                                 'flex h-11 w-full appearance-none rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus-visible:ring-2 focus-visible:outline-none',
                                 form.errors.venue_id
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-pink-500 focus-visible:ring-pink-300',
+                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
                             )}
                         >
                             <option value="" disabled>
@@ -3180,7 +3180,7 @@ function CreateCourtForm({
                                 'flex h-11 w-full appearance-none rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus-visible:ring-2 focus-visible:outline-none',
                                 form.errors.sport_id
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-pink-500 focus-visible:ring-pink-300',
+                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
                             )}
                         >
                             <option value="" disabled>
@@ -3216,7 +3216,7 @@ function CreateCourtForm({
                                 'flex h-11 w-full appearance-none rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none',
                                 form.errors.type
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-pink-500 focus-visible:ring-pink-300',
+                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
                             )}
                         >
                             <option value="indoor">Indoor</option>
@@ -3254,7 +3254,7 @@ function CreateCourtForm({
                                     'flex h-11 w-full rounded-xl border bg-white py-2 pr-3 pl-9 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus-visible:ring-2 focus-visible:outline-none',
                                     form.errors.price_per_hour
                                         ? 'border-red-500 focus-visible:ring-red-200'
-                                        : 'border-slate-200 focus-visible:border-pink-500 focus-visible:ring-pink-300',
+                                        : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
                                 )}
                             />
                         </div>
@@ -3273,7 +3273,7 @@ function CreateCourtForm({
                     <div className="mt-2 md:col-span-2">
                         <label className="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-slate-100/80">
                             <div className="space-y-0.5 pr-4">
-                                <span className="block text-sm font-bold text-slate-900 transition-colors group-hover:text-pink-500">
+                                <span className="block text-sm font-bold text-slate-900 transition-colors group-hover:text-emerald-500">
                                     Aktifkan Lapangan
                                 </span>
                                 <span className="block text-xs leading-relaxed text-slate-500">
@@ -3282,7 +3282,7 @@ function CreateCourtForm({
                                 </span>
                             </div>
                             <div
-                                className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:outline-none"
+                                className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:outline-none"
                                 style={{
                                     backgroundColor: form.data.is_active
                                         ? '#06D001'
@@ -3326,7 +3326,7 @@ function CreateCourtForm({
                 <button
                     type="submit"
                     disabled={form.processing}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-pink-500 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-pink-600 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-600 disabled:opacity-50"
                 >
                     {form.processing && <Spinner className="h-4 w-4" />}
                     Simpan Lapangan
@@ -3412,10 +3412,10 @@ function EditCourtForm({
                                 form.setData('name', e.target.value)
                             }
                             className={cn(
-                                'flex h-12 w-full rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:border-pink-500 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+                                'flex h-12 w-full rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
                                 form.errors.name
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:ring-pink-500/20',
+                                    : 'border-slate-200 focus-visible:ring-emerald-500/20',
                             )}
                         />
                         <InputError message={form.errors.name} />
@@ -3432,9 +3432,9 @@ function EditCourtForm({
                                 className="group flex min-h-[100px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 transition-colors hover:bg-slate-100"
                             >
                                 <div className="flex flex-col items-center justify-center py-5">
-                                    <UploadCloud className="mb-2 h-6 w-6 text-slate-400 transition-colors group-hover:text-pink-500" />
+                                    <UploadCloud className="mb-2 h-6 w-6 text-slate-400 transition-colors group-hover:text-emerald-500" />
                                     <p className="mb-0.5 text-xs font-semibold text-slate-500">
-                                        <span className="text-pink-500">
+                                        <span className="text-emerald-500">
                                             Klik untuk unggah
                                         </span>{' '}
                                         atau seret foto kesini
@@ -3524,7 +3524,7 @@ function EditCourtForm({
                                             >
                                                 <X className="h-3.5 w-3.5" />
                                             </button>
-                                            <div className="absolute inset-x-0 bottom-0 bg-pink-500/90 py-1 text-center text-[10px] font-medium text-white backdrop-blur-sm">
+                                            <div className="absolute inset-x-0 bottom-0 bg-emerald-500/90 py-1 text-center text-[10px] font-medium text-white backdrop-blur-sm">
                                                 Baru
                                             </div>
                                         </div>
@@ -3553,10 +3553,10 @@ function EditCourtForm({
                                 form.setData('venue_id', e.target.value)
                             }
                             className={cn(
-                                'flex h-12 w-full appearance-none rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 transition-colors focus-visible:border-pink-500 focus-visible:ring-2 focus-visible:outline-none',
+                                'flex h-12 w-full appearance-none rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 transition-colors focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:outline-none',
                                 form.errors.venue_id
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:ring-pink-500/20',
+                                    : 'border-slate-200 focus-visible:ring-emerald-500/20',
                             )}
                         >
                             <option value="" disabled>
@@ -3586,10 +3586,10 @@ function EditCourtForm({
                                 form.setData('sport_id', e.target.value)
                             }
                             className={cn(
-                                'flex h-12 w-full appearance-none rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 transition-colors focus-visible:border-pink-500 focus-visible:ring-2 focus-visible:outline-none',
+                                'flex h-12 w-full appearance-none rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 transition-colors focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:outline-none',
                                 form.errors.sport_id
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:ring-pink-500/20',
+                                    : 'border-slate-200 focus-visible:ring-emerald-500/20',
                             )}
                         >
                             <option value="" disabled>
@@ -3622,10 +3622,10 @@ function EditCourtForm({
                                 )
                             }
                             className={cn(
-                                'flex h-12 w-full appearance-none rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 capitalize transition-colors focus-visible:border-pink-500 focus-visible:ring-2 focus-visible:outline-none',
+                                'flex h-12 w-full appearance-none rounded-xl border bg-slate-50 px-4 py-2 text-[15px] font-medium text-slate-900 capitalize transition-colors focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:outline-none',
                                 form.errors.type
                                     ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:ring-pink-500/20',
+                                    : 'border-slate-200 focus-visible:ring-emerald-500/20',
                             )}
                         >
                             <option value="indoor">Indoor</option>
@@ -3658,10 +3658,10 @@ function EditCourtForm({
                                     )
                                 }
                                 className={cn(
-                                    'flex h-12 w-full rounded-xl border bg-slate-50 py-2 pr-4 pl-11 text-[15px] font-medium text-slate-900 transition-colors placeholder:text-slate-400 focus-visible:border-pink-500 focus-visible:ring-2 focus-visible:outline-none',
+                                    'flex h-12 w-full rounded-xl border bg-slate-50 py-2 pr-4 pl-11 text-[15px] font-medium text-slate-900 transition-colors placeholder:text-slate-400 focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:outline-none',
                                     form.errors.price_per_hour
                                         ? 'border-red-500 focus-visible:ring-red-200'
-                                        : 'border-slate-200 focus-visible:ring-pink-500/20',
+                                        : 'border-slate-200 focus-visible:ring-emerald-500/20',
                                 )}
                             />
                         </div>
@@ -3689,7 +3689,7 @@ function EditCourtForm({
                                 </span>
                             </div>
                             <div
-                                className="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:outline-none"
+                                className="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:outline-none"
                                 style={{
                                     backgroundColor: form.data.is_active
                                         ? '#06D001'
@@ -3733,7 +3733,7 @@ function EditCourtForm({
                 <button
                     type="submit"
                     disabled={form.processing}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-pink-500 px-7 py-2.5 text-sm font-bold text-white shadow-sm shadow-pink-500/20 transition-all hover:bg-pink-600 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-7 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-500/20 transition-all hover:bg-emerald-600 disabled:opacity-50"
                 >
                     {form.processing && <Spinner className="h-4 w-4" />}
                     Simpan Perubahan

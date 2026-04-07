@@ -235,9 +235,9 @@ export default function AdminDashboard({
             );
         }
         return sortConfig.direction === 'asc' ? (
-            <ChevronUp className="ml-1 h-3.5 w-3.5 text-pink-600" />
+            <ChevronUp className="ml-1 h-3.5 w-3.5 text-emerald-600" />
         ) : (
-            <ChevronDown className="ml-1 h-3.5 w-3.5 text-pink-600" />
+            <ChevronDown className="ml-1 h-3.5 w-3.5 text-emerald-600" />
         );
     };
 
@@ -426,7 +426,7 @@ export default function AdminDashboard({
                     </div>
 
                     {/* Stat Card 3: Bookings */}
-                    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-pink-200 hover:shadow-md">
+                    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-emerald-200 hover:shadow-md">
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 opacity-30">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart
@@ -469,8 +469,8 @@ export default function AdminDashboard({
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
-                        <div className="absolute top-0 right-0 -mt-4 -mr-4 rounded-full bg-pink-50/50 p-8 transition-transform group-hover:scale-110">
-                            <CalendarDays className="h-6 w-6 text-pink-500 opacity-50" />
+                        <div className="absolute top-0 right-0 -mt-4 -mr-4 rounded-full bg-emerald-50/50 p-8 transition-transform group-hover:scale-110">
+                            <CalendarDays className="h-6 w-6 text-emerald-500 opacity-50" />
                         </div>
                         <div className="relative z-10">
                             <div className="mb-3 flex items-center justify-between text-slate-500">
@@ -670,7 +670,7 @@ export default function AdminDashboard({
                         <div className="border-b border-slate-100 p-5 p-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="flex items-center gap-2 font-semibold text-slate-900">
-                                    <BarChart3 className="h-4 w-4 text-pink-500" />
+                                    <BarChart3 className="h-4 w-4 text-emerald-500" />
                                     Reservasi Graph (7 Hari Terakhir)
                                 </h3>
                             </div>
@@ -733,7 +733,7 @@ export default function AdminDashboard({
                     {/* Header Controls */}
                     <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-pink-100 bg-pink-50 text-pink-600">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600">
                                 <Activity className="h-5 w-5" />
                             </div>
                             <div>
@@ -755,7 +755,7 @@ export default function AdminDashboard({
                                 </div>
                                 <input
                                     type="text"
-                                    className="block w-full appearance-none rounded-xl border-0 bg-slate-50/50 py-2 pr-3 pl-9 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-pink-600 focus:ring-inset"
+                                    className="block w-full appearance-none rounded-xl border-0 bg-slate-50/50 py-2 pr-3 pl-9 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 focus:ring-inset"
                                     placeholder="Cari user, venue, id..."
                                     value={searchQuery}
                                     onChange={(e) =>
@@ -772,7 +772,7 @@ export default function AdminDashboard({
                                     onChange={(e) =>
                                         setStatusFilter(e.target.value)
                                     }
-                                    className="block w-full cursor-pointer appearance-none rounded-xl border-0 bg-slate-50/50 py-2 pr-10 pl-3 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-pink-600 focus:ring-inset"
+                                    className="block w-full cursor-pointer appearance-none rounded-xl border-0 bg-slate-50/50 py-2 pr-10 pl-3 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-emerald-600 focus:ring-inset"
                                 >
                                     <option value="all">Semua Status</option>
                                     <option value="pending">Menunggu</option>
@@ -796,7 +796,7 @@ export default function AdminDashboard({
                                     <tr>
                                         <th scope="col" className="px-6 py-4">
                                             <button
-                                                className="group flex items-center focus:text-pink-600 focus:outline-none"
+                                                className="group flex items-center focus:text-emerald-600 focus:outline-none"
                                                 onClick={() =>
                                                     handleSort('user.name')
                                                 }

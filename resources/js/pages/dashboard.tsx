@@ -124,7 +124,7 @@ export default function Dashboard({
                     </div>
                     <Link
                         href={home().url}
-                        className="inline-flex items-center gap-2 self-start rounded-xl bg-pink-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-pink-600 active:scale-95 sm:self-auto"
+                        className="inline-flex items-center gap-2 self-start rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-600 active:scale-95 sm:self-auto"
                     >
                         Pesan Lapangan
                         <ArrowRight className="h-4 w-4" />
@@ -146,8 +146,8 @@ export default function Dashboard({
                                     sesi
                                 </p>
                             </div>
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-500/10">
-                                <Trophy className="h-5 w-5 text-pink-500" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+                                <Trophy className="h-5 w-5 text-emerald-500" />
                             </div>
                         </div>
                     </div>
@@ -225,7 +225,7 @@ export default function Dashboard({
                                                 <span className="mt-0.5 font-heading text-3xl leading-none font-black text-slate-900">
                                                     {format(parsedDate, 'dd')}
                                                 </span>
-                                                <span className="mt-1.5 text-[11px] font-bold text-pink-500">
+                                                <span className="mt-1.5 text-[11px] font-bold text-emerald-500">
                                                     {formatTime(
                                                         booking.start_time,
                                                     )}
@@ -306,7 +306,7 @@ export default function Dashboard({
                                 </p>
                                 <Link
                                     href={home().url}
-                                    className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-colors hover:border-pink-500 hover:text-pink-500"
+                                    className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-colors hover:border-emerald-500 hover:text-emerald-500"
                                 >
                                     Cari Lapangan
                                     <ArrowRight className="h-3.5 w-3.5" />

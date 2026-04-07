@@ -54,7 +54,8 @@
       "Bash(php artisan test --compact --filter=Midtrans)",
       "Bash(php artisan test --compact --filter=GuestBooking)",
       "Bash(xargs cat -n)",
-      "Bash(php artisan test --compact --filter=\"Midtrans|GuestBooking\")"
+      "Bash(php artisan test --compact --filter=\"Midtrans|GuestBooking\")",
+      "Bash(php artisan:*)"
     ]
   },
   "enabledMcpjsonServers": [

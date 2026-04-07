@@ -20,8 +20,11 @@ import {
     Facebook,
     Phone,
     Mail,
+    Building2,
+    CalendarCheck,
+    Menu,
 } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { dashboard, login, register } from '@/routes';
 
@@ -232,10 +235,10 @@ function TimeSlotPicker({
                                 booked
                                     ? 'cursor-not-allowed border-red-200 bg-red-50 text-red-700 line-through'
                                     : sel
-                                      ? 'z-10 scale-105 border-pink-500 bg-pink-500 text-white shadow-[0_0_12px_rgba(236,72,153,0.4)]'
+                                      ? 'z-10 scale-105 border-emerald-500 bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
                                       : inRange
-                                        ? 'border-pink-500/40 bg-pink-500/20 text-pink-500'
-                                        : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-pink-500/40 hover:bg-slate-200 hover:text-slate-900',
+                                        ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-500'
+                                        : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-emerald-500/40 hover:bg-slate-200 hover:text-slate-900',
                             )}
                         >
                             {t.slice(0, 5)}
@@ -256,13 +259,13 @@ function TimeSlotPicker({
                                 ({hours} jam)
                             </span>
                         </p>
-                        <p className="mt-0.5 font-mono text-lg font-bold text-pink-500">
+                        <p className="mt-0.5 font-mono text-lg font-bold text-emerald-500">
                             {fmt(total)}
                         </p>
                     </div>
                     <button
                         onClick={handleAdd}
-                        className="flex items-center gap-2 rounded-xl bg-pink-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(236,72,153,0.3)] transition-all hover:bg-pink-600 active:scale-95"
+                        className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all hover:bg-emerald-600 active:scale-95"
                     >
                         <Plus className="h-4 w-4" />
                         Tambah
@@ -298,7 +301,7 @@ function CourtCard({
             className={cn(
                 'overflow-hidden rounded-2xl border transition-all duration-300',
                 expanded
-                    ? 'border-pink-500/50 bg-white'
+                    ? 'border-emerald-500/50 bg-white'
                     : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100',
             )}
         >
@@ -316,7 +319,7 @@ function CourtCard({
                     <div
                         className={cn(
                             'absolute top-1 right-1 h-2 w-2 rounded-full',
-                            court.is_booked_now ? 'bg-red-500' : 'bg-pink-500',
+                            court.is_booked_now ? 'bg-red-500' : 'bg-emerald-500',
                         )}
                     />
                 </div>
@@ -334,7 +337,7 @@ function CourtCard({
                     </p>
                 </div>
                 <div className="shrink-0 text-right">
-                    <p className="font-mono text-sm font-bold text-pink-500">
+                    <p className="font-mono text-sm font-bold text-emerald-500">
                         {fmt(court.price_per_hour)}
                     </p>
                     <p className="text-[10px] text-slate-400">/jam</p>
@@ -342,7 +345,7 @@ function CourtCard({
                 <ChevronRight
                     className={cn(
                         'h-4 w-4 shrink-0 text-slate-400 transition-transform duration-300',
-                        expanded && 'rotate-90 text-pink-500',
+                        expanded && 'rotate-90 text-emerald-500',
                     )}
                 />
             </button>
@@ -359,7 +362,7 @@ function CourtCard({
                 <div className="overflow-hidden">
                     <div className="border-t border-slate-200 px-5 pt-4 pb-5">
                         <div className="mb-3 flex items-center gap-2">
-                            <Clock className="h-3.5 w-3.5 text-pink-500" />
+                            <Clock className="h-3.5 w-3.5 text-emerald-500" />
                             <span className="text-xs font-bold tracking-wider text-slate-400 uppercase">
                                 Pilih Jam —{' '}
                                 {format(date, 'EEE, dd MMM', {
@@ -428,14 +431,14 @@ function CartPanel({
                             <span className="rounded bg-slate-200 px-2 py-0.5 font-mono text-[11px] text-slate-700">
                                 {format(item.date, 'dd MMM')}
                             </span>
-                            <span className="rounded bg-pink-500/15 px-2 py-0.5 font-mono text-[11px] text-pink-500">
+                            <span className="rounded bg-emerald-500/15 px-2 py-0.5 font-mono text-[11px] text-emerald-500">
                                 {item.startTime} – {item.endTime}
                             </span>
                             <span className="text-[11px] text-slate-400">
                                 {item.hours} jam
                             </span>
                         </div>
-                        <p className="mt-2 font-mono text-sm font-bold text-pink-500">
+                        <p className="mt-2 font-mono text-sm font-bold text-emerald-500">
                             {fmt(item.totalPrice)}
                         </p>
                     </div>
@@ -459,7 +462,7 @@ function CartPanel({
                 </div>
                 <button
                     onClick={onCheckout}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-500 py-3 font-bold text-white shadow-[0_4px_24px_rgba(236,72,153,0.3)] transition-all hover:bg-pink-600 hover:shadow-[0_4px_32px_rgba(236,72,153,0.5)] active:scale-[0.98]"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 font-bold text-white shadow-[0_4px_24px_rgba(16,185,129,0.3)] transition-all hover:bg-emerald-600 hover:shadow-[0_4px_32px_rgba(16,185,129,0.5)] active:scale-[0.98]"
                 >
                     Pesan Sekarang
                     <ArrowRight className="h-4 w-4" />
@@ -565,8 +568,8 @@ function CheckoutModal({
                 {step === 'done' ? (
                     /* ── Done ── */
                     <div className="flex flex-col items-center p-10 text-center">
-                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-pink-500/30 bg-pink-500/10">
-                            <CheckCircle2 className="h-9 w-9 text-pink-500" />
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
+                            <CheckCircle2 className="h-9 w-9 text-emerald-500" />
                         </div>
                         <h2 className="mb-2 font-heading text-2xl font-black text-slate-900">
                             Pembayaran Berhasil!
@@ -585,7 +588,7 @@ function CheckoutModal({
                                 onSuccess();
                                 onClose();
                             }}
-                            className="rounded-xl bg-pink-500 px-8 py-3 font-bold text-white transition-all hover:bg-pink-600"
+                            className="rounded-xl bg-emerald-500 px-8 py-3 font-bold text-white transition-all hover:bg-emerald-600"
                         >
                             Selesai
                         </button>
@@ -629,7 +632,7 @@ function CheckoutModal({
                                             {item.startTime}–{item.endTime}
                                         </span>
                                     </div>
-                                    <span className="font-mono text-xs font-bold text-pink-500">
+                                    <span className="font-mono text-xs font-bold text-emerald-500">
                                         {fmt(item.totalPrice)}
                                     </span>
                                 </div>
@@ -662,11 +665,11 @@ function CheckoutModal({
                                             setPhoneInput(e.target.value)
                                         }
                                         placeholder=" "
-                                        className="peer block w-full rounded-none border-0 border-b-2 border-amber-300 bg-transparent px-0 pt-5 pb-2 text-sm font-medium text-slate-900 placeholder-transparent transition-all duration-300 focus:border-pink-500 focus:ring-0 focus:outline-none"
+                                        className="peer block w-full rounded-none border-0 border-b-2 border-amber-300 bg-transparent px-0 pt-5 pb-2 text-sm font-medium text-slate-900 placeholder-transparent transition-all duration-300 focus:border-emerald-500 focus:ring-0 focus:outline-none"
                                     />
                                     <label
                                         htmlFor="checkout-phone"
-                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-sm font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-1 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-pink-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
+                                        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-sm font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-1 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-emerald-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase"
                                     >
                                         Nomor WhatsApp
                                     </label>
@@ -698,7 +701,7 @@ function CheckoutModal({
                             <button
                                 onClick={handlePay}
                                 disabled={submitting}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-500 py-3.5 font-bold text-white shadow-[0_4px_24px_rgba(236,72,153,0.3)] transition-all hover:bg-pink-600 disabled:opacity-50"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3.5 font-bold text-white shadow-[0_4px_24px_rgba(16,185,129,0.3)] transition-all hover:bg-emerald-600 disabled:opacity-50"
                             >
                                 {submitting ? (
                                     <>
@@ -750,12 +753,33 @@ export default function Welcome({
     const [cartOpen, setCartOpen] = useState(false);
     const [checkoutOpen, setCheckoutOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [activeSection, setActiveSection] = useState('hero');
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+    const scrollTo = useCallback((id: string) => {
+        const el = document.getElementById(id);
+        if (el) {
+            const offset = 80;
+            const top = el.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+    }, []);
 
     useEffect(() => {
+        const sections = ['hero', 'venues', 'booking', 'gallery'];
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
+            setIsScrolled(window.scrollY > 60);
+            // Determine active section
+            let current = 'hero';
+            for (const id of sections) {
+                const el = document.getElementById(id);
+                if (el && window.scrollY >= el.offsetTop - 120) {
+                    current = id;
+                }
+            }
+            setActiveSection(current);
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -805,54 +829,110 @@ export default function Welcome({
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-white selection:bg-pink-500 selection:text-white">
+        <div className="min-h-screen bg-slate-50 font-sans text-white selection:bg-emerald-500 selection:text-white">
             <Head title="Reservasi Lapangan Premium" />
 
-            {/* ── Navbar ── */}
+            {/* ── Floating Pill Navbar ── */}
             <nav
                 className={cn(
-                    'fixed inset-x-0 top-0 z-40 transition-all duration-300',
-                    isScrolled
-                        ? 'border-b border-slate-200 bg-white'
-                        : 'bg-transparent',
+                    'fixed inset-x-0 top-0 z-50 px-5 transition-all duration-500 lg:px-8',
+                    isScrolled ? 'pt-3' : 'pt-4',
                 )}
             >
-                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden sm:h-10 sm:w-10">
+                <div
+                    className={cn(
+                        'mx-auto flex max-w-7xl items-center justify-between gap-3 transition-all duration-500',
+                        isScrolled
+                            ? 'rounded-full border border-slate-200/60 bg-white/80 px-4 py-2.5 shadow-lg shadow-slate-900/[0.04] backdrop-blur-xl sm:px-6'
+                            : 'px-0 py-2',
+                    )}
+                >
+                    {/* Logo */}
+                    <button
+                        onClick={() => scrollTo('hero')}
+                        className="flex shrink-0 items-center gap-2"
+                    >
+                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
                             <img
                                 src="/images/logo-removebg-preview.png"
-                                alt="Aubry Padel Logo"
+                                alt="Sofiah Sport Center Logo"
                                 className="h-full w-full object-contain"
                             />
                         </div>
                         <span
                             className={cn(
-                                'font-heading text-lg font-black tracking-tight transition-colors sm:text-2xl',
+                                'hidden font-heading text-lg font-bold tracking-tight transition-colors sm:block',
                                 isScrolled ? 'text-slate-900' : 'text-white',
                             )}
                         >
-                            Aubry Padel
+                            Sofiah
                         </span>
+                    </button>
+
+                    {/* Center Nav Links */}
+                    <div
+                        className={cn(
+                            'hidden items-center gap-1 rounded-full p-1.5 sm:flex',
+                            isScrolled ? 'bg-slate-100/80' : '',
+                        )}
+                    >
+                        {([
+                            { id: 'hero', label: 'Beranda' },
+                            { id: 'venues', label: 'Venue' },
+                            { id: 'booking', label: 'Booking' },
+                            { id: 'gallery', label: 'Galeri' },
+                        ] as const).map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => scrollTo(item.id)}
+                                className={cn(
+                                    'relative rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200',
+                                    activeSection === item.id
+                                        ? isScrolled
+                                            ? 'bg-white text-emerald-600 shadow-sm'
+                                            : 'bg-white/20 text-white'
+                                        : isScrolled
+                                          ? 'text-slate-500 hover:text-slate-900'
+                                          : 'text-white/60 hover:text-white',
+                                )}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Cart toggle */}
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={() => setMobileNavOpen(!mobileNavOpen)}
+                        className={cn(
+                            'flex h-10 w-10 items-center justify-center rounded-full transition-colors sm:hidden',
+                            isScrolled
+                                ? 'text-slate-600 hover:bg-slate-100'
+                                : 'text-white/80 hover:text-white',
+                        )}
+                        aria-label="Menu"
+                    >
+                        {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                    </button>
+
+                    {/* Right Actions */}
+                    <div className="flex items-center gap-2 sm:gap-2.5">
+                        {/* Cart */}
                         <button
                             onClick={() => setCartOpen(!cartOpen)}
                             className={cn(
-                                'relative flex items-center justify-center rounded-xl p-2 transition-colors',
+                                'relative flex h-10 w-10 items-center justify-center rounded-full transition-colors',
                                 cartItems.length > 0
-                                    ? 'text-pink-500 hover:bg-white/10'
+                                    ? 'text-emerald-500'
                                     : isScrolled
-                                      ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                                      : 'text-white/80 hover:bg-white/10 hover:text-white',
+                                      ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
+                                      : 'text-white/70 hover:text-white',
                             )}
                             aria-label="Keranjang"
                         >
-                            <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
+                            <ShoppingCart className="h-5 w-5" />
                             {cartItems.length > 0 && (
-                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-pink-500 text-[9px] font-black text-white shadow-sm">
+                                <span className="absolute -top-0.5 right-0 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-black text-white ring-2 ring-white">
                                     {cartItems.length}
                                 </span>
                             )}
@@ -860,8 +940,8 @@ export default function Welcome({
 
                         <div
                             className={cn(
-                                'mx-1 h-6 w-px',
-                                isScrolled ? 'bg-slate-200' : 'bg-white/20',
+                                'h-6 w-px',
+                                isScrolled ? 'bg-slate-200' : 'bg-white/15',
                             )}
                         />
 
@@ -869,10 +949,10 @@ export default function Welcome({
                             <Link
                                 href={dashboard()}
                                 className={cn(
-                                    'rounded-xl px-4 py-2 text-sm font-semibold transition-colors',
+                                    'rounded-full px-5 py-2 text-sm font-semibold transition-all',
                                     isScrolled
-                                        ? 'bg-slate-200 text-slate-900 hover:bg-slate-300'
-                                        : 'bg-white/20 text-white backdrop-blur-sm hover:bg-white/30',
+                                        ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/25 hover:bg-emerald-600'
+                                        : 'bg-white/15 text-white hover:bg-white/25',
                                 )}
                             >
                                 Dashboard
@@ -882,10 +962,10 @@ export default function Welcome({
                                 <Link
                                     href={login()}
                                     className={cn(
-                                        'hidden text-xs font-medium transition-colors sm:block sm:text-sm',
+                                        'hidden rounded-full px-4 py-2 text-sm font-medium transition-colors sm:block',
                                         isScrolled
-                                            ? 'text-slate-500 hover:text-slate-900'
-                                            : 'text-white/80 hover:text-white',
+                                            ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                            : 'text-white/70 hover:text-white',
                                     )}
                                 >
                                     Masuk
@@ -894,10 +974,10 @@ export default function Welcome({
                                     <Link
                                         href={register()}
                                         className={cn(
-                                            'rounded-lg px-3 py-1.5 text-xs font-bold transition-all sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm',
+                                            'rounded-full px-5 py-2 text-xs font-bold transition-all sm:text-sm',
                                             isScrolled
-                                                ? 'bg-pink-500 text-white hover:bg-pink-600'
-                                                : 'bg-white/20 text-white backdrop-blur-sm hover:bg-white/30',
+                                                ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/25 hover:bg-emerald-600'
+                                                : 'bg-white/15 text-white hover:bg-white/25',
                                         )}
                                     >
                                         Daftar
@@ -907,10 +987,45 @@ export default function Welcome({
                         )}
                     </div>
                 </div>
+
+                {/* Mobile Nav Dropdown */}
+                <div
+                    className={cn(
+                        'mx-auto mt-2 max-w-7xl overflow-hidden rounded-3xl transition-all duration-300 sm:hidden',
+                        mobileNavOpen
+                            ? 'max-h-64 border border-slate-200/60 bg-white/95 opacity-100 shadow-lg backdrop-blur-xl'
+                            : 'max-h-0 opacity-0',
+                    )}
+                >
+                    <div className="flex flex-col gap-0.5 p-2.5">
+                        {([
+                            { id: 'hero', label: 'Beranda' },
+                            { id: 'venues', label: 'Venue' },
+                            { id: 'booking', label: 'Booking' },
+                            { id: 'gallery', label: 'Galeri' },
+                        ] as const).map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    scrollTo(item.id);
+                                    setMobileNavOpen(false);
+                                }}
+                                className={cn(
+                                    'rounded-2xl px-5 py-3 text-left text-sm font-semibold transition-colors',
+                                    activeSection === item.id
+                                        ? 'bg-emerald-50 text-emerald-600'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                                )}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </nav>
 
             {/* ── Hero ── */}
-            <section className="relative mb-8 flex min-h-[75vh] w-full items-center justify-center overflow-hidden px-5 py-32 lg:px-8">
+            <section id="hero" className="relative mb-8 flex min-h-screen w-full items-center justify-center overflow-hidden py-32">
                 {/* Full-width Background Video */}
                 <div className="absolute inset-0 z-0 bg-slate-900">
                     <video
@@ -929,7 +1044,7 @@ export default function Welcome({
                     <h1 className="mb-6 font-heading text-5xl leading-[1.1] font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
                         Selamat Datang di
                         <br />
-                        <span className="text-pink-400">Aubry Padel</span>
+                        <span className="text-emerald-400">Sofiah Sport Center</span>
                     </h1>
                     <p className="mx-auto max-w-xl text-lg leading-relaxed text-slate-200">
                         Rasakan pengalaman bermain padel terbaik. Pesan lapangan
@@ -939,8 +1054,75 @@ export default function Welcome({
                 </div>
             </section>
 
+            {/* ── Venues Section ── */}
+            {venues.length > 0 && (
+                <section id="venues" className="px-5 pb-16 lg:px-8">
+                    <div className="mx-auto max-w-7xl">
+                        <div className="mb-8 flex flex-col items-center text-center">
+                            <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold tracking-widest text-emerald-600 uppercase">
+                                <Building2 className="h-3 w-3" />
+                                Venue Kami
+                            </span>
+                            <h2 className="font-heading text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                                Pilih Venue Favorit Anda
+                            </h2>
+                            <p className="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
+                                Fasilitas premium dengan standar internasional untuk pengalaman olahraga terbaik.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                            {venues.map((venue) => {
+                                const image = venue.images?.[0];
+                                const courtCount = courts.filter((c) => c.venue?.id === venue.id).length;
+                                return (
+                                    <button
+                                        key={venue.id}
+                                        onClick={() => scrollTo('booking')}
+                                        className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-500/[0.06]"
+                                    >
+                                        {/* Image */}
+                                        <div className="relative h-44 w-full overflow-hidden bg-slate-100">
+                                            {image ? (
+                                                <img
+                                                    src={getImageUrl(image)}
+                                                    alt={venue.name}
+                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center">
+                                                    <Building2 className="h-10 w-10 text-slate-300" />
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
+                                            <div className="absolute bottom-3 left-3">
+                                                <span className="inline-flex items-center gap-1 rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-sm backdrop-blur-sm">
+                                                    <CalendarCheck className="h-3 w-3 text-emerald-500" />
+                                                    {courtCount} Lapangan
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="p-4">
+                                            <h3 className="font-heading text-base font-bold text-slate-900 transition-colors group-hover:text-emerald-600">
+                                                {venue.name}
+                                            </h3>
+                                            <p className="mt-1 text-xs text-slate-500">
+                                                Lihat lapangan yang tersedia
+                                                <ArrowRight className="ml-1 inline h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                                            </p>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* ── Booking Section ── */}
-            <section className="px-5 pb-24 lg:px-8">
+            <section id="booking" className="px-5 pb-24 lg:px-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:gap-8">
                     {/* LEFT: Courts */}
                     <div className="min-w-0 flex-1">
@@ -972,7 +1154,7 @@ export default function Welcome({
                                             className={cn(
                                                 'flex flex-col items-center rounded-xl border py-2.5 text-center transition-all duration-200',
                                                 isSel
-                                                    ? 'border-pink-500 bg-pink-500 text-white shadow-[0_4px_16px_rgba(236,72,153,0.3)]'
+                                                    ? 'border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_16px_rgba(16,185,129,0.3)]'
                                                     : 'border-slate-200 bg-slate-100/50 text-slate-500 hover:border-slate-300 hover:text-slate-900',
                                             )}
                                         >
@@ -1028,7 +1210,7 @@ export default function Welcome({
                                     className={cn(
                                         'rounded-full border px-4 py-1.5 text-sm font-bold transition-all',
                                         selectedSport === s.id
-                                            ? 'border-pink-500 bg-pink-500 text-white shadow-[0_2px_12px_rgba(236,72,153,0.3)]'
+                                            ? 'border-emerald-500 bg-emerald-500 text-white shadow-[0_2px_12px_rgba(16,185,129,0.3)]'
                                             : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-900',
                                     )}
                                 >
@@ -1066,12 +1248,12 @@ export default function Welcome({
                     <div className="hidden w-80 shrink-0 lg:block">
                         <div className="sticky top-24 rounded-2xl border border-slate-200 bg-slate-50 p-5">
                             <div className="mb-4 flex items-center gap-2">
-                                <ShoppingCart className="h-4 w-4 text-pink-500" />
+                                <ShoppingCart className="h-4 w-4 text-emerald-500" />
                                 <h3 className="font-heading text-sm font-bold text-slate-900">
                                     Keranjang Pesanan
                                 </h3>
                                 {cartItems.length > 0 && (
-                                    <span className="ml-auto rounded-full bg-pink-500/10 px-2 py-0.5 text-xs font-black text-pink-500">
+                                    <span className="ml-auto rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-black text-emerald-500">
                                         {cartItems.length}
                                     </span>
                                 )}
@@ -1093,11 +1275,11 @@ export default function Welcome({
             </section>
 
             {/* ── Gallery Section (Animated Slider Arch) ── */}
-            <section className="overflow-hidden bg-white py-24">
+            <section id="gallery" className="overflow-hidden bg-white py-24">
                 <div className="relative mx-auto w-full max-w-[1600px]">
                     {/* Text Section (Moved Above Slider) */}
                     <div className="mb-16 flex flex-col items-center px-5 text-center">
-                        <h2 className="font-heading text-3xl leading-tight font-black tracking-tight text-pink-500 md:text-4xl lg:text-4xl">
+                        <h2 className="font-heading text-3xl leading-tight font-black tracking-tight text-emerald-500 md:text-4xl lg:text-4xl">
                             Dipercaya oleh atlet
                             <br className="md:hidden" /> dan komunitas
                         </h2>
@@ -1245,7 +1427,7 @@ export default function Welcome({
                     />
                     <div className="relative max-h-[80vh] overflow-y-auto rounded-t-3xl border-t border-slate-200 bg-white p-6">
                         <div className="mb-5 flex items-center gap-2">
-                            <ShoppingCart className="h-4 w-4 text-pink-500" />
+                            <ShoppingCart className="h-4 w-4 text-emerald-500" />
                             <h3 className="font-heading font-bold text-slate-900">
                                 Keranjang
                             </h3>
@@ -1277,7 +1459,7 @@ export default function Welcome({
                 <div className="fixed right-6 bottom-6 z-40 lg:hidden">
                     <button
                         onClick={() => setCartOpen(true)}
-                        className="flex items-center gap-3 rounded-2xl bg-pink-500 px-5 py-3.5 font-bold text-white shadow-[0_8px_32px_rgba(236,72,153,0.5)] transition-all hover:bg-pink-600 active:scale-95"
+                        className="flex items-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3.5 font-bold text-white shadow-[0_8px_32px_rgba(16,185,129,0.5)] transition-all hover:bg-emerald-600 active:scale-95"
                     >
                         <ShoppingCart className="h-5 w-5" />
                         <span>{cartItems.length} item</span>
@@ -1308,7 +1490,7 @@ export default function Welcome({
                         {/* Brand & Socials */}
                         <div className="flex flex-col items-start">
                             <span className="mb-4 font-heading text-2xl font-black tracking-tight text-slate-900">
-                                Aubry Padel
+                                Sofiah Sport Center
                             </span>
                             <p className="mb-6 text-sm leading-relaxed text-slate-500">
                                 Menyediakan fasilitas padel kelas dunia dengan
@@ -1318,19 +1500,19 @@ export default function Welcome({
                             <div className="flex items-center gap-4">
                                 <a
                                     href="#"
-                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-pink-50 hover:text-pink-500"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-500"
                                 >
                                     <Instagram className="h-5 w-5" />
                                 </a>
                                 <a
                                     href="#"
-                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-pink-50 hover:text-pink-500"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-500"
                                 >
                                     <Facebook className="h-5 w-5" />
                                 </a>
                                 <a
                                     href="#"
-                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-pink-50 hover:text-pink-500"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-500"
                                 >
                                     <Mail className="h-5 w-5" />
                                 </a>
@@ -1343,7 +1525,7 @@ export default function Welcome({
                                 Lokasi Kami
                             </h3>
                             <div className="mb-4 flex items-start gap-3 text-sm text-slate-500">
-                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-pink-500" />
+                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                                 <p>
                                     Jl. Padel Premium No. 123,
                                     <br />
@@ -1351,7 +1533,7 @@ export default function Welcome({
                                 </p>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-slate-500">
-                                <Phone className="h-4 w-4 shrink-0 text-pink-500" />
+                                <Phone className="h-4 w-4 shrink-0 text-emerald-500" />
                                 <p>+62 812-3456-7890</p>
                             </div>
                         </div>
@@ -1366,14 +1548,14 @@ export default function Welcome({
                                     <>
                                         <Link
                                             href={login()}
-                                            className="text-sm font-medium text-slate-500 transition-colors hover:text-pink-500"
+                                            className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-500"
                                         >
                                             Masuk
                                         </Link>
                                         {canRegister && (
                                             <Link
                                                 href={register()}
-                                                className="text-sm font-medium text-slate-500 transition-colors hover:text-pink-500"
+                                                className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-500"
                                             >
                                                 Daftar Akun
                                             </Link>
@@ -1382,13 +1564,13 @@ export default function Welcome({
                                 )}
                                 <Link
                                     href="#"
-                                    className="text-sm font-medium text-slate-500 transition-colors hover:text-pink-500"
+                                    className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-500"
                                 >
                                     Syarat & Ketentuan
                                 </Link>
                                 <Link
                                     href="#"
-                                    className="text-sm font-medium text-slate-500 transition-colors hover:text-pink-500"
+                                    className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-500"
                                 >
                                     Kebijakan Privasi
                                 </Link>
@@ -1398,7 +1580,7 @@ export default function Welcome({
 
                     <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-8 sm:flex-row">
                         <p className="text-sm font-medium text-slate-400">
-                            &copy; {new Date().getFullYear()} Aubry Padel. All
+                            &copy; {new Date().getFullYear()} Sofiah Sport Center. All
                             rights reserved.
                         </p>
                     </div>
