@@ -20,8 +20,6 @@ import {
     Facebook,
     Phone,
     Mail,
-    Building2,
-    CalendarCheck,
     Menu,
 } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -325,7 +323,7 @@ function CourtCard({
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="mb-0.5 flex items-center gap-2">
-                        <h3 className="truncate font-heading font-bold text-slate-900">
+                        <h3 className="truncate font-display font-bold text-slate-900">
                             {court.name}
                         </h3>
                         <span className="hidden rounded-full border border-slate-200 px-2 py-0.5 text-[9px] font-black tracking-widest text-slate-500 uppercase sm:inline">
@@ -571,7 +569,7 @@ function CheckoutModal({
                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
                             <CheckCircle2 className="h-9 w-9 text-emerald-500" />
                         </div>
-                        <h2 className="mb-2 font-heading text-2xl font-black text-slate-900">
+                        <h2 className="mb-2 font-display text-2xl font-black text-slate-900">
                             Pembayaran Berhasil!
                         </h2>
                         <p className="mb-1 text-sm text-slate-400">
@@ -598,7 +596,7 @@ function CheckoutModal({
                     <>
                         <div className="flex items-center justify-between border-b border-slate-200 px-7 py-5">
                             <div>
-                                <h2 className="font-heading text-xl font-black text-slate-900">
+                                <h2 className="font-display text-xl font-black text-slate-900">
                                     Konfirmasi Pesanan
                                 </h2>
                                 <p className="mt-0.5 text-xs text-slate-500">
@@ -732,7 +730,6 @@ export default function Welcome({
     canRegister = true,
     courts = [],
     sports = [],
-    venues = [],
     filters,
 }: WelcomeProps & { filters?: { date?: string } }) {
     const { auth } = usePage().props as {
@@ -766,7 +763,7 @@ export default function Welcome({
     }, []);
 
     useEffect(() => {
-        const sections = ['hero', 'venues', 'booking', 'gallery'];
+        const sections = ['hero', 'sports', 'booking', 'gallery'];
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 60);
             // Determine active section
@@ -861,7 +858,7 @@ export default function Welcome({
                         </div>
                         <span
                             className={cn(
-                                'hidden font-heading text-lg font-bold tracking-tight transition-colors sm:block',
+                                'hidden font-display text-lg font-bold tracking-tight transition-colors sm:block',
                                 isScrolled ? 'text-slate-900' : 'text-white',
                             )}
                         >
@@ -878,7 +875,7 @@ export default function Welcome({
                     >
                         {([
                             { id: 'hero', label: 'Beranda' },
-                            { id: 'venues', label: 'Venue' },
+                            { id: 'sports', label: 'Sport' },
                             { id: 'booking', label: 'Booking' },
                             { id: 'gallery', label: 'Galeri' },
                         ] as const).map((item) => (
@@ -1000,7 +997,7 @@ export default function Welcome({
                     <div className="flex flex-col gap-0.5 p-2.5">
                         {([
                             { id: 'hero', label: 'Beranda' },
-                            { id: 'venues', label: 'Venue' },
+                            { id: 'sports', label: 'Sport' },
                             { id: 'booking', label: 'Booking' },
                             { id: 'gallery', label: 'Galeri' },
                         ] as const).map((item) => (
@@ -1041,7 +1038,7 @@ export default function Welcome({
                 </div>
 
                 <div className="relative z-10 mx-auto w-full max-w-3xl text-center">
-                    <h1 className="mb-6 font-heading text-5xl leading-[1.1] font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+                    <h1 className="mb-6 font-display text-5xl leading-[1.1] font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
                         Selamat Datang di
                         <br />
                         <span className="text-emerald-400">Sofiah Sport Center</span>
@@ -1054,69 +1051,148 @@ export default function Welcome({
                 </div>
             </section>
 
-            {/* ── Venues Section ── */}
-            {venues.length > 0 && (
-                <section id="venues" className="px-5 pb-16 lg:px-8">
-                    <div className="mx-auto max-w-7xl">
-                        <div className="mb-8 flex flex-col items-center text-center">
-                            <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold tracking-widest text-emerald-600 uppercase">
-                                <Building2 className="h-3 w-3" />
-                                Venue Kami
-                            </span>
-                            <h2 className="font-heading text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                                Pilih Venue Favorit Anda
+            {/* ── Sports Section ── */}
+            {sports.length > 0 && (
+                <section
+                    id="sports"
+                    className="my-10 flex flex-col overflow-hidden lg:my-16 lg:h-screen"
+                >
+                    {/* Minimal strip header */}
+                    <div className="shrink-0 border-b border-slate-100">
+                        <div className="flex items-center justify-between px-6 py-4 lg:px-10">
+                            <h2 className="font-display text-3xl font-extrabold leading-none text-slate-900 lg:text-4xl">
+                                OLAHRAGA KAMI
                             </h2>
-                            <p className="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
-                                Fasilitas premium dengan standar internasional untuk pengalaman olahraga terbaik.
+                            <p className="hidden text-[11px] font-medium text-slate-400 sm:block">
+                                {sports.length} kategori &middot; {courts.length}{' '}
+                                lapangan
                             </p>
                         </div>
+                    </div>
 
-                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                            {venues.map((venue) => {
-                                const image = venue.images?.[0];
-                                const courtCount = courts.filter((c) => c.venue?.id === venue.id).length;
-                                return (
-                                    <button
-                                        key={venue.id}
-                                        onClick={() => scrollTo('booking')}
-                                        className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-500/[0.06]"
+                    {/* Cards — fill remaining height equally */}
+                    <div className="flex min-h-0 flex-1 flex-col">
+                        {sports.map((sport, idx) => {
+                            const sportCourts = courts.filter(
+                                (c) => c.sport?.id === sport.id,
+                            );
+                            const courtCount = sportCourts.length;
+                            const imgPath =
+                                sportCourts.find((c) => c.images?.length)
+                                    ?.images?.[0] ??
+                                sportCourts.find(
+                                    (c) => c.venue?.images?.length,
+                                )?.venue?.images?.[0];
+                            const imgSrc = imgPath
+                                ? getImageUrl(imgPath)
+                                : 'https://images.unsplash.com/photo-1646649853703-7645147474ba?w=1200&q=80';
+                            const isActive = selectedSport === sport.id;
+
+                            return (
+                                <button
+                                    key={sport.id}
+                                    onClick={() => {
+                                        setSelectedSport(sport.id);
+                                        scrollTo('booking');
+                                    }}
+                                    className={cn(
+                                        'group relative flex w-full min-h-0 flex-1 flex-col overflow-hidden text-left transition-all duration-500',
+                                        idx % 2 === 0
+                                            ? 'sm:flex-row'
+                                            : 'sm:flex-row-reverse',
+                                    )}
+                                >
+                                    {/* ── Text panel ── */}
+                                    <div
+                                        className={cn(
+                                            'relative flex w-full flex-col justify-between px-6 py-5 transition-colors duration-500 sm:w-1/2 sm:px-10 sm:py-6 lg:px-12 lg:py-8',
+                                            isActive
+                                                ? 'bg-emerald-50'
+                                                : 'bg-white group-hover:bg-slate-50',
+                                        )}
                                     >
-                                        {/* Image */}
-                                        <div className="relative h-44 w-full overflow-hidden bg-slate-100">
-                                            {image ? (
-                                                <img
-                                                    src={getImageUrl(image)}
-                                                    alt={venue.name}
-                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center">
-                                                    <Building2 className="h-10 w-10 text-slate-300" />
-                                                </div>
+                                        {/* Index */}
+                                        <div className="flex items-center justify-between">
+                                            <span className="select-none font-display text-4xl font-black leading-none text-slate-200 transition-colors duration-300 group-hover:text-slate-300">
+                                                {String(idx + 1).padStart(
+                                                    2,
+                                                    '0',
+                                                )}
+                                            </span>
+                                            {isActive && (
+                                                <span className="font-sans text-[10px] font-bold tracking-[0.35em] text-emerald-600 uppercase">
+                                                    ✦ aktif
+                                                </span>
                                             )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
-                                            <div className="absolute bottom-3 left-3">
-                                                <span className="inline-flex items-center gap-1 rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-sm backdrop-blur-sm">
-                                                    <CalendarCheck className="h-3 w-3 text-emerald-500" />
-                                                    {courtCount} Lapangan
+                                        </div>
+
+                                        {/* Bottom content */}
+                                        <div>
+                                            <h3
+                                                className={cn(
+                                                    'font-display text-4xl font-black leading-none transition-colors duration-300 sm:text-5xl lg:text-[3.25rem]',
+                                                    isActive
+                                                        ? 'text-emerald-600'
+                                                        : 'text-slate-900 group-hover:text-emerald-600',
+                                                )}
+                                            >
+                                                {sport.name.toUpperCase()}
+                                            </h3>
+
+                                            <div
+                                                className={cn(
+                                                    'my-3 h-px transition-colors duration-500',
+                                                    isActive
+                                                        ? 'bg-emerald-400/50'
+                                                        : 'bg-slate-200 group-hover:bg-emerald-400/40',
+                                                )}
+                                            />
+
+                                            <div className="flex items-baseline gap-2.5">
+                                                <span className="font-display text-2xl font-bold leading-none text-slate-400 transition-colors duration-300 group-hover:text-slate-900">
+                                                    {courtCount}
+                                                </span>
+                                                <span className="font-sans text-xs text-slate-400 transition-colors group-hover:text-slate-600">
+                                                    lapangan tersedia
                                                 </span>
                                             </div>
-                                        </div>
 
-                                        {/* Content */}
-                                        <div className="p-4">
-                                            <h3 className="font-heading text-base font-bold text-slate-900 transition-colors group-hover:text-emerald-600">
-                                                {venue.name}
-                                            </h3>
-                                            <p className="mt-1 text-xs text-slate-500">
-                                                Lihat lapangan yang tersedia
-                                                <ArrowRight className="ml-1 inline h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                                            </p>
+                                            <div className="mt-4 flex items-center gap-2">
+                                                <span className="font-sans text-xs font-semibold text-slate-400 transition-colors duration-300 group-hover:text-slate-900">
+                                                    Booking Sekarang
+                                                </span>
+                                                <ArrowRight className="h-3.5 w-3.5 text-slate-300 transition-all duration-300 group-hover:translate-x-1 group-hover:text-emerald-500" />
+                                            </div>
                                         </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                                    </div>
+
+                                    {/* ── Image panel ── */}
+                                    <div className="relative h-36 overflow-hidden sm:h-auto sm:w-1/2">
+                                        <img
+                                            src={imgSrc}
+                                            alt={sport.name}
+                                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-slate-950/0 transition-all duration-500 group-hover:bg-slate-950/20" />
+
+                                        {/* Slide-up strip */}
+                                        <div className="absolute right-0 bottom-0 left-0 translate-y-full transition-transform duration-500 group-hover:translate-y-0">
+                                            <div className="flex items-center justify-between bg-white/95 px-5 py-3 backdrop-blur-sm">
+                                                <div>
+                                                    <p className="font-display text-base font-bold leading-none text-slate-900">
+                                                        {sport.name.toUpperCase()}
+                                                    </p>
+                                                    <p className="mt-0.5 font-sans text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">
+                                                        {courtCount} lapangan
+                                                    </p>
+                                                </div>
+                                                <ArrowRight className="h-4 w-4 text-slate-400" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 </section>
             )}
@@ -1170,7 +1246,7 @@ export default function Welcome({
                                                           locale: idLocale,
                                                       })}
                                             </span>
-                                            <span className="mt-0.5 font-heading text-lg leading-none font-black">
+                                            <span className="mt-0.5 font-display text-lg leading-none font-black">
                                                 {d.getDate()}
                                             </span>
                                         </button>
@@ -1249,7 +1325,7 @@ export default function Welcome({
                         <div className="sticky top-24 rounded-2xl border border-slate-200 bg-slate-50 p-5">
                             <div className="mb-4 flex items-center gap-2">
                                 <ShoppingCart className="h-4 w-4 text-emerald-500" />
-                                <h3 className="font-heading text-sm font-bold text-slate-900">
+                                <h3 className="font-display text-sm font-bold text-slate-900">
                                     Keranjang Pesanan
                                 </h3>
                                 {cartItems.length > 0 && (
@@ -1274,146 +1350,73 @@ export default function Welcome({
                 </div>
             </section>
 
-            {/* ── Gallery Section (Animated Slider Arch) ── */}
-            <section id="gallery" className="overflow-hidden bg-white py-24">
-                <div className="relative mx-auto w-full max-w-[1600px]">
-                    {/* Text Section (Moved Above Slider) */}
-                    <div className="mb-16 flex flex-col items-center px-5 text-center">
-                        <h2 className="font-heading text-3xl leading-tight font-black tracking-tight text-emerald-500 md:text-4xl lg:text-4xl">
-                            Dipercaya oleh atlet
-                            <br className="md:hidden" /> dan komunitas
-                        </h2>
-                        <p className="mt-4 text-xl font-bold tracking-tight text-slate-400 md:text-2xl lg:text-3xl">
-                            dari berbagai kalangan
+            {/* ── Gallery Section — Masonry ── */}
+            <section id="gallery" className="bg-slate-950 px-5 py-20 lg:px-8 lg:py-28">
+                <div className="mx-auto max-w-7xl">
+
+                    {/* Header */}
+                    <div className="mb-12 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-emerald-500 uppercase">
+                                — 03 Galeri
+                            </p>
+                            <h2 className="font-display text-4xl font-black leading-none text-white lg:text-5xl">
+                                MOMEN<br />
+                                <span className="text-slate-500">TERBAIK KAMI</span>
+                            </h2>
+                        </div>
+                        <p className="max-w-xs text-sm leading-relaxed text-slate-400 sm:text-right">
+                            Dipercaya oleh atlet dan komunitas dari berbagai kalangan.
                         </p>
                     </div>
 
-                    {/* Infinite Scrolling Slider Wrapper */}
-                    <div className="group flex w-full overflow-hidden">
-                        {/* 
-                          We duplicate the column set twice inside a continuous flex row. 
-                          The wrapper has an infinite linear `animate-scroll` animation 
-                          which creates the slider effect.
-                        */}
-                        <div className="flex w-max shrink-0 animate-[scroll_40s_linear_infinite] items-start gap-4 px-2 md:gap-6 lg:gap-8">
-                            {/* --- FIRST SET --- */}
+                    {/* Masonry grid via CSS columns */}
+                    <div className="columns-1 gap-3 sm:columns-2 lg:columns-3">
+                        {([
+                            { src: '/images/Gallery/gallery-1.jpg', aspect: 'aspect-[3/4]',  label: 'Padel Court' },
+                            { src: '/images/Gallery/gallery-2.jpg', aspect: 'aspect-[4/3]',  label: 'Training' },
+                            { src: '/images/Gallery/gallery-3.jpg', aspect: 'aspect-[2/3]',  label: 'Tournament' },
+                            { src: '/images/Gallery/gallery-4.jpg', aspect: 'aspect-square',  label: 'Community' },
+                            { src: '/images/Gallery/gallery-5.jpg', aspect: 'aspect-[3/4]',  label: 'Coaching' },
+                            { src: '/images/Gallery/gallery-6.jpg', aspect: 'aspect-[16/10]', label: 'Venue' },
+                            { src: '/images/Gallery/gallery-7.jpg', aspect: 'aspect-[4/5]',  label: 'Match Day' },
+                        ] as const).map((item, i) => (
+                            <div
+                                key={i}
+                                className="group relative mb-3 break-inside-avoid overflow-hidden rounded-xl"
+                            >
+                                <div className={cn('relative overflow-hidden', item.aspect)}>
+                                    <img
+                                        src={item.src}
+                                        alt={item.label}
+                                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                                    />
 
-                            <div className="mt-32 w-36 shrink-0 animate-[bump_6s_ease-in-out_infinite_alternate] md:w-48 lg:w-56">
-                                <img
-                                    src="/images/Gallery/gallery-1.jpg"
-                                    alt="Padel"
-                                    className="h-72 w-full rounded-[24px] object-cover shadow-sm md:h-80 lg:h-[400px]"
-                                />
-                            </div>
-                            <div className="mt-16 w-40 shrink-0 animate-[bump-reverse_5s_ease-in-out_infinite_alternate] md:w-52 lg:w-60">
-                                <img
-                                    src="/images/Gallery/gallery-2.jpg"
-                                    alt="Padel"
-                                    className="h-80 w-full rounded-[24px] object-cover shadow-sm md:h-96 lg:h-[450px]"
-                                />
-                            </div>
-                            <div className="mt-24 w-44 shrink-0 animate-[bump_7s_ease-in-out_infinite_alternate] md:w-56 lg:w-64">
-                                <img
-                                    src="/images/Gallery/gallery-3.jpg"
-                                    alt="Padel"
-                                    className="h-96 w-full rounded-[32px] object-cover shadow-sm md:h-[450px] lg:h-[500px]"
-                                />
-                            </div>
-                            <div className="mt-0 w-48 shrink-0 animate-[bump-reverse_6s_ease-in-out_infinite_alternate] md:w-64 lg:w-72">
-                                <img
-                                    src="/images/Gallery/gallery-4.jpg"
-                                    alt="Padel"
-                                    className="h-72 w-full rounded-[32px] object-cover shadow-sm md:h-[350px] lg:h-[400px]"
-                                />
-                            </div>
-                            <div className="mt-8 w-44 shrink-0 animate-[bump_5s_ease-in-out_infinite_alternate] md:w-56 lg:w-64">
-                                <img
-                                    src="/images/Gallery/gallery-5.jpg"
-                                    alt="Padel"
-                                    className="h-64 w-full rounded-[32px] object-cover shadow-sm md:h-80 lg:h-[350px]"
-                                />
-                            </div>
-                            <div className="mt-32 w-48 shrink-0 animate-[bump-reverse_7s_ease-in-out_infinite_alternate] md:w-64 lg:w-72">
-                                <img
-                                    src="/images/Gallery/gallery-6.jpg"
-                                    alt="Padel"
-                                    className="h-[400px] w-full rounded-[32px] object-cover shadow-sm md:h-[500px] lg:h-[550px]"
-                                />
-                            </div>
-                            <div className="mt-16 w-40 shrink-0 animate-[bump_6s_ease-in-out_infinite_alternate] md:w-52 lg:w-60">
-                                <img
-                                    src="/images/Gallery/gallery-7.jpg"
-                                    alt="Padel"
-                                    className="h-80 w-full rounded-[24px] object-cover shadow-sm md:h-[400px] lg:h-[450px]"
-                                />
-                            </div>
-                            <div className="mt-28 w-36 shrink-0 animate-[bump-reverse_5s_ease-in-out_infinite_alternate] md:w-48 lg:w-56">
-                                <img
-                                    src="/images/Gallery/gallery-1.jpg"
-                                    alt="Padel"
-                                    className="h-72 w-full rounded-[24px] object-cover shadow-sm md:h-80 lg:h-[400px]"
-                                />
-                            </div>
+                                    {/* Hover overlay */}
+                                    <div className="absolute inset-0 bg-slate-950/0 transition-all duration-500 group-hover:bg-slate-950/40" />
 
-                            {/* --- SECOND SET (DUPLICATE FOR SCROLL LOOP) --- */}
+                                    {/* Index — top-left, always visible, subtle */}
+                                    <div className="absolute top-3 left-3">
+                                        <span className="font-display text-[11px] font-bold tracking-[0.2em] text-white/30">
+                                            {String(i + 1).padStart(2, '0')}
+                                        </span>
+                                    </div>
 
-                            <div className="mt-32 w-36 shrink-0 animate-[bump_6s_ease-in-out_infinite_alternate] md:w-48 lg:w-56">
-                                <img
-                                    src="/images/Gallery/gallery-1.jpg"
-                                    alt="Padel"
-                                    className="h-72 w-full rounded-[24px] object-cover shadow-sm md:h-80 lg:h-[400px]"
-                                />
+                                    {/* Label — slides up on hover */}
+                                    <div className="absolute right-0 bottom-0 left-0 translate-y-2 px-4 pb-4 opacity-0 transition-all duration-400 group-hover:translate-y-0 group-hover:opacity-100">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-display text-sm font-bold tracking-wider text-white">
+                                                {item.label.toUpperCase()}
+                                            </span>
+                                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+                                                <ArrowRight className="h-3.5 w-3.5 text-white" />
+                                            </span>
+                                        </div>
+                                        <div className="mt-2 h-px bg-white/20" />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="mt-16 w-40 shrink-0 animate-[bump-reverse_5s_ease-in-out_infinite_alternate] md:w-52 lg:w-60">
-                                <img
-                                    src="/images/Gallery/gallery-2.jpg"
-                                    alt="Padel"
-                                    className="h-80 w-full rounded-[24px] object-cover shadow-sm md:h-96 lg:h-[450px]"
-                                />
-                            </div>
-                            <div className="mt-24 w-44 shrink-0 animate-[bump_7s_ease-in-out_infinite_alternate] md:w-56 lg:w-64">
-                                <img
-                                    src="/images/Gallery/gallery-3.jpg"
-                                    alt="Padel"
-                                    className="h-96 w-full rounded-[32px] object-cover shadow-sm md:h-[450px] lg:h-[500px]"
-                                />
-                            </div>
-                            <div className="mt-0 w-48 shrink-0 animate-[bump-reverse_6s_ease-in-out_infinite_alternate] md:w-64 lg:w-72">
-                                <img
-                                    src="/images/Gallery/gallery-4.jpg"
-                                    alt="Padel"
-                                    className="h-72 w-full rounded-[32px] object-cover shadow-sm md:h-[350px] lg:h-[400px]"
-                                />
-                            </div>
-                            <div className="mt-8 w-44 shrink-0 animate-[bump_5s_ease-in-out_infinite_alternate] md:w-56 lg:w-64">
-                                <img
-                                    src="/images/Gallery/gallery-5.jpg"
-                                    alt="Padel"
-                                    className="h-64 w-full rounded-[32px] object-cover shadow-sm md:h-80 lg:h-[350px]"
-                                />
-                            </div>
-                            <div className="mt-32 w-48 shrink-0 animate-[bump-reverse_7s_ease-in-out_infinite_alternate] md:w-64 lg:w-72">
-                                <img
-                                    src="/images/Gallery/gallery-6.jpg"
-                                    alt="Padel"
-                                    className="h-[400px] w-full rounded-[32px] object-cover shadow-sm md:h-[500px] lg:h-[550px]"
-                                />
-                            </div>
-                            <div className="mt-16 w-40 shrink-0 animate-[bump_6s_ease-in-out_infinite_alternate] md:w-52 lg:w-60">
-                                <img
-                                    src="/images/Gallery/gallery-7.jpg"
-                                    alt="Padel"
-                                    className="h-80 w-full rounded-[24px] object-cover shadow-sm md:h-[400px] lg:h-[450px]"
-                                />
-                            </div>
-                            <div className="mt-28 w-36 shrink-0 animate-[bump-reverse_5s_ease-in-out_infinite_alternate] md:w-48 lg:w-56">
-                                <img
-                                    src="/images/Gallery/gallery-1.jpg"
-                                    alt="Padel"
-                                    className="h-72 w-full rounded-[24px] object-cover shadow-sm md:h-80 lg:h-[400px]"
-                                />
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -1428,7 +1431,7 @@ export default function Welcome({
                     <div className="relative max-h-[80vh] overflow-y-auto rounded-t-3xl border-t border-slate-200 bg-white p-6">
                         <div className="mb-5 flex items-center gap-2">
                             <ShoppingCart className="h-4 w-4 text-emerald-500" />
-                            <h3 className="font-heading font-bold text-slate-900">
+                            <h3 className="font-display font-bold text-slate-900">
                                 Keranjang
                             </h3>
                             <button
@@ -1489,7 +1492,7 @@ export default function Welcome({
                     <div className="grid grid-cols-1 gap-12 md:grid-cols-3 lg:gap-16">
                         {/* Brand & Socials */}
                         <div className="flex flex-col items-start">
-                            <span className="mb-4 font-heading text-2xl font-black tracking-tight text-slate-900">
+                            <span className="mb-4 font-display text-2xl font-black tracking-tight text-slate-900">
                                 Sofiah Sport Center
                             </span>
                             <p className="mb-6 text-sm leading-relaxed text-slate-500">
@@ -1521,7 +1524,7 @@ export default function Welcome({
 
                         {/* Location & Map */}
                         <div className="flex flex-col items-start">
-                            <h3 className="mb-4 font-heading text-base font-bold text-slate-900">
+                            <h3 className="mb-4 font-display text-base font-bold text-slate-900">
                                 Lokasi Kami
                             </h3>
                             <div className="mb-4 flex items-start gap-3 text-sm text-slate-500">
@@ -1540,7 +1543,7 @@ export default function Welcome({
 
                         {/* Quick Links */}
                         <div className="flex flex-col items-start">
-                            <h3 className="mb-4 font-heading text-base font-bold text-slate-900">
+                            <h3 className="mb-4 font-display text-base font-bold text-slate-900">
                                 Akses Cepat
                             </h3>
                             <div className="flex flex-col gap-3">
