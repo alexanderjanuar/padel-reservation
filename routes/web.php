@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', \App\Http\Controllers\WelcomeController::class)->name('home');
+Route::get('/booking', \App\Http\Controllers\BookingPageController::class)->name('booking');
 
 Route::middleware('guest')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
