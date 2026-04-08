@@ -260,65 +260,6 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                 </div>
             </section>
 
-            {/* ── Intro Section ── */}
-            <section ref={introAnim.ref} className="overflow-hidden bg-white">
-                <div className={cn('transition-all duration-700 ease-out', introAnim.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8')}>
-
-                    {/* Top row — label + headline + image bleeding to edge */}
-                    <div className="flex flex-col lg:flex-row">
-
-                        {/* Left text block */}
-                        <div className="flex flex-col justify-center px-5 py-14 lg:w-1/2 lg:px-16 lg:py-20 xl:px-24">
-                            <p className="mb-5 text-[10px] font-black tracking-[0.45em] text-emerald-500 uppercase">— Tentang Kami</p>
-                            <h2 className="font-display text-4xl font-black leading-[1.05] text-slate-900 lg:text-5xl xl:text-6xl">
-                                SATU TEMPAT,<br />
-                                <span className="text-emerald-500">SEMUA</span><br />
-                                OLAHRAGA.
-                            </h2>
-                            <p className="mt-6 max-w-sm text-[15px] leading-relaxed text-slate-500">
-                                Sofiah Sport Center menghadirkan fasilitas olahraga premium dengan lapangan berkualitas tinggi, jadwal fleksibel, dan sistem pemesanan yang cepat dan mudah.
-                            </p>
-                            <div className="mt-8">
-                                <Link
-                                    href="/booking"
-                                    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-7 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-600"
-                                >
-                                    Reservasi Sekarang
-                                    <ArrowRight className="h-4 w-4" />
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Right — image bleeds to edge, no border/radius */}
-                        <div className="relative hidden lg:block lg:w-1/2">
-                            <img
-                                src="/images/Homepage/AboutUs.jpg"
-                                alt="About Us"
-                                className="h-full w-full object-cover"
-                                style={{ minHeight: '520px' }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-slate-900/10 to-slate-900/40" />
-                        </div>
-                    </div>
-
-                    {/* Bottom stats bar — full width, dark */}
-                    <div className="grid grid-cols-3 divide-x divide-slate-700 bg-slate-900">
-                        {[
-                            { value: String(sports.length), label: 'Cabang Olahraga' },
-                            { value: String(courts.length), label: 'Total Lapangan' },
-                            { value: '09—22', label: 'Jam Operasional', emerald: true },
-                        ].map((stat) => (
-                            <div key={stat.label} className="flex flex-col items-center justify-center px-6 py-8 text-center">
-                                <p className={cn('font-display text-3xl font-black leading-none lg:text-4xl', stat.emerald ? 'text-emerald-400' : 'text-white')}>
-                                    {stat.value}
-                                </p>
-                                <p className="mt-2 text-[10px] font-bold tracking-[0.25em] text-slate-500 uppercase">{stat.label}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* ── Featured Courts ── */}
             {courts.length > 0 && (
                 <section ref={featuredAnim.ref} className="bg-slate-50 px-5 py-16 lg:px-8 lg:py-20">
@@ -379,6 +320,65 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                     </div>
                 </section>
             )}
+
+            {/* ── Intro Section ── */}
+            <section ref={introAnim.ref} className="overflow-hidden bg-white">
+                <div className={cn('transition-all duration-700 ease-out', introAnim.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8')}>
+
+                    {/* Top row — label + headline + image bleeding to edge */}
+                    <div className="flex flex-col lg:flex-row">
+
+                        {/* Left text block */}
+                        <div className="flex flex-col justify-center px-5 py-14 lg:w-1/2 lg:px-16 lg:py-20 xl:px-24">
+                            <p className="mb-5 text-[10px] font-black tracking-[0.45em] text-emerald-500 uppercase">— Tentang Kami</p>
+                            <h2 className="font-display text-4xl font-black leading-[1.05] text-slate-900 lg:text-5xl xl:text-6xl">
+                                SATU TEMPAT,<br />
+                                <span className="text-emerald-500">SEMUA</span><br />
+                                OLAHRAGA.
+                            </h2>
+                            <p className="mt-6 max-w-sm text-[15px] leading-relaxed text-slate-500">
+                                Sofiah Sport Center menghadirkan fasilitas olahraga premium dengan lapangan berkualitas tinggi, jadwal fleksibel, dan sistem pemesanan yang cepat dan mudah.
+                            </p>
+                            <div className="mt-8">
+                                <Link
+                                    href="/booking"
+                                    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-7 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-600"
+                                >
+                                    Reservasi Sekarang
+                                    <ArrowRight className="h-4 w-4" />
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Right — image bleeds to edge, no border/radius */}
+                        <div className="relative hidden lg:block lg:w-1/2">
+                            <img
+                                src="/images/Homepage/AboutUs.jpg"
+                                alt="About Us"
+                                className="h-full w-full object-cover"
+                                style={{ minHeight: '520px' }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-slate-900/10 to-slate-900/40" />
+                        </div>
+                    </div>
+
+                    {/* Bottom stats bar — full width, dark */}
+                    <div className="grid grid-cols-3 divide-x divide-slate-700 bg-slate-900">
+                        {[
+                            { value: String(sports.length), label: 'Cabang Olahraga' },
+                            { value: String(courts.length), label: 'Total Lapangan' },
+                            { value: '09—22', label: 'Jam Operasional', emerald: true },
+                        ].map((stat) => (
+                            <div key={stat.label} className="flex flex-col items-center justify-center px-6 py-8 text-center">
+                                <p className={cn('font-display text-3xl font-black leading-none lg:text-4xl', stat.emerald ? 'text-emerald-400' : 'text-white')}>
+                                    {stat.value}
+                                </p>
+                                <p className="mt-2 text-[10px] font-bold tracking-[0.25em] text-slate-500 uppercase">{stat.label}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
             {/* ── Sports Section ── */}
             {sports.length > 0 && (
