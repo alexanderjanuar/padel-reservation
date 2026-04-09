@@ -9,7 +9,7 @@ import {
     Menu,
     X,
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { dashboard, login, register } from '@/routes';
 
@@ -96,7 +96,6 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
 
     const [selectedSport, setSelectedSport] = useState<number | null>(null);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [activeSection, setActiveSection] = useState('hero');
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     const introAnim    = useInView(0.1);
@@ -104,25 +103,8 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
     const sportsAnim   = useInView(0.1);
     const galleryAnim  = useInView(0.1);
 
-    const scrollTo = useCallback((id: string) => {
-        const el = document.getElementById(id);
-        if (el) {
-            const top = el.getBoundingClientRect().top + window.scrollY - 80;
-            window.scrollTo({ top, behavior: 'smooth' });
-        }
-    }, []);
-
     useEffect(() => {
-        const sections = ['hero', 'sports', 'gallery'];
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 60);
-            let current = 'hero';
-            for (const id of sections) {
-                const el = document.getElementById(id);
-                if (el && window.scrollY >= el.offsetTop - 120) current = id;
-            }
-            setActiveSection(current);
-        };
+        const handleScroll = () => setIsScrolled(window.scrollY > 60);
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -136,34 +118,31 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                 <div className={cn('mx-auto flex max-w-7xl items-center justify-between gap-3 transition-all duration-500', isScrolled ? 'rounded-full border border-slate-200/60 bg-white/80 px-4 py-2.5 shadow-lg shadow-slate-900/[0.04] backdrop-blur-xl sm:px-6' : 'px-0 py-2')}>
 
                     {/* Logo */}
-                    <button onClick={() => scrollTo('hero')} className="flex shrink-0 items-center gap-2">
+                    <Link href="/" className="flex shrink-0 items-center gap-2">
                         <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
                             <img src="/images/logo-removebg-preview.png" alt="Sofiah Sport Center Logo" className="h-full w-full object-contain" />
                         </div>
                         <span className={cn('hidden font-display text-lg font-bold tracking-tight transition-colors sm:block', isScrolled ? 'text-slate-900' : 'text-white')}>
                             Sofiah
                         </span>
-                    </button>
+                    </Link>
 
                     {/* Center Nav Links */}
                     <div className={cn('hidden items-center gap-1 rounded-full p-1.5 sm:flex', isScrolled ? 'bg-slate-100/80' : '')}>
                         {([
-                            { id: 'hero', label: 'Beranda' },
-                            { id: 'sports', label: 'Sport' },
-                            { id: 'gallery', label: 'Galeri' },
+                            { href: '/', label: 'Beranda' },
+                            { href: '/lapangan', label: 'Lapangan' },
                         ] as const).map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => scrollTo(item.id)}
+                            <Link
+                                key={item.href}
+                                href={item.href}
                                 className={cn(
                                     'relative rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200',
-                                    activeSection === item.id
-                                        ? isScrolled ? 'bg-white text-emerald-600 shadow-sm' : 'bg-white/20 text-white'
-                                        : isScrolled ? 'text-slate-500 hover:text-slate-900' : 'text-white/60 hover:text-white',
+                                    isScrolled ? 'text-slate-500 hover:text-slate-900' : 'text-white/60 hover:text-white',
                                 )}
                             >
                                 {item.label}
-                            </button>
+                            </Link>
                         ))}
                     </div>
 
@@ -211,17 +190,17 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                 <div className={cn('mx-auto mt-2 max-w-7xl overflow-hidden rounded-3xl transition-all duration-300 sm:hidden', mobileNavOpen ? 'max-h-64 border border-slate-200/60 bg-white/95 opacity-100 shadow-lg backdrop-blur-xl' : 'max-h-0 opacity-0')}>
                     <div className="flex flex-col gap-0.5 p-2.5">
                         {([
-                            { id: 'hero', label: 'Beranda' },
-                            { id: 'sports', label: 'Sport' },
-                            { id: 'gallery', label: 'Galeri' },
+                            { href: '/', label: 'Beranda' },
+                            { href: '/lapangan', label: 'Lapangan' },
                         ] as const).map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => { scrollTo(item.id); setMobileNavOpen(false); }}
-                                className={cn('rounded-2xl px-5 py-3 text-left text-sm font-semibold transition-colors', activeSection === item.id ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900')}
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setMobileNavOpen(false)}
+                                className="rounded-2xl px-5 py-3 text-left text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                             >
                                 {item.label}
-                            </button>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -240,7 +219,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         <span className="text-emerald-400">Sofiah Sport Center</span>
                     </h1>
                     <p className="mx-auto max-w-xl text-lg leading-relaxed text-slate-200">
-                        Rasakan pengalaman bermain padel terbaik. Pesan lapangan premium kami, tentukan jadwal ideal Anda, dan kuasai pertandingan dengan mudah dan cepat.
+                        Rasakan pengalaman berolahraga terbaik. Pesan lapangan premium kami, tentukan jadwal ideal Anda, dan nikmati fasilitas lengkap dengan mudah dan cepat.
                     </p>
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <Link
@@ -250,12 +229,12 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             Booking Sekarang
                             <ArrowRight className="h-4 w-4" />
                         </Link>
-                        <button
-                            onClick={() => scrollTo('sports')}
+                        <Link
+                            href="/lapangan"
                             className="inline-flex items-center gap-2 rounded-full border border-white/25 px-7 py-3 text-sm font-bold text-white transition-all hover:bg-white/10"
                         >
                             Lihat Olahraga
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -488,7 +467,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
 
                     <div className="columns-1 gap-3 sm:columns-2 lg:columns-3">
                         {([
-                            { src: '/images/Gallery/gallery-1.jpg', aspect: 'aspect-[3/4]',  label: 'Padel Court' },
+                            { src: '/images/Gallery/gallery-1.jpg', aspect: 'aspect-[3/4]',  label: 'Sport Court' },
                             { src: '/images/Gallery/gallery-2.jpg', aspect: 'aspect-[4/3]',  label: 'Training' },
                             { src: '/images/Gallery/gallery-3.jpg', aspect: 'aspect-[2/3]',  label: 'Tournament' },
                             { src: '/images/Gallery/gallery-4.jpg', aspect: 'aspect-square',  label: 'Community' },
@@ -556,7 +535,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                                     <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                                     <div>
                                         <p className="font-display text-sm font-black text-slate-900">Sofiah Sport Centre</p>
-                                        <p className="mt-0.5 text-sm leading-relaxed text-slate-500">Jl. Padel Premium No. 123,<br />Samarinda, Kalimantan Timur</p>
+                                        <p className="mt-0.5 text-sm leading-relaxed text-slate-500">Jl. Moeis Hasan, Simpang Tiga,<br />Kec. Loa Janan Ilir, Kota Samarinda,<br />Kalimantan Timur</p>
                                     </div>
                                 </div>
                             </div>
@@ -586,9 +565,9 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             <div>
                                 <p className="mb-3 text-[10px] font-bold tracking-[0.3em] text-slate-400 uppercase">Kontak</p>
                                 <div className="flex flex-col gap-2.5">
-                                    <a href="tel:+6281234567890" className="flex items-center gap-3 text-sm text-slate-500 transition-colors hover:text-emerald-600">
+                                    <a href="tel:+62082155670524" className="flex items-center gap-3 text-sm text-slate-500 transition-colors hover:text-emerald-600">
                                         <Phone className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                                        +62 812-3456-7890
+                                        0821-5567-0524
                                     </a>
                                     <a href="mailto:info@sofiahsport.id" className="flex items-center gap-3 text-sm text-slate-500 transition-colors hover:text-emerald-600">
                                         <Mail className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
@@ -603,7 +582,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             <div>
                                 <p className="mb-3 text-[10px] font-bold tracking-[0.3em] text-slate-400 uppercase">Media Sosial</p>
                                 <div className="flex items-center gap-3">
-                                    <a href="#" className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600" aria-label="Instagram">
+                                    <a href="https://www.instagram.com/sofiahsportcentre/" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600" aria-label="Instagram">
                                         <Instagram className="h-4 w-4" />
                                     </a>
                                     <a href="#" className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600" aria-label="Facebook">
@@ -624,10 +603,10 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         <div className="flex flex-col items-start">
                             <span className="mb-4 font-display text-2xl font-black tracking-tight text-slate-900">Sofiah Sport Center</span>
                             <p className="mb-6 text-sm leading-relaxed text-slate-500">
-                                Menyediakan fasilitas padel kelas dunia dengan lapangan premium. Mainkan permainan terbaik Anda bersama kami.
+                                Menyediakan fasilitas olahraga lengkap dengan lapangan premium berkualitas. Nikmati pengalaman berolahraga terbaik bersama kami.
                             </p>
                             <div className="flex items-center gap-4">
-                                <a href="#" className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-500">
+                                <a href="https://www.instagram.com/sofiahsportcentre/" target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-500">
                                     <Instagram className="h-5 w-5" />
                                 </a>
                                 <a href="#" className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-500">
@@ -643,11 +622,11 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             <h3 className="mb-4 font-display text-base font-bold text-slate-900">Lokasi Kami</h3>
                             <div className="mb-4 flex items-start gap-3 text-sm text-slate-500">
                                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                <p>Jl. Padel Premium No. 123,<br />Jakarta Selatan, DKI Jakarta 12345</p>
+                                <p>Jl. Moeis Hasan, Simpang Tiga,<br />Kec. Loa Janan Ilir, Kota Samarinda,<br />Kalimantan Timur</p>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-slate-500">
                                 <Phone className="h-4 w-4 shrink-0 text-emerald-500" />
-                                <p>+62 812-3456-7890</p>
+                                <p>0821-5567-0524</p>
                             </div>
                         </div>
 
