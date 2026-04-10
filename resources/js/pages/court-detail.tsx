@@ -334,16 +334,16 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
 
     return (
         <div className="min-h-screen bg-white font-sans">
-            <Head title={`${court.name} — Sofiah Sport Center`} />
+            <Head title={`${court.name} — Sewa Lapangan di Samarinda | Sofiah Sport Center`}>
+                <meta name="description" content={`Sewa ${court.name} di Samarinda. Lapangan ${court.sport?.name ?? 'olahraga'} ${court.type === 'indoor' ? 'indoor' : 'outdoor'} berkualitas di Sofiah Sport Center, Kec. Loa Janan Ilir, Samarinda. Pesan sekarang!`} />
+                <meta name="keywords" content={`${court.name}, lapangan ${court.sport?.name ?? 'olahraga'} Samarinda, sewa lapangan Samarinda, ${court.sport?.name ?? 'olahraga'} Samarinda, Sofiah Sport Center`} />
+            </Head>
 
             {/* ── Floating Pill Navbar ── */}
             <nav className={cn('fixed inset-x-0 top-0 z-50 px-5 transition-all duration-500 lg:px-8', isScrolled ? 'pt-3' : 'pt-4')}>
                 <div className={cn('mx-auto flex max-w-screen-2xl items-center justify-between gap-3 transition-all duration-500', isScrolled ? 'rounded-full border border-slate-200/60 bg-white/80 px-4 py-2.5 shadow-lg shadow-slate-900/[0.04] backdrop-blur-xl sm:px-6' : 'rounded-full border border-slate-200/40 bg-white/60 px-4 py-2.5 backdrop-blur-md sm:px-6')}>
                     <Link href="/" className="flex shrink-0 items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
-                            <img src="/images/logo-removebg-preview.png" alt="Logo" className="h-full w-full object-contain" />
-                        </div>
-                        <span className="hidden font-display text-lg font-bold tracking-tight text-slate-900 sm:block">Sofiah</span>
+                        <span className="font-display text-lg font-bold tracking-tight text-slate-900">Sofiah Sport Center</span>
                     </Link>
 
                     <div className={cn('hidden items-center gap-1 rounded-full p-1.5 sm:flex', isScrolled ? 'bg-slate-100/80' : 'bg-slate-100/60')}>
@@ -393,7 +393,7 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
 
                 {/* Gallery — 1 main + 2 sub */}
                 <div className="px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-[220px] gap-2 sm:h-[300px] lg:h-[420px]">
+                    <div className="flex h-[280px] gap-2 sm:h-[400px] lg:h-[520px]">
                         {/* Main image */}
                         <div className="relative w-full shrink-0 overflow-hidden rounded-xl sm:w-[65%] sm:rounded-2xl">
                             <img

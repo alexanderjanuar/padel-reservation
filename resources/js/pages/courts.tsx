@@ -245,7 +245,10 @@ export default function Courts({ courts = [], sports = [], filters = {}, canRegi
 
     return (
         <div className="min-h-screen bg-white font-sans">
-            <Head title="Semua Lapangan — Sofiah Sport Center" />
+            <Head title="Daftar Lapangan di Samarinda — Sewa Lapangan Futsal, Badminton & Olahraga Lainnya">
+                <meta name="description" content="Temukan dan sewa lapangan olahraga terbaik di Samarinda. Lapangan futsal, badminton, dan cabang olahraga lainnya tersedia di Sofiah Sport Center, Kec. Loa Janan Ilir, Samarinda." />
+                <meta name="keywords" content="lapangan di Samarinda, sewa lapangan Samarinda, lapangan futsal Samarinda, lapangan badminton Samarinda, lapangan olahraga Samarinda, Sofiah Sport Center" />
+            </Head>
 
             {/* ── Floating Pill Navbar ── */}
             <nav className={cn('fixed inset-x-0 top-0 z-50 px-5 transition-all duration-500 lg:px-8', isScrolled ? 'pt-3' : 'pt-4')}>
@@ -253,10 +256,7 @@ export default function Courts({ courts = [], sports = [], filters = {}, canRegi
 
                     {/* Logo */}
                     <Link href="/" className="flex shrink-0 items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
-                            <img src="/images/logo-removebg-preview.png" alt="Logo" className="h-full w-full object-contain" />
-                        </div>
-                        <span className="hidden font-display text-lg font-bold tracking-tight text-slate-900 sm:block">Sofiah</span>
+                        <span className="font-display text-lg font-bold tracking-tight text-slate-900">Sofiah Sport Center</span>
                     </Link>
 
                     {/* Center links */}

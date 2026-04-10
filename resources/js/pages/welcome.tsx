@@ -111,7 +111,10 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-white selection:bg-emerald-500 selection:text-white">
-            <Head title="Reservasi Lapangan Premium" />
+            <Head title="Sewa Lapangan Olahraga di Samarinda — Sofiah Sport Center">
+                <meta name="description" content="Sewa lapangan olahraga terbaik di Samarinda. Tersedia lapangan futsal, badminton, dan berbagai cabang olahraga lainnya. Pesan online mudah & cepat di Sofiah Sport Center, Kec. Loa Janan Ilir." />
+                <meta name="keywords" content="lapangan di Samarinda, sewa lapangan Samarinda, lapangan futsal Samarinda, lapangan badminton Samarinda, sport center Samarinda, Sofiah Sport Center" />
+            </Head>
 
             {/* ── Floating Pill Navbar ── */}
             <nav className={cn('fixed inset-x-0 top-0 z-50 px-5 transition-all duration-500 lg:px-8', isScrolled ? 'pt-3' : 'pt-4')}>
@@ -119,11 +122,8 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
 
                     {/* Logo */}
                     <Link href="/" className="flex shrink-0 items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
-                            <img src="/images/logo-removebg-preview.png" alt="Sofiah Sport Center Logo" className="h-full w-full object-contain" />
-                        </div>
-                        <span className={cn('hidden font-display text-lg font-bold tracking-tight transition-colors sm:block', isScrolled ? 'text-slate-900' : 'text-white')}>
-                            Sofiah
+                        <span className={cn('font-display text-lg font-bold tracking-tight transition-colors', isScrolled ? 'text-slate-900' : 'text-white')}>
+                            Sofiah Sport Center
                         </span>
                     </Link>
 
@@ -260,7 +260,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             {courts.slice(0, 3).map((court) => (
                                 <Link
                                     key={court.id}
-                                    href={`/booking?sport=${court.sport?.id}`}
+                                    href={`/lapangan/${court.id}`}
                                     className="group flex w-72 shrink-0 flex-col sm:w-auto"
                                 >
                                     {/* Image */}

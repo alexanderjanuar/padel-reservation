@@ -546,10 +546,7 @@ export default function Booking({ courts = [], sports = [], filters }: BookingPr
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                         <div className="h-5 w-px bg-slate-200" />
-                        <div className="flex items-center gap-2">
-                            <img src="/images/logo-removebg-preview.png" alt="Sofiah" className="h-7 w-7 object-contain" />
-                            <span className="hidden font-display text-lg font-bold text-slate-900 sm:block">Sofiah Sport Center</span>
-                        </div>
+                        <span className="font-display text-lg font-bold text-slate-900">Sofiah Sport Center</span>
                     </div>
 
                     <h1 className="font-display text-base font-black text-slate-900 sm:text-lg">BOOKING LAPANGAN</h1>
