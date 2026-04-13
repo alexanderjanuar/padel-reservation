@@ -209,7 +209,17 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
             {/* ── Hero ── */}
             <section id="hero" className="relative flex min-h-screen w-full items-center justify-center overflow-hidden py-32">
                 <div className="absolute inset-0 z-0 bg-slate-900">
-                    <video src="/videos/Footage.mp4" autoPlay loop muted playsInline className="h-full w-full object-cover opacity-90" />
+                    <video
+                        src="/videos/Footage.mp4"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="none"
+                        className="h-full w-full object-cover opacity-90"
+                        onCanPlay={(e) => (e.currentTarget.style.opacity = '0.9')}
+                        style={{ opacity: 0, transition: 'opacity 0.8s ease' }}
+                    />
                     <div className="absolute inset-0 bg-slate-900/40" />
                 </div>
                 <div className="relative z-10 mx-auto w-full max-w-3xl px-5 text-center">
