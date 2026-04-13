@@ -29,7 +29,7 @@ class UpdateCourtRequest extends FormRequest
             'price_per_hour' => ['required', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
             'images_to_delete' => ['nullable', 'array'],
             'images_to_delete.*' => ['string'],
             'pricing_rules' => ['nullable', 'array'],

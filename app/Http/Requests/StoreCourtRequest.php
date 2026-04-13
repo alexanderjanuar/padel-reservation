@@ -29,7 +29,7 @@ class StoreCourtRequest extends FormRequest
             'price_per_hour' => ['required', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
             'pricing_rules' => ['nullable', 'array'],
             'pricing_rules.*.days' => ['required', 'array'],
             'pricing_rules.*.days.*' => ['integer', 'min:0', 'max:6'],
