@@ -29,7 +29,7 @@ class UpdateVenueRequest extends FormRequest
             'longitude' => ['nullable', 'numeric'],
             'is_active' => ['boolean'],
             'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
             'existing_images' => ['nullable', 'array'],
             'existing_images.*' => ['string'],
         ];

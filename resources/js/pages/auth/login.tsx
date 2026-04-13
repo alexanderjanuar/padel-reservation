@@ -43,16 +43,9 @@ export default function Login({
                 <div className="flex items-center justify-between">
                     <Link
                         href={home()}
-                        className="flex items-center gap-3 font-heading text-2xl font-bold tracking-tighter text-slate-900"
+                        className="font-heading text-2xl font-bold tracking-tighter text-slate-900"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden">
-                            <img
-                                src="/images/logo-removebg-preview.png"
-                                alt="Sofiah Sport Center Logo"
-                                className="h-full w-full object-contain"
-                            />
-                        </div>
-                        <span>Sofiah Sport Center.</span>
+                        Sofiah Sport Center.
                     </Link>
                     {canRegister && (
                         <Link

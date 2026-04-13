@@ -333,7 +333,7 @@ export default function Venues({ venues }: VenuesProps) {
     const submitCreateVenue = (e: React.FormEvent) => {
         e.preventDefault();
 
-        form.submit(store(), {
+        form.post(store().url, {
             forceFormData: true,
             onSuccess: () => {
                 setIsCreateModalOpen(false);
@@ -670,6 +670,7 @@ export default function Venues({ venues }: VenuesProps) {
                                     <div className="p-6 max-h-[80vh] overflow-y-auto">
                                         <form
                                             onSubmit={submitCreateVenue}
+                                            noValidate
                                             className="flex flex-col gap-8"
                                         >
                                             {/* Full Width Map Section */}
@@ -825,6 +826,11 @@ export default function Venues({ venues }: VenuesProps) {
                                                         onFilesChange={(files) => form.setData('images', files)}
                                                     />
                                                     <InputError message={form.errors.images} className="mt-2" />
+                                                    {Object.entries(form.errors)
+                                                        .filter(([key]) => key.startsWith('images.'))
+                                                        .map(([key, msg]) => (
+                                                            <InputError key={key} message={msg} className="mt-1" />
+                                                        ))}
                                                 </div>
                                             </div>
 
