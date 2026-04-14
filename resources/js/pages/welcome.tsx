@@ -114,6 +114,24 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
             <Head title="Sewa Lapangan Olahraga di Samarinda — Sofiah Sport Center">
                 <meta name="description" content="Sewa lapangan olahraga terbaik di Samarinda. Tersedia lapangan futsal, badminton, dan berbagai cabang olahraga lainnya. Pesan online mudah & cepat di Sofiah Sport Center, Kec. Loa Janan Ilir." />
                 <meta name="keywords" content="lapangan di Samarinda, sewa lapangan Samarinda, lapangan futsal Samarinda, lapangan badminton Samarinda, sport center Samarinda, Sofiah Sport Center" />
+
+                {/* Open Graph */}
+                <meta property="og:type" content="website" />
+                <meta property="og:site_name" content="Sofiah Sport Center" />
+                <meta property="og:title" content="Sewa Lapangan Olahraga di Samarinda — Sofiah Sport Center" />
+                <meta property="og:description" content="Sewa lapangan olahraga terbaik di Samarinda. Tersedia lapangan futsal, badminton, dan berbagai cabang olahraga lainnya. Pesan online mudah & cepat di Sofiah Sport Center, Kec. Loa Janan Ilir." />
+                <meta property="og:image" content="/og-image.jpg" />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta property="og:image:alt" content="Sofiah Sport Center — Lapangan Olahraga Samarinda" />
+                <meta property="og:locale" content="id_ID" />
+
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Sewa Lapangan Olahraga di Samarinda — Sofiah Sport Center" />
+                <meta name="twitter:description" content="Sewa lapangan olahraga terbaik di Samarinda. Tersedia lapangan futsal, badminton, dan berbagai cabang olahraga lainnya. Pesan online mudah & cepat di Sofiah Sport Center, Kec. Loa Janan Ilir." />
+                <meta name="twitter:image" content="/og-image.jpg" />
+                <meta name="twitter:image:alt" content="Sofiah Sport Center — Lapangan Olahraga Samarinda" />
             </Head>
 
             {/* ── Floating Pill Navbar ── */}
@@ -122,9 +140,11 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
 
                     {/* Logo */}
                     <Link href="/" className="flex shrink-0 items-center gap-2">
-                        <span className={cn('font-display text-lg font-bold tracking-tight transition-colors', isScrolled ? 'text-slate-900' : 'text-white')}>
-                            Sofiah Sport Center
-                        </span>
+                        <img
+                            src="/images/Logo/Logo Landscape.png"
+                            alt="Sofiah Sport Center"
+                            className={cn('h-12 w-auto object-contain transition-all md:h-18', isScrolled ? '' : 'brightness-0 invert')}
+                        />
                     </Link>
 
                     {/* Center Nav Links */}

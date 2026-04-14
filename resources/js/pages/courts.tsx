@@ -256,7 +256,11 @@ export default function Courts({ courts = [], sports = [], filters = {}, canRegi
 
                     {/* Logo */}
                     <Link href="/" className="flex shrink-0 items-center gap-2">
-                        <span className="font-display text-lg font-bold tracking-tight text-slate-900">Sofiah Sport Center</span>
+                        <img
+                            src="/images/Logo/Logo Landscape.png"
+                            alt="Sofiah Sport Center"
+                            className="h-10 w-auto object-contain md:h-12"
+                        />
                     </Link>
 
                     {/* Center links */}

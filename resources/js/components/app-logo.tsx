@@ -1,9 +1,11 @@
 export default function AppLogo() {
     return (
         <div className="ml-1 flex items-center">
-            <span className="truncate text-lg font-bold tracking-tight text-slate-900">
-                Sofiah Sport Center
-            </span>
+            <img
+                src="/images/Logo/Logo Landscape.png"
+                alt="Sofiah Sport Center"
+                className="h-8 w-auto object-contain"
+            />
         </div>
     );
 }
