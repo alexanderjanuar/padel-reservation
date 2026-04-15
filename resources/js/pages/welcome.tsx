@@ -143,7 +143,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                     {/* Logo */}
                     <Link href="/" className="flex shrink-0 items-center gap-2">
                         <img
-                            src="/images/Logo/Logo Landscape.png"
+                            src="/images/Logo/Logo Landscape.webp"
                             alt="Sofiah Sport Center"
                             fetchPriority="high"
                             decoding="async"
@@ -240,7 +240,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         muted
                         playsInline
                         preload="metadata"
-                        poster="/images/Gallery/gallery-1.jpg"
+                        poster="/images/Gallery/gallery-1.webp"
                         className="h-full w-full object-cover"
                         onCanPlay={(e) => (e.currentTarget.style.opacity = '0.9')}
                         style={{ opacity: 0, transition: 'opacity 0.8s ease' }}
@@ -367,7 +367,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         {/* Right — image bleeds to edge, no border/radius */}
                         <div className="relative hidden lg:block lg:w-1/2">
                             <img
-                                src="/images/Homepage/AboutUs.jpg"
+                                src="/images/Homepage/AboutUs.webp"
                                 alt="About Us"
                                 loading="lazy"
                                 decoding="async"
@@ -504,13 +504,13 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
 
                     <div className="columns-1 gap-3 sm:columns-2 lg:columns-3">
                         {([
-                            { src: '/images/Gallery/gallery-1.jpg', aspect: 'aspect-[3/4]',  label: 'Sport Court' },
-                            { src: '/images/Gallery/gallery-2.jpg', aspect: 'aspect-[4/3]',  label: 'Training' },
-                            { src: '/images/Gallery/gallery-3.jpg', aspect: 'aspect-[2/3]',  label: 'Tournament' },
-                            { src: '/images/Gallery/gallery-4.jpg', aspect: 'aspect-square',  label: 'Community' },
-                            { src: '/images/Gallery/gallery-5.jpg', aspect: 'aspect-[3/4]',  label: 'Coaching' },
-                            { src: '/images/Gallery/gallery-6.jpg', aspect: 'aspect-[16/10]', label: 'Venue' },
-                            { src: '/images/Gallery/gallery-7.jpg', aspect: 'aspect-[4/5]',  label: 'Match Day' },
+                            { src: '/images/Gallery/gallery-1.webp', aspect: 'aspect-[3/4]',  label: 'Sport Court' },
+                            { src: '/images/Gallery/gallery-2.webp', aspect: 'aspect-[4/3]',  label: 'Training' },
+                            { src: '/images/Gallery/gallery-3.webp', aspect: 'aspect-[2/3]',  label: 'Tournament' },
+                            { src: '/images/Gallery/gallery-4.webp', aspect: 'aspect-square',  label: 'Community' },
+                            { src: '/images/Gallery/gallery-5.webp', aspect: 'aspect-[3/4]',  label: 'Coaching' },
+                            { src: '/images/Gallery/gallery-6.webp', aspect: 'aspect-[16/10]', label: 'Venue' },
+                            { src: '/images/Gallery/gallery-7.webp', aspect: 'aspect-[4/5]',  label: 'Match Day' },
                         ] as const).map((item, i) => (
                             <div key={i} className="group relative mb-3 break-inside-avoid overflow-hidden rounded-xl">
                                 <div className={cn('relative overflow-hidden', item.aspect)}>

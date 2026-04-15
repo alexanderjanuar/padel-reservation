@@ -344,7 +344,7 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
                 <div className={cn('mx-auto flex max-w-screen-2xl items-center justify-between gap-3 transition-all duration-500', isScrolled ? 'rounded-full border border-slate-200/60 bg-white/80 px-4 py-2.5 shadow-lg shadow-slate-900/[0.04] backdrop-blur-xl sm:px-6' : 'rounded-full border border-slate-200/40 bg-white/60 px-4 py-2.5 backdrop-blur-md sm:px-6')}>
                     <Link href="/" className="flex shrink-0 items-center gap-2">
                         <img
-                            src="/images/Logo/Logo Landscape.png"
+                            src="/images/Logo/Logo Landscape.webp"
                             alt="Sofiah Sport Center"
                             className="h-10 w-auto object-contain md:h-12"
                         />

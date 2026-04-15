@@ -257,7 +257,7 @@ export default function Courts({ courts = [], sports = [], filters = {}, canRegi
                     {/* Logo */}
                     <Link href="/" className="flex shrink-0 items-center gap-2">
                         <img
-                            src="/images/Logo/Logo Landscape.png"
+                            src="/images/Logo/Logo Landscape.webp"
                             alt="Sofiah Sport Center"
                             className="h-10 w-auto object-contain md:h-12"
                         />
