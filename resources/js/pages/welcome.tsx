@@ -56,6 +56,8 @@ function CourtCardInner({ court }: { court: Court }) {
             <img
                 src={imgSrc}
                 alt={court.name}
+                loading="lazy"
+                decoding="async"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
             />
@@ -143,6 +145,8 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         <img
                             src="/images/Logo/Logo Landscape.png"
                             alt="Sofiah Sport Center"
+                            fetchPriority="high"
+                            decoding="async"
                             className={cn('h-12 w-auto object-contain transition-all md:h-18', isScrolled ? '' : 'brightness-0 invert')}
                         />
                     </Link>
@@ -235,8 +239,9 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         loop
                         muted
                         playsInline
-                        preload="none"
-                        className="h-full w-full object-cover opacity-90"
+                        preload="metadata"
+                        poster="/images/Gallery/gallery-1.jpg"
+                        className="h-full w-full object-cover"
                         onCanPlay={(e) => (e.currentTarget.style.opacity = '0.9')}
                         style={{ opacity: 0, transition: 'opacity 0.8s ease' }}
                     />
@@ -253,7 +258,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                     </p>
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <Link
-                            href="/booking"
+                            href="/lapangan"
                             className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition-all hover:bg-emerald-600 hover:shadow-emerald-500/50"
                         >
                             Booking Sekarang
@@ -350,7 +355,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             </p>
                             <div className="mt-8">
                                 <Link
-                                    href="/booking"
+                                    href="/lapangan"
                                     className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-7 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-600"
                                 >
                                     Reservasi Sekarang
@@ -364,6 +369,8 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             <img
                                 src="/images/Homepage/AboutUs.jpg"
                                 alt="About Us"
+                                loading="lazy"
+                                decoding="async"
                                 className="h-full w-full object-cover"
                                 style={{ minHeight: '520px' }}
                             />
@@ -460,7 +467,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
 
                                     {/* ── Image panel ── */}
                                     <div className="relative h-36 overflow-hidden sm:h-auto sm:w-1/2">
-                                        <img src={imgSrc} alt={sport.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                        <img src={imgSrc} alt={sport.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                         <div className="absolute inset-0 bg-slate-950/0 transition-all duration-500 group-hover:bg-slate-950/20" />
                                         <div className="absolute right-0 bottom-0 left-0 translate-y-full transition-transform duration-500 group-hover:translate-y-0">
                                             <div className="flex items-center justify-between bg-white/95 px-5 py-3 backdrop-blur-sm">
@@ -507,7 +514,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         ] as const).map((item, i) => (
                             <div key={i} className="group relative mb-3 break-inside-avoid overflow-hidden rounded-xl">
                                 <div className={cn('relative overflow-hidden', item.aspect)}>
-                                    <img src={item.src} alt={item.label} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />
+                                    <img src={item.src} alt={item.label} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />
                                     <div className="absolute inset-0 bg-slate-950/0 transition-all duration-500 group-hover:bg-slate-950/40" />
                                     <div className="absolute top-3 left-3">
                                         <span className="font-display text-[11px] font-bold tracking-[0.2em] text-white/30">{String(i + 1).padStart(2, '0')}</span>
