@@ -99,7 +99,6 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
     const [selectedSport, setSelectedSport] = useState<number | null>(null);
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
     const introAnim    = useInView(0.1);
     const featuredAnim = useInView(0.1);
     const sportsAnim   = useInView(0.1);
@@ -234,7 +233,6 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
             <section id="hero" className="relative flex min-h-screen w-full items-center justify-center overflow-hidden py-32">
                 <div className="absolute inset-0 z-0 bg-slate-900">
                     <video
-                        src="/videos/Footage.mp4"
                         autoPlay
                         loop
                         muted
@@ -244,7 +242,10 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                         className="h-full w-full object-cover"
                         onCanPlay={(e) => (e.currentTarget.style.opacity = '0.9')}
                         style={{ opacity: 0, transition: 'opacity 0.8s ease' }}
-                    />
+                    >
+                        <source src="/videos/Footage_mobile.mp4" media="(max-width: 767px)" type="video/mp4" />
+                        <source src="/videos/Footage_optimized.mp4" type="video/mp4" />
+                    </video>
                     <div className="absolute inset-0 bg-slate-900/40" />
                 </div>
                 <div className="relative z-10 mx-auto w-full max-w-3xl px-5 text-center">
