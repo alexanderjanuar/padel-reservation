@@ -33,7 +33,7 @@ interface Venue {
 interface Court {
     id: number; name: string; type: 'indoor' | 'outdoor';
     price_per_hour: number; sport: Sport; venue: Venue;
-    images?: string[]; pricing_rules?: { days: number[]; start_time: string; end_time: string; price: number; }[];
+    images?: string[]; pricing_rules?: { days: number[]; start_time: string; end_time: string; price: number; price_2_hours?: number; }[];
 }
 interface PageProps {
     court: Court;
@@ -53,18 +53,30 @@ function calcPrice(court: Court, startTime: string, endTime: string, date: Date)
     const endHour = parseInt(endTime.split(':')[0], 10);
     const dayOfWeek = date.getDay();
     let total = 0;
-    for (let h = startHour; h < endHour; h++) {
-        const slot = `${h.toString().padStart(2, '0')}:00`;
-        let price = court.price_per_hour;
-        if (court.pricing_rules) {
-            for (const rule of court.pricing_rules) {
-                if (rule.days.includes(dayOfWeek) && slot >= rule.start_time && slot < rule.end_time) {
-                    price = Number(rule.price);
-                    break;
-                }
+
+    const findRule = (hour: number) => {
+        const slot = `${hour.toString().padStart(2, '0')}:00`;
+        return court.pricing_rules?.find(
+            r => r.days.includes(dayOfWeek) && slot >= r.start_time && slot < r.end_time,
+        ) ?? null;
+    };
+
+    let h = startHour;
+    while (h < endHour) {
+        const rule = findRule(h);
+        const slotPrice = rule ? Number(rule.price) : court.price_per_hour;
+
+        if (h + 1 < endHour && rule?.price_2_hours) {
+            const nextSlot = `${(h + 1).toString().padStart(2, '0')}:00`;
+            if (nextSlot >= rule.start_time && nextSlot < rule.end_time) {
+                total += Number(rule.price_2_hours);
+                h += 2;
+                continue;
             }
         }
-        total += price;
+
+        total += slotPrice;
+        h++;
     }
     return total;
 }
