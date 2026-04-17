@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
+use App\Models\Court;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\FonnteService;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
@@ -52,7 +55,7 @@ class BookingController extends Controller
             ], 422);
         }
 
-        $court = \App\Models\Court::findOrFail($validated['court_id']);
+        $court = Court::findOrFail($validated['court_id']);
 
         // Calculate expected price
         $dateStr = $validated['date'];
@@ -62,22 +65,42 @@ class BookingController extends Controller
 
         $calculatedPrice = 0;
 
-        for ($h = $startHour; $h < $endHour; $h++) {
-            $currentSlotHour = sprintf('%02d:00', $h);
-            $slotPrice = $court->price_per_hour;
-
-            if (is_array($court->pricing_rules)) {
-                foreach ($court->pricing_rules as $rule) {
-                    if (in_array($dayOfWeek, $rule['days'] ?? [])) {
-                        if ($currentSlotHour >= $rule['start_time'] && $currentSlotHour < $rule['end_time']) {
-                            $slotPrice = $rule['price'];
-                            break; // use the first matching rule
-                        }
+        $findRule = function (int $hour) use ($court, $dayOfWeek): ?array {
+            $slotHour = sprintf('%02d:00', $hour);
+            if (! is_array($court->pricing_rules)) {
+                return null;
+            }
+            foreach ($court->pricing_rules as $rule) {
+                if (in_array($dayOfWeek, $rule['days'] ?? [])) {
+                    if ($slotHour >= $rule['start_time'] && $slotHour < $rule['end_time']) {
+                        return $rule;
                     }
                 }
             }
 
+            return null;
+        };
+
+        $h = $startHour;
+        while ($h < $endHour) {
+            $rule = $findRule($h);
+            $slotPrice = $rule ? (int) $rule['price'] : $court->price_per_hour;
+
+            // Try 2-hour package: next hour exists and falls in the same rule window
+            if ($h + 1 < $endHour && $rule !== null && ! empty($rule['price_2_hours'])) {
+                $nextSlotHour = sprintf('%02d:00', $h + 1);
+                $nextInSameRule = $nextSlotHour >= $rule['start_time'] && $nextSlotHour < $rule['end_time'];
+
+                if ($nextInSameRule) {
+                    $calculatedPrice += (int) $rule['price_2_hours'];
+                    $h += 2;
+
+                    continue;
+                }
+            }
+
             $calculatedPrice += $slotPrice;
+            $h++;
         }
 
         // The calculated price is still computed above, but we no longer enforce it
@@ -141,7 +164,7 @@ class BookingController extends Controller
         ], 201);
     }
 
-    public function uploadProof(Booking $booking, \Illuminate\Http\Request $request): JsonResponse
+    public function uploadProof(Booking $booking, Request $request): JsonResponse
     {
         $request->validate([
             'proof' => ['required', 'file', 'image', 'max:10240'],
@@ -154,7 +177,7 @@ class BookingController extends Controller
         if ($payment) {
             // Delete old file if exists
             if ($payment->proof_of_payment) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($payment->proof_of_payment);
+                Storage::disk('public')->delete($payment->proof_of_payment);
             }
             $payment->update(['proof_of_payment' => $path]);
         } else {

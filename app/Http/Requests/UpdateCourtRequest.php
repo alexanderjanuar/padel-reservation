@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCourtRequest extends FormRequest
@@ -17,7 +18,7 @@ class UpdateCourtRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -38,6 +39,7 @@ class UpdateCourtRequest extends FormRequest
             'pricing_rules.*.start_time' => ['required', 'date_format:H:i'],
             'pricing_rules.*.end_time' => ['required', 'date_format:H:i', 'after:pricing_rules.*.start_time'],
             'pricing_rules.*.price' => ['required', 'numeric', 'min:0'],
+            'pricing_rules.*.price_2_hours' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

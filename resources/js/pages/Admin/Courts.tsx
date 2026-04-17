@@ -104,6 +104,7 @@ interface PricingRule {
     start_time: string;
     end_time: string;
     price: number | '';
+    price_2_hours?: number | '';
 }
 
 interface Court {
@@ -191,24 +192,42 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
         const dayOfWeek = date.getDay();
         let total = 0;
 
-        for (let h = startHour; h < endHour; h++) {
-            const currentSlotHour = `${h.toString().padStart(2, '0')}:00`;
-            let slotPrice = court.price_per_hour;
-
-            if (court.pricing_rules && court.pricing_rules.length > 0) {
-                for (const rule of court.pricing_rules) {
-                    if (rule.days.includes(dayOfWeek)) {
-                        if (
-                            currentSlotHour >= rule.start_time &&
-                            currentSlotHour < rule.end_time
-                        ) {
-                            slotPrice = Number(rule.price);
-                            break;
-                        }
-                    }
+        const findRule = (hour: number) => {
+            const slotHour = `${hour.toString().padStart(2, '0')}:00`;
+            if (!court.pricing_rules) return null;
+            for (const rule of court.pricing_rules) {
+                if (
+                    rule.days.includes(dayOfWeek) &&
+                    slotHour >= rule.start_time &&
+                    slotHour < rule.end_time
+                ) {
+                    return rule;
                 }
             }
+            return null;
+        };
+
+        let h = startHour;
+        while (h < endHour) {
+            const rule = findRule(h);
+            const slotPrice = rule ? Number(rule.price) : court.price_per_hour;
+
+            // Try 2-hour package: next hour exists and falls in the same rule window
+            if (h + 1 < endHour && rule && rule.price_2_hours) {
+                const nextSlotHour = `${(h + 1).toString().padStart(2, '0')}:00`;
+                const nextInSameRule =
+                    nextSlotHour >= rule.start_time &&
+                    nextSlotHour < rule.end_time;
+
+                if (nextInSameRule) {
+                    total += Number(rule.price_2_hours);
+                    h += 2;
+                    continue;
+                }
+            }
+
             total += slotPrice;
+            h++;
         }
 
         return total;
@@ -2778,7 +2797,7 @@ function PricingRulesEditor({
     const addRule = () => {
         onChange([
             ...rules,
-            { days: [], start_time: '06:00', end_time: '18:00', price: '' },
+            { days: [], start_time: '06:00', end_time: '18:00', price: '', price_2_hours: '' },
         ]);
     };
 
@@ -2813,6 +2832,15 @@ function PricingRulesEditor({
         }
         const numericValue = rawValue.replace(/\D/g, '');
         updateRule(index, 'price', numericValue ? Number(numericValue) : '');
+    };
+
+    const handlePrice2HoursChange = (index: number, rawValue: string) => {
+        if (!rawValue) {
+            updateRule(index, 'price_2_hours', '');
+            return;
+        }
+        const numericValue = rawValue.replace(/\D/g, '');
+        updateRule(index, 'price_2_hours', numericValue ? Number(numericValue) : '');
     };
 
     return (
@@ -2894,7 +2922,7 @@ function PricingRulesEditor({
                             )}
 
                             {/* Time + Price row */}
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                                         Mulai
@@ -2954,7 +2982,36 @@ function PricingRulesEditor({
                                                 )
                                             }
                                             className="h-9 rounded-lg border-slate-200 bg-white pr-2 pl-8 text-[13px] font-semibold text-slate-900 focus-visible:ring-emerald-500"
-                                            placeholder="200.000"
+                                            placeholder="250.000"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                        Tarif/2 Jam
+                                    </label>
+                                    <div className="relative">
+                                        <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-[12px] font-semibold text-slate-400">
+                                            Rp
+                                        </span>
+                                        <Input
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={
+                                                rule.price_2_hours
+                                                    ? rule.price_2_hours.toLocaleString(
+                                                          'id-ID',
+                                                      )
+                                                    : ''
+                                            }
+                                            onChange={(e) =>
+                                                handlePrice2HoursChange(
+                                                    index,
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="h-9 rounded-lg border-slate-200 bg-white pr-2 pl-8 text-[13px] font-semibold text-slate-900 focus-visible:ring-emerald-500"
+                                            placeholder="400.000"
                                         />
                                     </div>
                                 </div>
