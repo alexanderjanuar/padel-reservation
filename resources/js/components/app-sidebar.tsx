@@ -1,15 +1,13 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
-    BookOpen,
+    CalendarCheck2,
     Dumbbell,
     ExternalLink,
-    Github,
     Grid2x2,
     LayoutGrid,
     MapPin,
     Sparkles,
 } from 'lucide-react';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -23,6 +21,7 @@ import {
     SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import * as bookings from '@/routes/bookings';
 import courts from '@/routes/courts';
 import facilities from '@/routes/facilities';
 import sports from '@/routes/sports';
@@ -30,48 +29,43 @@ import venues from '@/routes/venues';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Olahraga',
-        href: sports.index(),
-        icon: Dumbbell,
-    },
-    {
-        title: 'Tempat',
-        href: venues.index(),
-        icon: MapPin,
-    },
-    {
-        title: 'Lapangan',
-        href: courts.index(),
-        icon: Grid2x2,
-    },
-    {
-        title: 'Fasilitas',
-        href: facilities.index(),
-        icon: Sparkles,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repositori',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Github,
-    },
-    {
-        title: 'Dokumentasi',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
-
 export function AppSidebar() {
+    const { pendingBookingsCount } = usePage().props;
+
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Booking',
+            href: bookings.index(),
+            icon: CalendarCheck2,
+            badge: pendingBookingsCount as number,
+        },
+        {
+            title: 'Olahraga',
+            href: sports.index(),
+            icon: Dumbbell,
+        },
+        {
+            title: 'Tempat',
+            href: venues.index(),
+            icon: MapPin,
+        },
+        {
+            title: 'Lapangan',
+            href: courts.index(),
+            icon: Grid2x2,
+        },
+        {
+            title: 'Fasilitas',
+            href: facilities.index(),
+            icon: Sparkles,
+        },
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="sidebar">
             <SidebarHeader>

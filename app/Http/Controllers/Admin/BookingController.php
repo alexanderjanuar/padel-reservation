@@ -42,11 +42,12 @@ class BookingController extends Controller
             $userId = $guestUser->id;
         }
 
-        // Prevent double-booking: check if the slot is already taken
+        // Prevent double-booking against confirmed schedules only.
         $conflict = Booking::where('court_id', $validated['court_id'])
             ->whereDate('date', $validated['date'])
-            ->where('start_time', $validated['start_time'])
-            ->whereIn('status', ['pending', 'confirmed', 'completed'])
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->where('start_time', '<', $validated['end_time'])
+            ->where('end_time', '>', $validated['start_time'])
             ->exists();
 
         if ($conflict) {

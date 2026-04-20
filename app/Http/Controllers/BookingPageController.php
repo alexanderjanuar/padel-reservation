@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Court;
 use App\Models\Sport;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class BookingPageController extends Controller
 {
-    public function __invoke(\Illuminate\Http\Request $request): Response
+    public function __invoke(Request $request): Response
     {
         $date = $request->input('date', now()->toDateString());
 
@@ -19,14 +20,14 @@ class BookingPageController extends Controller
                     $query->where('date', $date)
                         ->where('start_time', '<=', now()->toTimeString())
                         ->where('end_time', '>', now()->toTimeString())
-                        ->whereIn('status', ['pending', 'confirmed', 'completed']);
+                        ->whereIn('status', ['confirmed', 'completed']);
                 },
             ])
             ->where('is_active', true)
             ->with([
                 'bookings' => function ($query) use ($date) {
                     $query->where('date', $date)
-                        ->whereIn('status', ['pending', 'confirmed', 'completed'])
+                        ->whereIn('status', ['confirmed', 'completed'])
                         ->select('id', 'court_id', 'start_time', 'end_time');
                 },
             ])

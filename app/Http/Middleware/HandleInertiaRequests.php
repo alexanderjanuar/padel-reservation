@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -46,6 +47,9 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
+            'pendingBookingsCount' => fn () => $request->user()
+                ? Booking::where('status', 'pending')->count()
+                : 0,
         ];
     }
 }

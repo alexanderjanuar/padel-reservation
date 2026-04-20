@@ -15,7 +15,7 @@ class CourtDetailController extends Controller
             'venue:id,name,address,city,phone,description,images',
             'venue.facilities:id,name,icon',
             'bookings' => function ($query) {
-                $query->whereIn('status', ['pending', 'confirmed', 'completed'])
+                $query->whereIn('status', ['confirmed', 'completed'])
                     ->whereDate('date', '>=', now()->toDateString())
                     ->select('id', 'court_id', 'date', 'start_time', 'end_time');
             },
