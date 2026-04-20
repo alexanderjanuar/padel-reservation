@@ -10,10 +10,12 @@ import {
     ChevronLeft,
     ChevronRight,
     Clock,
+    Download,
     Instagram,
     Mail,
     MapPin,
     Menu,
+    MessageCircle,
     Phone,
     X,
 } from 'lucide-react';
@@ -209,21 +211,112 @@ function CheckoutModal({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-0 backdrop-blur-sm sm:items-center sm:p-4">
             <div className="flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] sm:max-h-[88vh] sm:rounded-[28px]">
                 {step === 'done' ? (
-                    <div className="flex flex-col items-center px-5 py-8 text-center sm:px-10 sm:py-10">
-                        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-                            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                    <>
+                        {/* Header */}
+                        <div className="shrink-0 border-b border-slate-100 px-5 py-4 sm:px-7 sm:py-5">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <h2 className="font-display text-lg font-black text-slate-900">Booking Diterima!</h2>
+                                    <p className="text-xs text-slate-500">Selesaikan pembayaran untuk konfirmasi</p>
+                                </div>
+                            </div>
                         </div>
-                        <h2 className="mb-2 font-display text-2xl font-black text-slate-900">Booking Berhasil</h2>
-                        <p className="mb-1 text-sm text-slate-500">Permintaan booking Anda sudah kami terima.</p>
-                        <p className="mb-6 text-xs leading-relaxed text-slate-500">
-                            Admin kami akan follow up melalui WhatsApp ke{' '}
-                            <span className="font-medium text-slate-900">{deliveryTarget}</span>
-                            {' '}untuk konfirmasi lebih lanjut.
-                        </p>
-                        <button onClick={() => { onSuccess(); onClose(); }} className="rounded-2xl bg-emerald-500 px-8 py-3 font-bold text-white transition-all hover:bg-emerald-600">
-                            Selesai
-                        </button>
-                    </div>
+
+                        {/* Scrollable body */}
+                        <div className="min-h-0 flex-1 overflow-y-auto">
+                            <div className="space-y-4 px-5 py-5 sm:px-7">
+
+                                {/* Booking summary */}
+                                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                                    <p className="mb-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Ringkasan Booking</p>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-slate-500">Lapangan</span>
+                                            <span className="font-semibold text-slate-900">{item.courtName}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-slate-500">Tanggal</span>
+                                            <span className="font-semibold text-slate-900">{format(item.date, 'dd MMM yyyy', { locale: idLocale })}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-slate-500">Jam</span>
+                                            <span className="font-semibold text-slate-900">{item.startTime} – {item.endTime}</span>
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2">
+                                            <span className="text-sm font-bold text-slate-700">Total</span>
+                                            <span className="font-display text-base font-black text-emerald-600">{fmt(item.totalPrice)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* QRIS */}
+                                <div>
+                                    <p className="mb-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Bayar via QRIS</p>
+                                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                        <div className="bg-emerald-500 px-4 py-3 text-center">
+                                            <p className="text-[10px] font-bold tracking-widest text-emerald-100 uppercase">Scan & Bayar</p>
+                                            <p className="mt-0.5 font-display text-xl font-black text-white">{fmt(item.totalPrice)}</p>
+                                        </div>
+                                        <div className="flex justify-center p-5">
+                                            <img
+                                                src="/images/qris.png"
+                                                alt="QRIS Pembayaran"
+                                                className="h-52 w-52 object-contain sm:h-60 sm:w-60"
+                                            />
+                                        </div>
+                                        <div className="border-t border-slate-100 px-4 pb-4">
+                                            <a
+                                                href="/images/qris.png"
+                                                download="QRIS-SSC.png"
+                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                                            >
+                                                <Download className="h-4 w-4" />
+                                                Download QR Code
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Send proof instructions */}
+                                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                                            <MessageCircle className="h-5 w-5 text-amber-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-amber-900">Kirim Bukti Pembayaran</p>
+                                            <p className="mt-1 text-xs leading-relaxed text-amber-700">
+                                                Setelah bayar, kirim <span className="font-bold">screenshot / foto bukti</span> ke WhatsApp kami. Booking dikonfirmasi setelah pembayaran terverifikasi.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={`https://wa.me/6282155670524?text=${encodeURIComponent(`Halo, saya ingin mengirim bukti pembayaran booking:\n• Lapangan: ${item.courtName}\n• Tanggal: ${format(item.date, 'dd MMM yyyy', { locale: idLocale })}\n• Jam: ${item.startTime} - ${item.endTime}\n• Total: ${fmt(item.totalPrice)}`)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-bold text-white shadow-sm shadow-[#25D366]/30 transition-all hover:bg-[#1ebe5d]"
+                                    >
+                                        <MessageCircle className="h-4 w-4" />
+                                        Kirim ke WhatsApp · 0821-5567-0524
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="shrink-0 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+                            <button
+                                onClick={() => { onSuccess(); onClose(); }}
+                                className="w-full rounded-2xl border border-slate-200 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </>
                 ) : (
                     <>
                         <div className="shrink-0 border-b border-slate-200 px-5 py-4 sm:px-7 sm:py-5">
