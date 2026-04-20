@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import {
@@ -31,6 +32,8 @@ interface Venue {
 interface Court {
     id: number; name: string; type: 'indoor' | 'outdoor';
     price_per_hour: number; sport: Sport; venue: Venue;
+    bookings?: { id: number; date: string; start_time: string; end_time: string }[];
+    booked_slots_by_date?: Record<string, string[]>;
     images?: string[]; pricing_rules?: { days: number[]; start_time: string; end_time: string; price: number; price_2_hours?: number; }[];
 }
 interface PageProps {
@@ -168,10 +171,38 @@ function CheckoutModal({
         if (needsPhone && !phoneInput.trim()) { setError('Nomor WhatsApp wajib diisi.'); return; }
         setSubmitting(true);
         setError('');
-        window.setTimeout(() => {
-            setSubmitting(false);
+        try {
+            if (needsPhone) {
+                await axios.patch('/user/phone', { phone: phoneInput.trim() });
+            }
+
+            await axios.post('/bookings/guest', customer?.id ? {
+                user_id: customer.id,
+                court_id: item.courtId,
+                date: format(item.date, 'yyyy-MM-dd'),
+                start_time: item.startTime,
+                end_time: item.endTime,
+                total_price: item.totalPrice,
+                payment_status: 'unpaid',
+            } : {
+                guest_name: guestForm.name.trim(),
+                guest_email: guestForm.email.trim(),
+                guest_phone: guestForm.phone.trim(),
+                court_id: item.courtId,
+                date: format(item.date, 'yyyy-MM-dd'),
+                start_time: item.startTime,
+                end_time: item.endTime,
+                total_price: item.totalPrice,
+                payment_status: 'unpaid',
+            });
+
             setStep('done');
-        }, 500);
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            setError(e.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -372,16 +403,42 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
         return calcPrice(court, timeStart, bookingEndTime, selectedDate);
     }, [court, timeStart, bookingEndTime, selectedDate]);
 
+    const bookedSlots = useMemo(() => {
+        const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
+        return court.booked_slots_by_date?.[selectedDateString] ?? [];
+    }, [court.booked_slots_by_date, selectedDate]);
+
     const handleSlotClick = (t: string) => {
+        if (bookedSlots.includes(t)) return;
         if (!timeStart || (timeStart && timeEnd)) { setTimeStart(t); setTimeEnd(null); return; }
         if (t < timeStart) { setTimeStart(t); return; }
         if (t === timeStart) { setTimeStart(null); return; }
+        const startHour = parseInt(timeStart.split(':')[0], 10);
+        const targetHour = parseInt(t.split(':')[0], 10);
+
+        for (let hour = startHour + 1; hour <= targetHour; hour++) {
+            if (bookedSlots.includes(`${hour.toString().padStart(2, '0')}:00`)) {
+                setTimeStart(t);
+                setTimeEnd(null);
+                return;
+            }
+        }
+
         setTimeEnd(t);
     };
 
     const isSlotInRange = (t: string) => {
         if (!timeStart || timeEnd) return false;
         if (!hovered || t <= timeStart || t > hovered) return false;
+        const startHour = parseInt(timeStart.split(':')[0], 10);
+        const hoverHour = parseInt(hovered.split(':')[0], 10);
+
+        for (let hour = startHour + 1; hour <= hoverHour; hour++) {
+            if (bookedSlots.includes(`${hour.toString().padStart(2, '0')}:00`)) {
+                return false;
+            }
+        }
+
         return true;
     };
 
@@ -616,17 +673,21 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
                             {/* Time slot grid */}
                             <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6 md:grid-cols-8">
                                 {TIME_SLOTS.map((t) => {
+                                    const booked = bookedSlots.includes(t);
                                     const sel = isSlotSelected(t);
                                     const inRange = isSlotInRange(t);
                                     return (
                                         <button
                                             key={t}
+                                            disabled={booked}
                                             onClick={() => handleSlotClick(t)}
-                                            onMouseEnter={() => setHovered(t)}
+                                            onMouseEnter={() => !booked && setHovered(t)}
                                             onMouseLeave={() => setHovered(null)}
                                             className={cn(
                                                 'relative rounded-lg border py-2 text-[10px] font-bold transition-all duration-150 outline-none',
-                                                sel
+                                                booked
+                                                    ? 'cursor-not-allowed border-red-200 bg-red-50 text-red-700 line-through opacity-80'
+                                                    : sel
                                                     ? 'z-10 scale-105 border-emerald-500 bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
                                                     : inRange
                                                         ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-600'
@@ -644,6 +705,10 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
                                 <div className="flex items-center gap-1.5">
                                     <div className="h-2.5 w-2.5 rounded-sm border border-emerald-500 bg-emerald-500" />
                                     <span className="text-[10px] text-slate-400">Dipilih</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="h-2.5 w-2.5 rounded-sm border border-red-200 bg-red-50" />
+                                    <span className="text-[10px] text-slate-400">Sudah dibooking</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <div className="h-2.5 w-2.5 rounded-sm border border-slate-200 bg-slate-50" />

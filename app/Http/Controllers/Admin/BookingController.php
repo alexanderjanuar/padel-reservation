@@ -146,20 +146,19 @@ class BookingController extends Controller
 
         Payment::create([
             'booking_id' => $booking->id,
-            'method' => $isPaid ? 'cash' : 'qris',
+            'method' => $isPaid ? 'cash' : 'manual',
             'amount' => $booking->total_price,
             'status' => $isPaid ? 'paid' : 'pending',
             'paid_at' => $isPaid ? now() : null,
         ]);
 
-        $booking->load(['user', 'court.venue']);
-
-        if ($isPaid) {
-            $this->fonnteService->sendBookingNotification($booking);
-        }
+        $booking->load(['user', 'court.venue', 'court.sport']);
+        $this->fonnteService->sendBookingNotification($booking);
 
         return response()->json([
-            'message' => 'Booking berhasil dibuat.',
+            'message' => $isPaid
+                ? 'Booking berhasil dibuat.'
+                : 'Permintaan booking berhasil dibuat. Admin akan follow up melalui WhatsApp.',
             'booking' => $booking,
         ], 201);
     }

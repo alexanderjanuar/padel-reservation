@@ -46,6 +46,7 @@ class FonnteService
         $user = $booking->user;
         $court = $booking->court;
         $venue = $court->venue;
+        $sport = $court->sport;
 
         if (empty($user->phone)) {
             Log::warning('FonnteService: User has no phone number.', ['user_id' => $user->id]);
@@ -114,15 +115,25 @@ class FonnteService
         $phone = $this->normalisePhone($user->phone);
         $date = $booking->date->format('d-m-Y');
         $price = 'Rp '.number_format($booking->total_price, 0, ',', '.');
-        $status = ucfirst($booking->status);
+        $isPending = $booking->status === 'pending';
 
-        $message = "Halo {$user->name}! Booking Anda telah berhasil dibuat. ✅\n\n"
-            ."📅 Tanggal  : {$date}\n"
-            ."⏰ Waktu    : {$booking->start_time} - {$booking->end_time}\n"
-            ."🏟️ Lapangan : {$court->name} - {$venue->name}\n"
-            ."💰 Total    : {$price}\n"
-            ."📌 Status   : {$status}\n\n"
-            .'Terima kasih telah memesan di Padel Reservation! 🎾';
+        $message = $isPending
+            ? "Halo {$user->name}, terima kasih. Permintaan booking Anda sudah kami terima.\n\n"
+                ."Detail booking:\n"
+                ."• Lapangan: {$court->name}\n"
+                ."• Venue: {$venue->name}\n"
+                ."• Tanggal: {$date}\n"
+                ."• Jam: {$booking->start_time} - {$booking->end_time}\n"
+                ."• Estimasi biaya: {$price}\n\n"
+                .'Admin kami akan segera menghubungi Anda melalui WhatsApp ini untuk konfirmasi ketersediaan jadwal dan tindak lanjut booking.'
+            : "Halo {$user->name}, booking Anda berhasil dibuat.\n\n"
+                ."Detail booking:\n"
+                ."• Lapangan: {$court->name}\n"
+                ."• Venue: {$venue->name}\n"
+                ."• Tanggal: {$date}\n"
+                ."• Jam: {$booking->start_time} - {$booking->end_time}\n"
+                ."• Total biaya: {$price}\n\n"
+                .'Terima kasih telah melakukan booking. Sampai jumpa di lapangan.';
 
         try {
             $response = Http::withHeaders([

@@ -1,4 +1,5 @@
 import { Head, usePage, Link, router } from '@inertiajs/react';
+import axios from 'axios';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import {
@@ -363,10 +364,40 @@ function CheckoutModal({
         if (needsPhone && !phoneInput.trim()) { setError('Nomor WhatsApp wajib diisi.'); return; }
         setSubmitting(true);
         setError('');
-        window.setTimeout(() => {
-            setSubmitting(false);
+        try {
+            if (needsPhone) {
+                await axios.patch('/user/phone', { phone: phoneInput.trim() });
+            }
+
+            for (const item of items) {
+                await axios.post('/bookings/guest', customer?.id ? {
+                    user_id: customer.id,
+                    court_id: item.court.id,
+                    date: format(item.date, 'yyyy-MM-dd'),
+                    start_time: item.startTime,
+                    end_time: item.endTime,
+                    total_price: item.totalPrice,
+                    payment_status: 'unpaid',
+                } : {
+                    guest_name: guestForm.name.trim(),
+                    guest_email: guestForm.email.trim(),
+                    guest_phone: guestForm.phone.trim(),
+                    court_id: item.court.id,
+                    date: format(item.date, 'yyyy-MM-dd'),
+                    start_time: item.startTime,
+                    end_time: item.endTime,
+                    total_price: item.totalPrice,
+                    payment_status: 'unpaid',
+                });
+            }
+
             setStep('done');
-        }, 500);
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            setError(e.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
