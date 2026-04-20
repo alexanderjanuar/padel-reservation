@@ -46,7 +46,6 @@ class FonnteService
         $user = $booking->user;
         $court = $booking->court;
         $venue = $court->venue;
-        $sport = $court->sport;
 
         if (empty($user->phone)) {
             Log::warning('FonnteService: User has no phone number.', ['user_id' => $user->id]);
@@ -54,7 +53,7 @@ class FonnteService
             return;
         }
 
-        $phone = $this->normalisePhone($user->phone);
+        $phone = $this->normalisePhone((string) $user->phone);
         $date = $booking->date->format('d-m-Y');
         $price = 'Rp '.number_format($booking->total_price, 0, ',', '.');
 
@@ -112,39 +111,48 @@ class FonnteService
             return;
         }
 
-        $phone = $this->normalisePhone($user->phone);
+        $phone = $this->normalisePhone((string) $user->phone);
         $date = $booking->date->format('d-m-Y');
         $price = 'Rp '.number_format($booking->total_price, 0, ',', '.');
         $isPending = $booking->status === 'pending';
 
         $message = $isPending
-            ? "Halo {$user->name}, terima kasih. Permintaan booking Anda sudah kami terima.\n\n"
-                ."Detail booking:\n"
-                ."• Lapangan: {$court->name}\n"
-                ."• Venue: {$venue->name}\n"
-                ."• Tanggal: {$date}\n"
-                ."• Jam: {$booking->start_time} - {$booking->end_time}\n"
-                ."• Estimasi biaya: {$price}\n\n"
-                .'Admin kami akan segera menghubungi Anda melalui WhatsApp ini untuk konfirmasi ketersediaan jadwal dan tindak lanjut booking.'
-            : "Halo {$user->name}, booking Anda berhasil dibuat.\n\n"
-                ."Detail booking:\n"
-                ."• Lapangan: {$court->name}\n"
-                ."• Venue: {$venue->name}\n"
-                ."• Tanggal: {$date}\n"
-                ."• Jam: {$booking->start_time} - {$booking->end_time}\n"
-                ."• Total biaya: {$price}\n\n"
-                .'Terima kasih telah melakukan booking. Sampai jumpa di lapangan.';
+            ? "Halo {$user->name}, terima kasih! Permintaan booking Anda sudah kami terima. 🎾\n\n"
+                ."*Detail Booking:*\n"
+                ."📋 Lapangan : {$court->name}\n"
+                ."📍 Venue    : {$venue->name}\n"
+                ."📅 Tanggal  : {$date}\n"
+                ."⏰ Jam      : {$booking->start_time} - {$booking->end_time}\n"
+                ."💰 Total    : {$price}\n\n"
+                ."*Cara Pembayaran:*\n"
+                ."Silakan lakukan pembayaran via QRIS di atas, lalu *kirim bukti pembayaran (screenshot/foto) ke chat ini* agar booking Anda segera dikonfirmasi.\n\n"
+                .'Admin kami akan memverifikasi dan mengirimkan konfirmasi booking setelah pembayaran diterima. 🙏'
+            : "Halo {$user->name}, booking Anda berhasil dibuat. ✅\n\n"
+                ."*Detail Booking:*\n"
+                ."📋 Lapangan : {$court->name}\n"
+                ."📍 Venue    : {$venue->name}\n"
+                ."📅 Tanggal  : {$date}\n"
+                ."⏰ Jam      : {$booking->start_time} - {$booking->end_time}\n"
+                ."💰 Total    : {$price}\n\n"
+                .'Terima kasih telah melakukan booking. Sampai jumpa di lapangan! 🎾';
+
+        $payload = [
+            ['name' => 'target',      'contents' => $phone],
+            ['name' => 'message',     'contents' => $message],
+            ['name' => 'countryCode', 'contents' => '62'],
+            ['name' => 'delay',       'contents' => '2'],
+            ['name' => 'schedule',    'contents' => '0'],
+        ];
+
+        if ($isPending && ! app()->isLocal()) {
+            $payload[] = ['name' => 'url',      'contents' => url('/images/qris.png')];
+            $payload[] = ['name' => 'filename', 'contents' => 'QRIS-Pembayaran.png'];
+        }
 
         try {
             $response = Http::withHeaders([
                 'Authorization' => $this->token,
-            ])->asMultipart()->post($this->apiUrl, [
-                ['name' => 'target', 'contents' => $phone],
-                ['name' => 'message', 'contents' => $message],
-                ['name' => 'countryCode', 'contents' => '62'],
-                ['name' => 'delay', 'contents' => '2'],
-                ['name' => 'schedule', 'contents' => '0'],
-            ]);
+            ])->asMultipart()->post($this->apiUrl, $payload);
 
             if (! $response->successful()) {
                 Log::error('FonnteService: Failed to send WA message.', [
