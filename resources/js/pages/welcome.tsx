@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, lapangan, login, register } from '@/routes';
 
 /* ─────────────────────────── Types ─────────────────────────── */
 interface Sport {
@@ -42,11 +42,15 @@ interface WelcomeProps {
 const getImageUrl = (path: string) =>
     path.startsWith('http') ? path : `/storage/${path}`;
 
-
 const fmt = (n: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1646649853703-7645147474ba?w=1200&q=80';
+const CONTACT_PHONE_DISPLAY = '0895-0909-5786';
+const CONTACT_PHONE_WHATSAPP = '6289509095786';
+const BOOKING_WHATSAPP_MESSAGE =
+    'Halo Admin Sofiah Sport Center, saya ingin melakukan booking lapangan. Mohon informasinya terkait jadwal yang tersedia, harga sewa, dan cara pemesanannya. Terima kasih.';
+const BOOKING_WHATSAPP_URL = `https://wa.me/${CONTACT_PHONE_WHATSAPP}?text=${encodeURIComponent(BOOKING_WHATSAPP_MESSAGE)}`;
 
 function CourtCardInner({ court }: { court: Court }) {
     const p = court.images?.[0] ?? court.venue?.images?.[0];
@@ -428,7 +432,7 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             return (
                                 <Link
                                     key={sport.id}
-                                    href={`/booking?sport=${sport.id}`}
+                                    href={lapangan({ query: { sport: sport.id } }).url}
                                     onClick={() => setSelectedSport(sport.id)}
                                     className={cn(
                                         'group relative flex w-full min-h-0 flex-1 flex-col overflow-hidden text-left transition-all duration-500',
@@ -603,9 +607,14 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                             <div>
                                 <p className="mb-3 text-[10px] font-bold tracking-[0.3em] text-slate-400 uppercase">Kontak</p>
                                 <div className="flex flex-col gap-2.5">
-                                    <a href="tel:+62082155670524" className="flex items-center gap-3 text-sm text-slate-500 transition-colors hover:text-emerald-600">
+                                    <a
+                                        href={BOOKING_WHATSAPP_URL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-3 text-sm text-slate-500 transition-colors hover:text-emerald-600"
+                                    >
                                         <Phone className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                                        0821-5567-0524
+                                        {CONTACT_PHONE_DISPLAY}
                                     </a>
                                     <a href="mailto:info@sofiahsport.id" className="flex items-center gap-3 text-sm text-slate-500 transition-colors hover:text-emerald-600">
                                         <Mail className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
@@ -662,10 +671,15 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                                 <p>Jl. Moeis Hasan, Simpang Tiga,<br />Kec. Loa Janan Ilir, Kota Samarinda,<br />Kalimantan Timur</p>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-slate-500">
+                            <a
+                                href={BOOKING_WHATSAPP_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 text-sm text-slate-500 transition-colors hover:text-emerald-600"
+                            >
                                 <Phone className="h-4 w-4 shrink-0 text-emerald-500" />
-                                <p>0821-5567-0524</p>
-                            </div>
+                                <p>{CONTACT_PHONE_DISPLAY}</p>
+                            </a>
                         </div>
 
                         <div className="flex flex-col items-start">

@@ -1,5 +1,4 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import axios from 'axios';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import {
@@ -16,7 +15,6 @@ import {
     Menu,
     Phone,
     X,
-    Zap,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -112,138 +110,198 @@ function RelatedCard({ court }: { court: Court }) {
 interface CheckoutItem {
     courtId: number;
     courtName: string;
+    venueName: string;
+    sportName: string;
     date: Date;
     startTime: string;
     endTime: string;
     hours: number;
     totalPrice: number;
 }
+interface BookingCustomer {
+    id?: number;
+    name: string;
+    email: string;
+    phone?: string;
+}
+interface GuestBookingForm {
+    name: string;
+    email: string;
+    phone: string;
+}
 
 function CheckoutModal({
     item,
     onClose,
     onSuccess,
-    user,
+    customer,
 }: {
     item: CheckoutItem;
     onClose: () => void;
     onSuccess: () => void;
-    user: { id: number; name: string; email: string; phone?: string };
+    customer?: BookingCustomer;
 }) {
     const [step, setStep] = useState<'confirm' | 'done'>('confirm');
     const [submitting, setSubmitting] = useState(false);
-    const [snapOpen, setSnapOpen] = useState(false);
     const [error, setError] = useState('');
-    const [phoneInput, setPhoneInput] = useState('');
-    const needsPhone = !user.phone;
+    const [guestForm, setGuestForm] = useState<GuestBookingForm>({
+        name: '',
+        email: '',
+        phone: '',
+    });
+    const [phoneInput, setPhoneInput] = useState(customer?.phone ?? '');
+    const isGuestCheckout = !customer?.id;
+    const needsPhone = Boolean(customer?.id) && !customer?.phone;
+    const deliveryTarget = isGuestCheckout
+        ? guestForm.phone || guestForm.email
+        : customer?.phone || phoneInput || customer?.email || '';
 
-    const openSnap = (token: string) => {
-        if (!window.snap) { setError('Midtrans tidak tersedia. Refresh halaman dan coba lagi.'); return; }
-        setSnapOpen(true);
-        window.snap.pay(token, {
-            onSuccess: () => { setSnapOpen(false); setStep('done'); },
-            onPending: () => { setSnapOpen(false); setStep('done'); },
-            onError: () => { setSnapOpen(false); setError('Pembayaran gagal. Silakan coba lagi.'); },
-            onClose: () => { setSnapOpen(false); setError('Pembayaran dibatalkan. Klik "Bayar Sekarang" untuk melanjutkan.'); },
-        });
+    const updateGuestField = (field: keyof GuestBookingForm, value: string) => {
+        setGuestForm((prev) => ({ ...prev, [field]: value }));
     };
 
     const handlePay = async () => {
+        if (isGuestCheckout && (!guestForm.name.trim() || !guestForm.email.trim() || !guestForm.phone.trim())) {
+            setError('Nama, email, dan nomor WhatsApp wajib diisi.');
+            return;
+        }
         if (needsPhone && !phoneInput.trim()) { setError('Nomor WhatsApp wajib diisi.'); return; }
         setSubmitting(true);
         setError('');
-        try {
-            if (needsPhone) await axios.patch('/user/phone', { phone: phoneInput.trim() });
-            const res = await axios.post('/bookings/guest', {
-                user_id: user.id,
-                court_id: item.courtId,
-                date: format(item.date, 'yyyy-MM-dd'),
-                start_time: item.startTime,
-                end_time: item.endTime,
-                total_price: item.totalPrice,
-                payment_status: 'midtrans',
-            });
+        window.setTimeout(() => {
             setSubmitting(false);
-            openSnap(res.data.snap_token);
-        } catch (err: unknown) {
-            const e = err as { response?: { data?: { message?: string } } };
-            setError(e.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.');
-            setSubmitting(false);
-        }
+            setStep('done');
+        }, 500);
     };
 
     return (
-        <div className={cn('fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 backdrop-blur-sm sm:items-center', snapOpen && 'invisible')}>
-            <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-4 backdrop-blur-sm sm:items-center">
+            <div className="w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.16)]">
                 {step === 'done' ? (
-                    <div className="flex flex-col items-center p-10 text-center">
-                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
-                            <CheckCircle2 className="h-9 w-9 text-emerald-500" />
+                    <div className="flex flex-col items-center px-8 py-10 text-center sm:px-10">
+                        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
                         </div>
-                        <h2 className="mb-2 font-display text-2xl font-black text-slate-900">Pembayaran Berhasil!</h2>
-                        <p className="mb-1 text-sm text-slate-400">Booking Anda telah dikonfirmasi.</p>
-                        <p className="mb-6 text-xs text-slate-500">
-                            Notifikasi akan dikirim via WhatsApp ke{' '}
-                            <span className="font-medium text-slate-900">{user.phone ?? (phoneInput || user.email)}</span>
+                        <h2 className="mb-2 font-display text-2xl font-black text-slate-900">Booking Berhasil</h2>
+                        <p className="mb-1 text-sm text-slate-500">Permintaan booking Anda sudah kami terima.</p>
+                        <p className="mb-6 text-xs leading-relaxed text-slate-500">
+                            Admin kami akan follow up melalui WhatsApp ke{' '}
+                            <span className="font-medium text-slate-900">{deliveryTarget}</span>
+                            {' '}untuk konfirmasi lebih lanjut.
                         </p>
-                        <button onClick={() => { onSuccess(); onClose(); }} className="rounded-xl bg-emerald-500 px-8 py-3 font-bold text-white transition-all hover:bg-emerald-600">
+                        <button onClick={() => { onSuccess(); onClose(); }} className="rounded-2xl bg-emerald-500 px-8 py-3 font-bold text-white transition-all hover:bg-emerald-600">
                             Selesai
                         </button>
                     </div>
                 ) : (
                     <>
-                        <div className="flex items-center justify-between border-b border-slate-200 px-7 py-5">
-                            <div>
-                                <h2 className="font-display text-xl font-black text-slate-900">Konfirmasi Pesanan</h2>
-                                <p className="mt-0.5 text-xs text-slate-500">{item.courtName} · {fmt(item.totalPrice)}</p>
+                        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-[11px] font-semibold tracking-[0.18em] text-emerald-600 uppercase">Checkout</p>
+                                    <h2 className="mt-1 font-display text-xl font-black text-slate-900">Konfirmasi Pesanan</h2>
+                                    <p className="mt-1 text-sm text-slate-500">Ringkasan booking lapangan</p>
+                                </div>
+                                <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-700">
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
-                            <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900">
-                                <X className="h-4 w-4" />
-                            </button>
                         </div>
 
-                        <div className="border-b border-slate-200 px-7 py-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <div>
-                                    <span className="font-medium text-slate-900">{item.courtName}</span>
-                                    <span className="mx-2 text-slate-400">·</span>
-                                    <span className="font-mono text-xs text-slate-500">
-                                        {format(item.date, 'dd MMM yyyy', { locale: idLocale })} · {item.startTime}–{item.endTime} ({item.hours} jam)
+                        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p className="font-display text-base font-black text-slate-900">{item.courtName}</p>
+                                        <p className="mt-1 text-xs text-slate-500">{item.venueName} · {item.sportName}</p>
+                                        <p className="mt-2 text-xs text-slate-600">
+                                            {format(item.date, 'dd MMM yyyy', { locale: idLocale })} · {item.startTime}–{item.endTime} · {item.hours} jam
+                                        </p>
+                                    </div>
+                                    <span className="shrink-0 text-sm font-bold text-emerald-600">
+                                        {fmt(item.totalPrice)}
                                     </span>
                                 </div>
-                                <span className="ml-4 shrink-0 font-mono text-xs font-bold text-emerald-500">{fmt(item.totalPrice)}</span>
                             </div>
                         </div>
 
-                        <div className="border-b border-slate-200 px-7 py-4">
-                            <p className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase">Pemesan</p>
-                            <p className="text-sm font-medium text-slate-900">{user.name}</p>
-                            <p className="text-xs text-slate-500">{user.email}</p>
-                            {user.phone ? (
-                                <p className="text-xs text-slate-500">{user.phone}</p>
+                        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+                            <p className="mb-3 text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                                {isGuestCheckout ? 'Data Pemesan' : 'Pemesan'}
+                            </p>
+                            {isGuestCheckout ? (
+                                <div className="grid gap-3">
+                                    <div>
+                                        <label htmlFor="guest-name" className="mb-1.5 block text-xs font-semibold text-slate-600">Nama Lengkap</label>
+                                        <input
+                                            id="guest-name"
+                                            type="text"
+                                            value={guestForm.name}
+                                            onChange={(e) => updateGuestField('name', e.target.value)}
+                                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10"
+                                            placeholder="Masukkan nama pemesan"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="guest-email" className="mb-1.5 block text-xs font-semibold text-slate-600">Email</label>
+                                        <input
+                                            id="guest-email"
+                                            type="email"
+                                            value={guestForm.email}
+                                            onChange={(e) => updateGuestField('email', e.target.value)}
+                                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10"
+                                            placeholder="nama@email.com"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="guest-phone" className="mb-1.5 block text-xs font-semibold text-slate-600">Nomor WhatsApp</label>
+                                        <input
+                                            id="guest-phone"
+                                            type="tel"
+                                            value={guestForm.phone}
+                                            onChange={(e) => updateGuestField('phone', e.target.value)}
+                                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10"
+                                            placeholder="08xxxxxxxxxx"
+                                        />
+                                    </div>
+                                </div>
                             ) : (
-                                <div className="group relative mt-3">
-                                    <input
-                                        id="checkout-phone"
-                                        type="tel"
-                                        required
-                                        value={phoneInput}
-                                        onChange={(e) => setPhoneInput(e.target.value)}
-                                        placeholder=" "
-                                        className="peer block w-full rounded-none border-0 border-b-2 border-amber-300 bg-transparent px-0 pt-5 pb-2 text-sm font-medium text-slate-900 placeholder-transparent transition-all duration-300 focus:border-emerald-500 focus:ring-0 focus:outline-none"
-                                    />
-                                    <label htmlFor="checkout-phone" className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-sm font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-1 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-emerald-500 peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase">
-                                        Nomor WhatsApp
-                                    </label>
-                                    <p className="mt-1 text-[10px] text-amber-600">Diperlukan untuk notifikasi booking</p>
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                    <p className="text-sm font-semibold text-slate-900">{customer?.name}</p>
+                                    <p className="mt-1 text-xs text-slate-500">{customer?.email}</p>
+                                    {customer?.phone ? (
+                                        <p className="mt-1 text-xs text-slate-500">{customer.phone}</p>
+                                    ) : (
+                                        <div className="mt-4">
+                                            <label htmlFor="checkout-phone" className="mb-1.5 block text-xs font-semibold text-slate-600">Nomor WhatsApp</label>
+                                            <input
+                                                id="checkout-phone"
+                                                type="tel"
+                                                value={phoneInput}
+                                                onChange={(e) => setPhoneInput(e.target.value)}
+                                                className="w-full rounded-2xl border border-amber-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10"
+                                                placeholder="Tambahkan nomor untuk notifikasi booking"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
 
-                        <div className="px-7 py-6">
-                            <div className="mb-4 flex items-baseline justify-between">
-                                <span className="text-xs font-bold tracking-widest text-slate-500 uppercase">Total Pembayaran</span>
-                                <span className="font-mono text-xl font-black text-slate-900">{fmt(item.totalPrice)}</span>
+                        <div className="px-6 py-5 sm:px-7 sm:py-6">
+                            <div className="mb-5 rounded-2xl bg-slate-50 p-4">
+                                <div className="flex items-center justify-between text-sm text-slate-500">
+                                    <span>Venue</span>
+                                    <span className="font-semibold text-slate-700">{item.venueName}</span>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between text-sm text-slate-500">
+                                    <span>Jam booking</span>
+                                    <span className="font-semibold text-slate-700">{item.startTime} - {item.endTime}</span>
+                                </div>
+                                <div className="mt-2 flex items-baseline justify-between">
+                                    <span className="text-sm text-slate-500">Total pembayaran</span>
+                                    <span className="font-display text-2xl font-black text-slate-900">{fmt(item.totalPrice)}</span>
+                                </div>
                             </div>
                             {error && (
                                 <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
@@ -254,15 +312,14 @@ function CheckoutModal({
                             <button
                                 onClick={handlePay}
                                 disabled={submitting}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3.5 font-bold text-white shadow-[0_4px_24px_rgba(16,185,129,0.3)] transition-all hover:bg-emerald-600 disabled:opacity-50"
+                                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3.5 font-bold text-white transition-all hover:bg-emerald-600 disabled:opacity-50"
                             >
                                 {submitting ? (
                                     <><span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-white" />Memproses...</>
                                 ) : (
-                                    <><Zap className="h-4 w-4" />Bayar Sekarang · {fmt(item.totalPrice)}</>
+                                    <>Booking Sekarang</>
                                 )}
                             </button>
-                            <p className="mt-3 text-center text-xs text-slate-400">Pembayaran aman via Midtrans · Berbagai metode tersedia</p>
                         </div>
                     </>
                 )}
@@ -273,7 +330,7 @@ function CheckoutModal({
 
 /* ─────────────────────────── Main Page ─────────────────────────── */
 export default function CourtDetail({ court, relatedCourts = [], canRegister = true }: PageProps) {
-    const { auth } = usePage().props as { auth: { user?: { id: number; name: string; email: string } } | null; };
+    const { auth } = usePage().props as { auth: { user?: { id: number; name: string; email: string; phone?: string } } | null; };
 
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -641,10 +698,7 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
                             <div className="flex flex-col gap-2">
                                 <button
                                     disabled={!timeStart}
-                                    onClick={() => {
-                                        if (!auth?.user) { window.location.href = '/login'; return; }
-                                        setCheckoutOpen(true);
-                                    }}
+                                    onClick={() => setCheckoutOpen(true)}
                                     className="flex w-full items-center justify-center rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-white transition-all hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                     {timeStart ? 'Booking Sekarang' : 'Pilih Jam Dulu'}
@@ -744,10 +798,7 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
                     </div>
                     <button
                         disabled={!timeStart}
-                        onClick={() => {
-                            if (!auth?.user) { window.location.href = '/login'; return; }
-                            setCheckoutOpen(true);
-                        }}
+                        onClick={() => setCheckoutOpen(true)}
                         className="shrink-0 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {timeStart ? 'Booking' : 'Pilih Jam'}
@@ -756,18 +807,20 @@ export default function CourtDetail({ court, relatedCourts = [], canRegister = t
             </div>
 
             {/* ── Checkout Modal ── */}
-            {checkoutOpen && auth?.user && timeStart && (
+            {checkoutOpen && timeStart && (
                 <CheckoutModal
                     item={{
                         courtId: court.id,
                         courtName: court.name,
+                        venueName: court.venue?.name ?? '-',
+                        sportName: court.sport?.name ?? '-',
                         date: selectedDate,
                         startTime: timeStart,
                         endTime: bookingEndTime,
                         hours: bookingHours,
                         totalPrice: bookingTotal,
                     }}
-                    user={auth.user}
+                    customer={auth?.user}
                     onClose={() => setCheckoutOpen(false)}
                     onSuccess={() => { setTimeStart(null); setTimeEnd(null); }}
                 />
