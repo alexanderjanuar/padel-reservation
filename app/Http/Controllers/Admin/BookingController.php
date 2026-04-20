@@ -199,6 +199,18 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking tidak dapat dikonfirmasi.'], 422);
         }
 
+        $conflict = Booking::where('court_id', $booking->court_id)
+            ->whereDate('date', $booking->date)
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->where('id', '!=', $booking->id)
+            ->where('start_time', '<', $booking->end_time)
+            ->where('end_time', '>', $booking->start_time)
+            ->exists();
+
+        if ($conflict) {
+            return response()->json(['message' => 'Slot ini sudah dikonfirmasi untuk booking lain. Tidak bisa dikonfirmasi ganda.'], 422);
+        }
+
         $booking->update(['status' => 'confirmed']);
 
         if ($booking->payment) {

@@ -49,7 +49,7 @@ const getImageUrl = (path: string) => path.startsWith('http') ? path : `/storage
 const fmt = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1646649853703-7645147474ba?w=1200&q=80';
 
-const TIME_SLOTS = Array.from({ length: 16 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
+const TIME_SLOTS = Array.from({ length: 14 }, (_, i) => `${(i + 9).toString().padStart(2, '0')}:00`);
 
 function calcPrice(court: Court, startTime: string, endTime: string, date: Date): number {
     const startHour = parseInt(startTime.split(':')[0], 10);

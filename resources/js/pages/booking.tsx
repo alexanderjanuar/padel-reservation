@@ -106,7 +106,7 @@ function calcPrice(court: Court, startTime: string, endTime: string, date: Date)
     return total;
 }
 
-const TIME_SLOTS = Array.from({ length: 16 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
+const TIME_SLOTS = Array.from({ length: 14 }, (_, i) => `${(i + 9).toString().padStart(2, '0')}:00`);
 
 /* ─────────────────────────── Time Slot Picker ─────────────────────────── */
 function TimeSlotPicker({ court, date, onAdd }: { court: Court; date: Date; onAdd: (item: CartItem) => void }) {
