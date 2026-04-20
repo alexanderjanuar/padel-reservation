@@ -175,10 +175,10 @@ function CheckoutModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-4 backdrop-blur-sm sm:items-center">
-            <div className="w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.16)]">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <div className="flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] sm:max-h-[88vh] sm:rounded-[28px]">
                 {step === 'done' ? (
-                    <div className="flex flex-col items-center px-8 py-10 text-center sm:px-10">
+                    <div className="flex flex-col items-center px-5 py-8 text-center sm:px-10 sm:py-10">
                         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
                             <CheckCircle2 className="h-8 w-8 text-emerald-500" />
                         </div>
@@ -195,12 +195,12 @@ function CheckoutModal({
                     </div>
                 ) : (
                     <>
-                        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+                        <div className="shrink-0 border-b border-slate-200 px-5 py-4 sm:px-7 sm:py-5">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
                                     <p className="text-[11px] font-semibold tracking-[0.18em] text-emerald-600 uppercase">Checkout</p>
                                     <h2 className="mt-1 font-display text-xl font-black text-slate-900">Konfirmasi Pesanan</h2>
-                                    <p className="mt-1 text-sm text-slate-500">Ringkasan booking lapangan</p>
+                                    <p className="mt-1 text-xs text-slate-500 sm:text-sm">Ringkasan booking lapangan</p>
                                 </div>
                                 <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-700">
                                     <X className="h-4 w-4" />
@@ -208,7 +208,9 @@ function CheckoutModal({
                             </div>
                         </div>
 
-                        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+                        <div className="min-h-0 flex-1 overflow-y-auto">
+                            <div className="space-y-4 px-5 py-4 sm:px-7 sm:py-5">
+                        <div className="border-b border-slate-200 pb-4 sm:pb-5">
                             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
@@ -225,7 +227,7 @@ function CheckoutModal({
                             </div>
                         </div>
 
-                        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+                        <div className="border-b border-slate-200 pb-4 sm:pb-5">
                             <p className="mb-3 text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
                                 {isGuestCheckout ? 'Data Pemesan' : 'Pemesan'}
                             </p>
@@ -288,8 +290,8 @@ function CheckoutModal({
                             )}
                         </div>
 
-                        <div className="px-6 py-5 sm:px-7 sm:py-6">
-                            <div className="mb-5 rounded-2xl bg-slate-50 p-4">
+                        <div>
+                            <div className="mb-4 rounded-2xl bg-slate-50 p-4">
                                 <div className="flex items-center justify-between text-sm text-slate-500">
                                     <span>Venue</span>
                                     <span className="font-semibold text-slate-700">{item.venueName}</span>
@@ -298,9 +300,9 @@ function CheckoutModal({
                                     <span>Jam booking</span>
                                     <span className="font-semibold text-slate-700">{item.startTime} - {item.endTime}</span>
                                 </div>
-                                <div className="mt-2 flex items-baseline justify-between">
+                                <div className="mt-3 flex items-baseline justify-between">
                                     <span className="text-sm text-slate-500">Total pembayaran</span>
-                                    <span className="font-display text-2xl font-black text-slate-900">{fmt(item.totalPrice)}</span>
+                                    <span className="font-display text-xl font-black text-slate-900 sm:text-2xl">{fmt(item.totalPrice)}</span>
                                 </div>
                             </div>
                             {error && (
@@ -309,6 +311,11 @@ function CheckoutModal({
                                     {error}
                                 </div>
                             )}
+                        </div>
+                            </div>
+                        </div>
+
+                        <div className="shrink-0 border-t border-slate-200 bg-white px-5 py-4 sm:px-7 sm:py-5">
                             <button
                                 onClick={handlePay}
                                 disabled={submitting}
