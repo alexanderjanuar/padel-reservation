@@ -213,29 +213,29 @@ function CheckoutModal({
                 {step === 'done' ? (
                     <>
                         {/* Header */}
-                        <div className="shrink-0 border-b border-slate-100 px-5 py-4 sm:px-7 sm:py-5">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <div className="shrink-0 border-b border-slate-100 px-4 py-3 sm:px-7 sm:py-4">
+                            <div className="flex items-center gap-2.5 sm:gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 sm:h-10 sm:w-10">
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500 sm:h-5 sm:w-5" />
                                 </div>
                                 <div>
-                                    <h2 className="font-display text-lg font-black text-slate-900">Booking Diterima!</h2>
-                                    <p className="text-xs text-slate-500">Selesaikan pembayaran untuk konfirmasi</p>
+                                    <h2 className="font-display text-base font-black text-slate-900 sm:text-lg">Booking Diterima!</h2>
+                                    <p className="text-[11px] text-slate-500 sm:text-xs">Selesaikan pembayaran untuk konfirmasi</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Scrollable body */}
                         <div className="min-h-0 flex-1 overflow-y-auto">
-                            <div className="space-y-4 px-5 py-5 sm:px-7">
+                            <div className="space-y-3 px-4 py-4 sm:space-y-4 sm:px-7 sm:py-5">
 
                                 {/* Booking summary */}
-                                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                                    <p className="mb-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Ringkasan Booking</p>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-slate-500">Lapangan</span>
-                                            <span className="font-semibold text-slate-900">{item.courtName}</span>
+                                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 sm:rounded-2xl sm:p-4">
+                                    <p className="mb-2 text-[9px] font-bold tracking-widest text-slate-400 uppercase sm:mb-3 sm:text-[10px]">Ringkasan Booking</p>
+                                    <div className="space-y-1.5 text-xs sm:space-y-2 sm:text-sm">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="shrink-0 text-slate-500">Lapangan</span>
+                                            <span className="truncate text-right font-semibold text-slate-900">{item.courtName}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-slate-500">Tanggal</span>
@@ -245,35 +245,38 @@ function CheckoutModal({
                                             <span className="text-slate-500">Jam</span>
                                             <span className="font-semibold text-slate-900">{item.startTime} – {item.endTime}</span>
                                         </div>
-                                        <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2">
-                                            <span className="text-sm font-bold text-slate-700">Total</span>
-                                            <span className="font-display text-base font-black text-emerald-600">{fmt(item.totalPrice)}</span>
+                                        <div className="flex items-center justify-between border-t border-slate-200 pt-1.5 sm:pt-2">
+                                            <span className="font-bold text-slate-700">Total</span>
+                                            <span className="font-display text-sm font-black text-emerald-600 sm:text-base">{fmt(item.totalPrice)}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* QRIS */}
                                 <div>
-                                    <p className="mb-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Bayar via QRIS</p>
-                                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                                        <div className="bg-emerald-500 px-4 py-3 text-center">
-                                            <p className="text-[10px] font-bold tracking-widest text-emerald-100 uppercase">Scan & Bayar</p>
-                                            <p className="mt-0.5 font-display text-xl font-black text-white">{fmt(item.totalPrice)}</p>
+                                    <p className="mb-2 text-[9px] font-bold tracking-widest text-slate-400 uppercase sm:mb-3 sm:text-[10px]">Bayar via QRIS</p>
+                                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white sm:rounded-2xl">
+                                        {/* Amount banner */}
+                                        <div className="bg-emerald-500 px-4 py-2.5 text-center sm:py-3">
+                                            <p className="text-[9px] font-bold tracking-widest text-emerald-100 uppercase sm:text-[10px]">Scan & Bayar</p>
+                                            <p className="mt-0.5 font-display text-lg font-black text-white sm:text-xl">{fmt(item.totalPrice)}</p>
                                         </div>
-                                        <div className="flex justify-center p-5">
+                                        {/* QR image — scales fluidly, caps at 220px */}
+                                        <div className="flex justify-center px-6 py-4 sm:px-8 sm:py-5">
                                             <img
                                                 src="/images/qris.png"
                                                 alt="QRIS Pembayaran"
-                                                className="h-52 w-52 object-contain sm:h-60 sm:w-60"
+                                                className="aspect-square w-full max-w-[172px] object-contain sm:max-w-[210px]"
                                             />
                                         </div>
-                                        <div className="border-t border-slate-100 px-4 pb-4">
+                                        {/* Download */}
+                                        <div className="border-t border-slate-100 px-3 pb-3 sm:px-4 sm:pb-4">
                                             <a
                                                 href="/images/qris.png"
                                                 download="QRIS-SSC.png"
-                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:py-2.5 sm:text-sm"
                                             >
-                                                <Download className="h-4 w-4" />
+                                                <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                 Download QR Code
                                             </a>
                                         </div>
@@ -281,15 +284,15 @@ function CheckoutModal({
                                 </div>
 
                                 {/* Send proof instructions */}
-                                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100">
-                                            <MessageCircle className="h-5 w-5 text-amber-600" />
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 sm:rounded-2xl sm:p-4">
+                                    <div className="flex items-start gap-2.5 sm:gap-3">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 sm:h-9 sm:w-9 sm:rounded-xl">
+                                            <MessageCircle className="h-4 w-4 text-amber-600 sm:h-5 sm:w-5" />
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-amber-900">Kirim Bukti Pembayaran</p>
-                                            <p className="mt-1 text-xs leading-relaxed text-amber-700">
-                                                Setelah bayar, kirim <span className="font-bold">screenshot / foto bukti</span> ke WhatsApp kami. Booking dikonfirmasi setelah pembayaran terverifikasi.
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-amber-900 sm:text-sm">Kirim Bukti Pembayaran</p>
+                                            <p className="mt-0.5 text-[11px] leading-relaxed text-amber-700 sm:mt-1 sm:text-xs">
+                                                Setelah bayar, kirim <span className="font-bold">screenshot / foto bukti</span> ke WhatsApp kami agar booking segera dikonfirmasi.
                                             </p>
                                         </div>
                                     </div>
@@ -297,10 +300,10 @@ function CheckoutModal({
                                         href={`https://wa.me/6282155670524?text=${encodeURIComponent(`Halo, saya ingin mengirim bukti pembayaran booking:\n• Lapangan: ${item.courtName}\n• Tanggal: ${format(item.date, 'dd MMM yyyy', { locale: idLocale })}\n• Jam: ${item.startTime} - ${item.endTime}\n• Total: ${fmt(item.totalPrice)}`)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-bold text-white shadow-sm shadow-[#25D366]/30 transition-all hover:bg-[#1ebe5d]"
+                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-2.5 text-xs font-bold text-white shadow-sm shadow-[#25D366]/30 transition-all hover:bg-[#1ebe5d] sm:py-3 sm:text-sm"
                                     >
-                                        <MessageCircle className="h-4 w-4" />
-                                        Kirim ke WhatsApp · 0821-5567-0524
+                                        <MessageCircle className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                                        <span>Kirim ke WhatsApp · 0821-5567-0524</span>
                                     </a>
                                 </div>
 
@@ -308,10 +311,10 @@ function CheckoutModal({
                         </div>
 
                         {/* Footer */}
-                        <div className="shrink-0 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+                        <div className="shrink-0 border-t border-slate-100 bg-white px-4 py-3 sm:px-7 sm:py-4">
                             <button
                                 onClick={() => { onSuccess(); onClose(); }}
-                                className="w-full rounded-2xl border border-slate-200 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                                className="w-full rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:rounded-2xl sm:py-3 sm:text-sm"
                             >
                                 Tutup
                             </button>
