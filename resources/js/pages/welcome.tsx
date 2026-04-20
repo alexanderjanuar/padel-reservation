@@ -310,7 +310,6 @@ export default function Welcome({ canRegister = true, courts = [], sports = [] }
                                             <h3 className="font-display text-sm font-black leading-tight text-slate-900 transition-colors group-hover:text-emerald-600">
                                                 {court.name}
                                             </h3>
-                                            
                                             <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-emerald-500" />
                                         </div>
                                         <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
