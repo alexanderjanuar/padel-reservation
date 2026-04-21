@@ -246,6 +246,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
     const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>(
         'paid',
     );
+    const [priceInputMode, setPriceInputMode] = useState<'system' | 'manual'>(
+        'system',
+    );
     const [customTotal, setCustomTotal] = useState<number | null>(null);
     const [bookingNotes, setBookingNotes] = useState<string>('');
     const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
@@ -2359,58 +2362,139 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                     </span>
                                                 </div>
                                                 <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-5">
-                                                    <label
-                                                        htmlFor="overrideTotal"
-                                                        className="flex items-center justify-between font-medium text-slate-900"
-                                                    >
-                                                        <span>Total Harga</span>
-                                                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-500">
-                                                            Bisa diedit
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="font-medium text-slate-900">
+                                                            Total Harga
+                                                        </label>
+                                                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                                                            Pilih sumber harga
                                                         </span>
-                                                    </label>
-                                                    <div className="relative">
-                                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 font-semibold text-slate-500">
-                                                            Rp
-                                                        </span>
-                                                        <input
-                                                            id="overrideTotal"
-                                                            type="text"
-                                                            value={
-                                                                customTotal !==
-                                                                null
-                                                                    ? customTotal.toLocaleString(
-                                                                          'id-ID',
-                                                                      )
-                                                                    : total.toLocaleString(
-                                                                          'id-ID',
-                                                                      )
-                                                            }
-                                                            onChange={(e) => {
-                                                                const val =
-                                                                    e.target.value.replace(
-                                                                        /\D/g,
-                                                                        '',
-                                                                    );
-                                                                if (
-                                                                    val === ''
-                                                                ) {
-                                                                    setCustomTotal(
-                                                                        total,
-                                                                    ); // Revert to calculated if emptied, or 0
-                                                                } else {
-                                                                    setCustomTotal(
-                                                                        Number(
-                                                                            val,
-                                                                        ),
-                                                                    );
-                                                                }
-                                                            }}
-                                                            className="block w-full rounded-xl border-slate-200 py-2.5 pr-4 pl-10 text-lg font-bold text-slate-900 transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                                                        />
                                                     </div>
-                                                    {customTotal !== null &&
-                                                        customTotal !==
-                                                            total && (
+
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setPriceInputMode(
+                                                                    'system',
+                                                                )
+                                                            }
+                                                            className={cn(
+                                                                'rounded-2xl border px-3 py-3 text-left transition-all',
+                                                                priceInputMode ===
+                                                                    'system'
+                                                                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                                    : 'border-slate-200 bg-white hover:border-slate-300',
+                                                            )}
+                                                        >
+                                                            <p
+                                                                className={cn(
+                                                                    'text-xs font-bold uppercase tracking-wider',
+                                                                    priceInputMode ===
+                                                                        'system'
+                                                                        ? 'text-emerald-600'
+                                                                        : 'text-slate-500',
+                                                                )}
+                                                            >
+                                                                Harga Sistem
+                                                            </p>
+                                                            <p className="mt-1 text-sm font-bold text-slate-900">
+                                                                Rp{' '}
+                                                                {total.toLocaleString(
+                                                                    'id-ID',
+                                                                )}
+                                                            </p>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setPriceInputMode(
+                                                                    'manual',
+                                                                )
+                                                            }
+                                                            className={cn(
+                                                                'rounded-2xl border px-3 py-3 text-left transition-all',
+                                                                priceInputMode ===
+                                                                    'manual'
+                                                                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                                    : 'border-slate-200 bg-white hover:border-slate-300',
+                                                            )}
+                                                        >
+                                                            <p
+                                                                className={cn(
+                                                                    'text-xs font-bold uppercase tracking-wider',
+                                                                    priceInputMode ===
+                                                                        'manual'
+                                                                        ? 'text-emerald-600'
+                                                                        : 'text-slate-500',
+                                                                )}
+                                                            >
+                                                                Harga Manual
+                                                            </p>
+                                                            <p className="mt-1 text-sm font-bold text-slate-900">
+                                                                {priceInputMode ===
+                                                                    'manual' &&
+                                                                customTotal !==
+                                                                    null
+                                                                    ? `Rp ${customTotal.toLocaleString(
+                                                                          'id-ID',
+                                                                      )}`
+                                                                    : 'Input manual'}
+                                                            </p>
+                                                        </button>
+                                                    </div>
+
+                                                    {priceInputMode ===
+                                                        'manual' && (
+                                                        <>
+                                                            <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm shadow-slate-900/5 transition-all focus-within:border-emerald-500 focus-within:shadow-emerald-500/10">
+                                                                <div className="relative">
+                                                                    <span className="absolute inset-y-0 left-0 flex items-center pl-1 text-sm font-semibold text-slate-500">
+                                                                        Rp
+                                                                    </span>
+                                                                    <input
+                                                                        id="overrideTotal"
+                                                                        type="text"
+                                                                        value={
+                                                                            customTotal !==
+                                                                            null
+                                                                                ? customTotal.toLocaleString(
+                                                                                      'id-ID',
+                                                                                  )
+                                                                                : total.toLocaleString(
+                                                                                      'id-ID',
+                                                                                  )
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) => {
+                                                                            const val =
+                                                                                e.target.value.replace(
+                                                                                    /\D/g,
+                                                                                    '',
+                                                                                );
+                                                                            if (
+                                                                                val ===
+                                                                                ''
+                                                                            ) {
+                                                                                setCustomTotal(
+                                                                                    total,
+                                                                                );
+                                                                            } else {
+                                                                                setCustomTotal(
+                                                                                    Number(
+                                                                                        val,
+                                                                                    ),
+                                                                                );
+                                                                            }
+                                                                        }}
+                                                                        className="block w-full border-0 border-b-2 border-emerald-200 bg-transparent py-1 pr-2 pl-8 text-lg font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-emerald-500 focus:ring-0"
+                                                                    />
+                                                                </div>
+                                                                <p className="mt-2 text-[11px] text-slate-400">
+                                                                    Masukkan nominal manual untuk overwrite harga sistem.
+                                                                </p>
+                                                            </div>
                                                             <div className="mt-1 flex items-center justify-between">
                                                                 <p className="text-[11px] text-slate-500">
                                                                     Harga
@@ -2421,17 +2505,22 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                 </p>
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() =>
+                                                                    onClick={() => {
                                                                         setCustomTotal(
                                                                             null,
-                                                                        )
-                                                                    }
+                                                                        );
+                                                                        setPriceInputMode(
+                                                                            'system',
+                                                                        );
+                                                                    }}
                                                                     className="text-[11px] font-semibold text-emerald-500 hover:underline"
                                                                 >
-                                                                    Kembalikan
+                                                                    Kembali ke
+                                                                    sistem
                                                                 </button>
                                                             </div>
-                                                        )}
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -2569,7 +2658,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                       )
                     : 0;
                 const effectiveTotal =
-                    customTotal !== null ? customTotal : calculatedTotal;
+                    priceInputMode === 'manual' && customTotal !== null
+                        ? customTotal
+                        : calculatedTotal;
 
                 const handleSubmitBooking = async () => {
                     if (!selectedCourt || !selectedCustomer) return;
@@ -2600,6 +2691,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                         setSelectedCustomer(null);
                         setSearchQuery('');
                         setPaymentStatus('paid');
+                        setPriceInputMode('system');
                         setCustomTotal(null);
                         setBookingNotes('');
 
@@ -3073,30 +3165,19 @@ function CreateCourtForm({
             <div className="scrollbar-thin scrollbar-thumb-slate-200 min-h-0 flex-1 overflow-y-auto px-6 py-6">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Input: Name */}
-                    <div className="space-y-2 md:col-span-2">
-                        <label
-                            htmlFor="name"
-                            className="text-sm font-semibold text-slate-900"
-                        >
-                            Nama Lapangan{' '}
-                            <span className="text-red-500">*</span>
-                        </label>
+                    <div className="group relative md:col-span-2">
                         <input
                             id="name"
                             type="text"
                             value={form.data.name}
-                            onChange={(e) =>
-                                form.setData('name', e.target.value)
-                            }
-                            placeholder="Contoh: Lapangan A (Padel)"
-                            className={cn(
-                                'flex h-11 w-full rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
-                                form.errors.name
-                                    ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
-                            )}
+                            onChange={(e) => form.setData('name', e.target.value)}
+                            placeholder=" "
+                            className="peer block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pt-6 pb-2.5 text-[15px] font-medium text-slate-900 placeholder-transparent transition-all duration-300 hover:border-slate-300 focus:border-padel-green focus:bg-transparent focus:ring-0 focus:outline-none"
                         />
-                        <InputError message={form.errors.name} />
+                        <label htmlFor="name" className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-[15px] font-normal text-slate-500 transition-all duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:-translate-y-1/2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-padel-green peer-focus:uppercase peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-widest peer-[:not(:placeholder-shown)]:uppercase">
+                            Nama Lapangan
+                        </label>
+                        <InputError message={form.errors.name} className="mt-2" />
                     </div>
 
                     {/* Input: Images (Multiple) */}
@@ -3186,136 +3267,86 @@ function CreateCourtForm({
                     </div>
 
                     {/* Input: Venue & Sport (Selects) */}
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="venue_id"
-                            className="text-sm font-semibold text-slate-900"
-                        >
-                            Lokasi / Tempat{' '}
-                            <span className="text-red-500">*</span>
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="venue_id" className="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+                            Lokasi / Tempat
                         </label>
-                        <select
-                            id="venue_id"
-                            value={form.data.venue_id}
-                            onChange={(e) =>
-                                form.setData('venue_id', e.target.value)
-                            }
-                            className={cn(
-                                'flex h-11 w-full appearance-none rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus-visible:ring-2 focus-visible:outline-none',
-                                form.errors.venue_id
-                                    ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
-                            )}
-                        >
-                            <option value="" disabled>
-                                Pilih Tempat
-                            </option>
-                            {venues.map((v) => (
-                                <option key={v.id} value={v.id}>
-                                    {v.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <select
+                                id="venue_id"
+                                value={form.data.venue_id}
+                                onChange={(e) => form.setData('venue_id', e.target.value)}
+                                className="block w-full appearance-none rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 py-2.5 text-[15px] font-medium text-slate-900 transition-all hover:border-slate-300 focus:border-padel-green focus:ring-0 focus:outline-none"
+                            >
+                                <option value="" disabled>Pilih Tempat</option>
+                                {venues.map((v) => (
+                                    <option key={v.id} value={v.id}>{v.name}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-0 bottom-3 h-4 w-4 text-slate-400" />
+                        </div>
                         <InputError message={form.errors.venue_id} />
                     </div>
 
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="sport_id"
-                            className="text-sm font-semibold text-slate-900"
-                        >
-                            Jenis Olahraga{' '}
-                            <span className="text-red-500">*</span>
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="sport_id" className="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+                            Jenis Olahraga
                         </label>
-                        <select
-                            id="sport_id"
-                            value={form.data.sport_id}
-                            onChange={(e) =>
-                                form.setData('sport_id', e.target.value)
-                            }
-                            className={cn(
-                                'flex h-11 w-full appearance-none rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus-visible:ring-2 focus-visible:outline-none',
-                                form.errors.sport_id
-                                    ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
-                            )}
-                        >
-                            <option value="" disabled>
-                                Pilih Olahraga
-                            </option>
-                            {sports.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <select
+                                id="sport_id"
+                                value={form.data.sport_id}
+                                onChange={(e) => form.setData('sport_id', e.target.value)}
+                                className="block w-full appearance-none rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 py-2.5 text-[15px] font-medium text-slate-900 transition-all hover:border-slate-300 focus:border-padel-green focus:ring-0 focus:outline-none"
+                            >
+                                <option value="" disabled>Pilih Olahraga</option>
+                                {sports.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-0 bottom-3 h-4 w-4 text-slate-400" />
+                        </div>
                         <InputError message={form.errors.sport_id} />
                     </div>
 
                     {/* Input: Type & Price */}
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="type"
-                            className="text-sm font-semibold text-slate-900"
-                        >
-                            Tipe Area <span className="text-red-500">*</span>
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="type" className="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+                            Tipe Area
                         </label>
-                        <select
-                            id="type"
-                            value={form.data.type}
-                            onChange={(e) =>
-                                form.setData(
-                                    'type',
-                                    e.target.value as 'indoor' | 'outdoor',
-                                )
-                            }
-                            className={cn(
-                                'flex h-11 w-full appearance-none rounded-xl border bg-white px-3 py-2 text-sm text-slate-900 capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none',
-                                form.errors.type
-                                    ? 'border-red-500 focus-visible:ring-red-200'
-                                    : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
-                            )}
-                        >
-                            <option value="indoor">Indoor</option>
-                            <option value="outdoor">Outdoor</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                id="type"
+                                value={form.data.type}
+                                onChange={(e) => form.setData('type', e.target.value as 'indoor' | 'outdoor')}
+                                className="block w-full appearance-none rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 py-2.5 text-[15px] font-medium capitalize text-slate-900 transition-all hover:border-slate-300 focus:border-padel-green focus:ring-0 focus:outline-none"
+                            >
+                                <option value="indoor">Indoor</option>
+                                <option value="outdoor">Outdoor</option>
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-0 bottom-3 h-4 w-4 text-slate-400" />
+                        </div>
                         <InputError message={form.errors.type} />
                     </div>
 
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="price_per_hour"
-                            className="text-sm font-semibold text-slate-900"
-                        >
-                            Tarif / Jam (Rp){' '}
-                            <span className="text-red-500">*</span>
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="price_per_hour" className="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+                            Tarif / Jam
                         </label>
                         <div className="relative">
-                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-medium text-slate-400">
-                                Rp
-                            </span>
+                            <span className="pointer-events-none absolute bottom-2.5 left-0 text-[15px] font-medium text-slate-400">Rp</span>
                             <input
                                 id="price_per_hour"
                                 type="number"
                                 min="0"
                                 step="1000"
                                 value={form.data.price_per_hour}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'price_per_hour',
-                                        e.target.value,
-                                    )
-                                }
+                                onChange={(e) => form.setData('price_per_hour', e.target.value)}
                                 placeholder="150000"
-                                className={cn(
-                                    'flex h-11 w-full rounded-xl border bg-white py-2 pr-3 pl-9 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus-visible:ring-2 focus-visible:outline-none',
-                                    form.errors.price_per_hour
-                                        ? 'border-red-500 focus-visible:ring-red-200'
-                                        : 'border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-300',
-                                )}
+                                className="block w-full rounded-none border-0 border-b-2 border-slate-200 bg-transparent px-0 pl-8 py-2.5 text-[15px] font-medium text-slate-900 placeholder:text-slate-400 transition-all hover:border-slate-300 focus:border-padel-green focus:ring-0 focus:outline-none"
                             />
                         </div>
-                        <InputError message={form.errors.price_per_hour} />
+                        <InputError message={form.errors.price_per_hour} className="mt-2" />
                     </div>
 
                     {/* Pricing Rules Editor */}

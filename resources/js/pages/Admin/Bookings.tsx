@@ -1,8 +1,9 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
-import { format, parseISO } from 'date-fns';
+import { endOfMonth, endOfWeek, format, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import {
+    AlertCircle,
     CalendarCheck2,
     CalendarDays,
     CheckCircle2,
@@ -14,13 +15,23 @@ import {
     Filter,
     Inbox,
     MapPin,
+    Plus,
     Search,
-    X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import * as bookingRoutes from '@/routes/bookings';
+import courtRoutes from '@/routes/courts';
 import type { BreadcrumbItem } from '@/types';
 
 type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
@@ -56,17 +67,51 @@ interface BookingItem {
     payment: {
         method?: string | null;
         status?: string | null;
+        amount?: number | null;
     };
 }
 
 interface Props {
     bookings: BookingItem[];
-    stats: {
-        total: number;
-        pending: number;
-        confirmed: number;
-        today: number;
+    courts: AvailabilityCourt[];
+}
+
+interface PricingRule {
+    days: number[];
+    start_time: string;
+    end_time: string;
+    price: number;
+    price_2_hours?: number;
+}
+
+interface AvailabilityCourt {
+    id: number;
+    name: string;
+    type: 'indoor' | 'outdoor';
+    price_per_hour: number;
+    pricing_rules?: PricingRule[] | null;
+    venue: {
+        id?: number | null;
+        name?: string | null;
     };
+    sport: {
+        id?: number | null;
+        name?: string | null;
+    };
+    booked_slots: string[];
+    slot_meta: Record<
+        string,
+        {
+            booking_id: number;
+            customer: string;
+            phone: string;
+            start_time: string;
+            end_time: string;
+            status: BookingStatus;
+            total_price: number;
+            notes?: string | null;
+        }
+    >;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -110,23 +155,305 @@ function fmtDateTime(date?: string | null) {
     return format(parseISO(date), 'dd MMM yyyy, HH:mm', { locale: idLocale });
 }
 
-export default function AdminBookings({ bookings }: Props) {
+function calculateBookingPrice(
+    court: AvailabilityCourt,
+    startTime: string,
+    endTime: string,
+    date: Date,
+) {
+    const startHour = parseInt(startTime.split(':')[0], 10);
+    const endHour = parseInt(endTime.split(':')[0], 10);
+    const dayOfWeek = date.getDay();
+    let total = 0;
+
+    const findRule = (hour: number) => {
+        const slot = `${hour.toString().padStart(2, '0')}:00`;
+
+        return (
+            court.pricing_rules?.find(
+                (rule) =>
+                    rule.days.includes(dayOfWeek) &&
+                    slot >= rule.start_time &&
+                    slot < rule.end_time,
+            ) ?? null
+        );
+    };
+
+    let hour = startHour;
+    while (hour < endHour) {
+        const rule = findRule(hour);
+        const slotPrice = rule ? Number(rule.price) : court.price_per_hour;
+
+        if (hour + 1 < endHour && rule?.price_2_hours) {
+            const nextSlot = `${(hour + 1).toString().padStart(2, '0')}:00`;
+
+            if (nextSlot >= rule.start_time && nextSlot < rule.end_time) {
+                total += Number(rule.price_2_hours);
+                hour += 2;
+                continue;
+            }
+        }
+
+        total += slotPrice;
+        hour++;
+    }
+
+    return total;
+}
+
+function mapApiBookingToRow(booking: {
+    id: number;
+    date: string;
+    start_time: string;
+    end_time: string;
+    status: BookingStatus;
+    total_price: number;
+    notes?: string | null;
+    created_at?: string | null;
+    user?: {
+        id?: number | null;
+        name?: string | null;
+        email?: string | null;
+        phone?: string | null;
+    } | null;
+    court?: {
+        id?: number | null;
+        name?: string | null;
+        sport?: {
+            id?: number | null;
+            name?: string | null;
+        } | null;
+        venue?: {
+            id?: number | null;
+            name?: string | null;
+            city?: string | null;
+        } | null;
+    } | null;
+    payment?: {
+        method?: string | null;
+        status?: string | null;
+        amount?: number | null;
+    } | null;
+}): BookingItem {
+    return {
+        id: booking.id,
+        date: booking.date,
+        start_time: booking.start_time,
+        end_time: booking.end_time,
+        status: booking.status,
+        total_price: booking.total_price,
+        notes: booking.notes ?? null,
+        created_at: booking.created_at ?? new Date().toISOString(),
+        user: {
+            id: booking.user?.id ?? null,
+            name: booking.user?.name ?? 'Guest',
+            email: booking.user?.email ?? null,
+            phone: booking.user?.phone ?? null,
+        },
+        court: {
+            id: booking.court?.id ?? null,
+            name: booking.court?.name ?? null,
+            sport: {
+                id: booking.court?.sport?.id ?? null,
+                name: booking.court?.sport?.name ?? null,
+            },
+            venue: {
+                id: booking.court?.venue?.id ?? null,
+                name: booking.court?.venue?.name ?? null,
+                city: booking.court?.venue?.city ?? null,
+            },
+        },
+        payment: {
+            method: booking.payment?.method ?? null,
+            status: booking.payment?.status ?? null,
+            amount: booking.payment?.amount ?? booking.total_price,
+        },
+    };
+}
+
+type Preset = 'today' | 'week' | 'month' | 'all' | 'custom';
+
+function buildPresets(now: Date) {
+    const todayStr = format(now, 'yyyy-MM-dd');
+    return [
+        { id: 'today' as Preset, label: 'Hari Ini', from: todayStr, to: todayStr },
+        {
+            id: 'week' as Preset,
+            label: 'Minggu Ini',
+            from: format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+            to: format(endOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+        },
+        {
+            id: 'month' as Preset,
+            label: 'Bulan Ini',
+            from: format(startOfMonth(now), 'yyyy-MM-dd'),
+            to: format(endOfMonth(now), 'yyyy-MM-dd'),
+        },
+        { id: 'all' as Preset, label: 'Semua', from: '', to: '' },
+    ];
+}
+
+function DateRangePicker({
+    dateFrom,
+    dateTo,
+    activePreset,
+    onPreset,
+    onCustomChange,
+}: {
+    dateFrom: string;
+    dateTo: string;
+    activePreset: Preset;
+    onPreset: (preset: Preset, from: string, to: string) => void;
+    onCustomChange: (from: string, to: string) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const now = new Date();
+    const presets = buildPresets(now);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const label = (() => {
+        if (activePreset === 'all') return 'Semua Tanggal';
+        if (activePreset === 'today' && dateFrom)
+            return format(parseISO(dateFrom), 'EEE, dd MMM yyyy', { locale: idLocale });
+        if (activePreset === 'week') return 'Minggu Ini';
+        if (activePreset === 'month') return format(now, 'MMMM yyyy', { locale: idLocale });
+        if (dateFrom && dateTo && dateFrom !== dateTo)
+            return `${format(parseISO(dateFrom), 'dd MMM', { locale: idLocale })} – ${format(parseISO(dateTo), 'dd MMM yyyy', { locale: idLocale })}`;
+        if (dateFrom) return format(parseISO(dateFrom), 'dd MMM yyyy', { locale: idLocale });
+        return 'Pilih Tanggal';
+    })();
+
+    const isActive = activePreset !== 'all';
+
+    return (
+        <div ref={ref} className="relative">
+            {/* Trigger */}
+            <button
+                onClick={() => setOpen((v) => !v)}
+                className={cn(
+                    'flex h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-all',
+                    isActive
+                        ? 'border-padel-green bg-padel-green/5 text-padel-green hover:bg-padel-green/10'
+                        : 'border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50',
+                )}
+            >
+                <CalendarDays className="h-4 w-4 shrink-0" />
+                <span>{label}</span>
+                <ChevronDown
+                    className={cn(
+                        'h-3.5 w-3.5 shrink-0 transition-transform duration-200',
+                        open && 'rotate-180',
+                        isActive ? 'text-padel-green/60' : 'text-slate-400',
+                    )}
+                />
+            </button>
+
+            {/* Panel */}
+            {open && (
+                <div className="absolute left-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10">
+                    {/* Presets */}
+                    <div className="p-3">
+                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                            Filter Cepat
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {presets.map((p) => (
+                                <button
+                                    key={p.id}
+                                    onClick={() => {
+                                        onPreset(p.id, p.from, p.to);
+                                        setOpen(false);
+                                    }}
+                                    className={cn(
+                                        'flex items-center justify-center rounded-xl border py-2 text-xs font-semibold transition-all',
+                                        activePreset === p.id
+                                            ? 'border-padel-green bg-padel-green text-white shadow-sm'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50',
+                                    )}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="mx-3 border-t border-slate-100" />
+
+                    {/* Custom range */}
+                    <div className="p-3">
+                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                            Rentang Kustom
+                        </p>
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <span className="w-10 shrink-0 text-xs font-semibold text-slate-400">Dari</span>
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(e) => onCustomChange(e.target.value, dateTo)}
+                                    className="flex-1 bg-transparent text-sm text-slate-700 focus:outline-none"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <span className="w-10 shrink-0 text-xs font-semibold text-slate-400">s/d</span>
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    min={dateFrom || undefined}
+                                    onChange={(e) => onCustomChange(dateFrom, e.target.value)}
+                                    className="flex-1 bg-transparent text-sm text-slate-700 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default function AdminBookings({
+    bookings,
+    courts,
+}: Props) {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
     const [rows, setRows] = useState(bookings);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | BookingStatus>('all');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
+    const [dateFrom, setDateFrom] = useState(todayStr);
+    const [dateTo, setDateTo] = useState(todayStr);
+    const [activePreset, setActivePreset] = useState<Preset>('today');
     const [actingId, setActingId] = useState<number | null>(null);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [isStatsVisible, setIsStatsVisible] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [linesPerPage, setLinesPerPage] = useState(10);
+    const [confirmBooking, setConfirmBooking] = useState<BookingItem | null>(null);
+    const [confirmPriceMode, setConfirmPriceMode] = useState<'system' | 'manual'>('system');
+    const [confirmManualTotal, setConfirmManualTotal] = useState<number | null>(null);
+    const [confirmError, setConfirmError] = useState('');
+    const [isConfirmSubmitting, setIsConfirmSubmitting] = useState(false);
 
-    const hasDateFilter = dateFrom !== '' || dateTo !== '';
+    const handlePreset = (preset: Preset, from: string, to: string) => {
+        setActivePreset(preset);
+        setDateFrom(from);
+        setDateTo(to);
+        setCurrentPage(1);
+    };
 
-    const clearDateFilter = () => {
-        setDateFrom('');
-        setDateTo('');
+    const handleCustomDate = (from: string, to: string) => {
+        setActivePreset('custom');
+        setDateFrom(from);
+        setDateTo(to);
         setCurrentPage(1);
     };
 
@@ -169,15 +496,50 @@ export default function AdminBookings({ bookings }: Props) {
         return filteredRows.slice(start, start + linesPerPage);
     }, [filteredRows, currentPage, linesPerPage]);
 
-    const runAction = async (bookingId: number, action: 'confirm' | 'cancel') => {
+    const confirmCourt = useMemo(
+        () => courts.find((court) => court.id === confirmBooking?.court.id) ?? null,
+        [courts, confirmBooking],
+    );
+
+    const confirmSystemTotal = useMemo(() => {
+        if (!confirmBooking) return 0;
+        if (!confirmCourt) return confirmBooking.total_price;
+
+        return calculateBookingPrice(
+            confirmCourt,
+            confirmBooking.start_time,
+            confirmBooking.end_time,
+            parseISO(confirmBooking.date),
+        );
+    }, [confirmBooking, confirmCourt]);
+
+    const confirmEffectiveTotal =
+        confirmPriceMode === 'manual' && confirmManualTotal !== null
+            ? confirmManualTotal
+            : confirmSystemTotal;
+
+    const openConfirmModal = (booking: BookingItem) => {
+        setConfirmBooking(booking);
+        setConfirmPriceMode('system');
+        setConfirmManualTotal(booking.total_price);
+        setConfirmError('');
+    };
+
+    const closeConfirmModal = (open: boolean) => {
+        if (open || isConfirmSubmitting) return;
+
+        setConfirmBooking(null);
+        setConfirmPriceMode('system');
+        setConfirmManualTotal(null);
+        setConfirmError('');
+    };
+
+    const runAction = async (bookingId: number) => {
         setActingId(bookingId);
         setFeedback(null);
 
         try {
-            const route =
-                action === 'confirm'
-                    ? bookingRoutes.confirm({ booking: bookingId })
-                    : bookingRoutes.cancel({ booking: bookingId });
+            const route = bookingRoutes.cancel({ booking: bookingId });
 
             const response = await axios({ url: route.url, method: route.method });
 
@@ -186,11 +548,7 @@ export default function AdminBookings({ bookings }: Props) {
                     booking.id === bookingId
                         ? {
                               ...booking,
-                              status: action === 'confirm' ? 'confirmed' : 'cancelled',
-                              payment: {
-                                  ...booking.payment,
-                                  status: action === 'confirm' ? 'paid' : booking.payment.status,
-                              },
+                              status: 'cancelled',
                           }
                         : booking,
                 ),
@@ -212,29 +570,103 @@ export default function AdminBookings({ bookings }: Props) {
         }
     };
 
+    const submitConfirmation = async () => {
+        if (!confirmBooking) return;
+
+        if (confirmPriceMode === 'manual' && confirmManualTotal === null) {
+            setConfirmError('Masukkan harga manual sebelum booking dikonfirmasi.');
+            return;
+        }
+
+        setIsConfirmSubmitting(true);
+        setActingId(confirmBooking.id);
+        setFeedback(null);
+        setConfirmError('');
+
+        try {
+            const route = bookingRoutes.confirm({ booking: confirmBooking.id });
+            const response = await axios({
+                url: route.url,
+                method: route.method,
+                data: {
+                    price_mode: confirmPriceMode,
+                    total_price: confirmPriceMode === 'manual' ? confirmManualTotal : undefined,
+                },
+            });
+
+            const updatedBooking = response.data?.booking
+                ? mapApiBookingToRow(response.data.booking)
+                : {
+                      ...confirmBooking,
+                      status: 'confirmed' as BookingStatus,
+                      total_price: confirmEffectiveTotal,
+                      payment: {
+                          ...confirmBooking.payment,
+                          amount: confirmEffectiveTotal,
+                          status: 'paid',
+                      },
+                  };
+
+            setRows((current) =>
+                current.map((booking) => (booking.id === confirmBooking.id ? updatedBooking : booking)),
+            );
+            setFeedback({
+                type: 'success',
+                text: response.data?.message ?? 'Booking berhasil dikonfirmasi.',
+            });
+            setConfirmBooking(null);
+            setConfirmPriceMode('system');
+            setConfirmManualTotal(null);
+            setConfirmError('');
+        } catch (error: unknown) {
+            const message = axios.isAxiosError(error)
+                ? (error.response?.data?.message ?? 'Terjadi kesalahan saat mengonfirmasi booking.')
+                : 'Terjadi kesalahan saat mengonfirmasi booking.';
+
+            setConfirmError(message);
+            setFeedback({
+                type: 'error',
+                text: message,
+            });
+        } finally {
+            setIsConfirmSubmitting(false);
+            setActingId(null);
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Booking" />
 
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-1 flex-col gap-4 bg-white p-4 md:gap-6 md:p-8">
                 {/* ═══════════ Header ═══════════ */}
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Kelola Booking</h1>
-                    <p className="text-sm font-medium text-slate-500">
-                        Pantau & kelola semua reservasi lapangan dari satu tempat.{' '}
-                        <button
-                            className="ml-1 inline-flex items-center font-semibold text-slate-800 transition-colors hover:text-slate-900 focus:outline-none"
-                            onClick={() => setIsStatsVisible(!isStatsVisible)}
-                        >
-                            {isStatsVisible ? 'Sembunyikan data' : 'Tampilkan data'}
-                            <ChevronUp
-                                className={cn(
-                                    'ml-1 h-4 w-4 transition-transform duration-300',
-                                    !isStatsVisible && 'rotate-180',
-                                )}
-                            />
-                        </button>
-                    </p>
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Kelola Booking</h1>
+                        <p className="text-sm font-medium text-slate-500">
+                            Pantau & kelola semua reservasi lapangan dari satu tempat.{' '}
+                            <button
+                                className="ml-1 inline-flex items-center font-semibold text-slate-800 transition-colors hover:text-slate-900 focus:outline-none"
+                                onClick={() => setIsStatsVisible(!isStatsVisible)}
+                            >
+                                {isStatsVisible ? 'Sembunyikan data' : 'Tampilkan data'}
+                                <ChevronUp
+                                    className={cn(
+                                        'ml-1 h-4 w-4 transition-transform duration-300',
+                                        !isStatsVisible && 'rotate-180',
+                                    )}
+                                />
+                            </button>
+                        </p>
+                    </div>
+
+                    <Link
+                        href={courtRoutes.index().url}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Buat Booking Baru
+                    </Link>
                 </div>
 
                 {/* ═══════════ Stats Row (collapsible) ═══════════ */}
@@ -328,41 +760,14 @@ export default function AdminBookings({ bookings }: Props) {
                             <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-slate-400" />
                         </div>
 
-                        {/* Date range filter */}
-                        <div className="flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white px-3 h-9">
-                            <CalendarDays className="h-4 w-4 shrink-0 text-slate-400" />
-                            <input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) => {
-                                    setDateFrom(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                className="h-full w-32 bg-transparent text-sm text-slate-600 focus:outline-none"
-                                title="Dari tanggal"
-                            />
-                            <span className="text-slate-300 text-xs">—</span>
-                            <input
-                                type="date"
-                                value={dateTo}
-                                min={dateFrom || undefined}
-                                onChange={(e) => {
-                                    setDateTo(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                className="h-full w-32 bg-transparent text-sm text-slate-600 focus:outline-none"
-                                title="Sampai tanggal"
-                            />
-                            {hasDateFilter && (
-                                <button
-                                    onClick={clearDateFilter}
-                                    className="ml-1 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                                    title="Hapus filter tanggal"
-                                >
-                                    <X className="h-3 w-3" />
-                                </button>
-                            )}
-                        </div>
+                        {/* Date range picker */}
+                        <DateRangePicker
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
+                            activePreset={activePreset}
+                            onPreset={handlePreset}
+                            onCustomChange={handleCustomDate}
+                        />
 
                         <span className="ml-auto text-sm font-medium text-slate-500">
                             <span className="font-semibold text-slate-700">{filteredRows.length}</span> booking
@@ -489,7 +894,7 @@ export default function AdminBookings({ bookings }: Props) {
                                                         <button
                                                             type="button"
                                                             disabled={!canConfirm || actingId === booking.id}
-                                                            onClick={() => runAction(booking.id, 'confirm')}
+                                                            onClick={() => openConfirmModal(booking)}
                                                             className="flex h-8 items-center rounded-md bg-padel-green px-3 text-xs font-semibold text-white transition-colors hover:bg-padel-green-dark disabled:cursor-not-allowed disabled:opacity-40"
                                                         >
                                                             {actingId === booking.id && canConfirm
@@ -499,7 +904,7 @@ export default function AdminBookings({ bookings }: Props) {
                                                         <button
                                                             type="button"
                                                             disabled={!canCancel || actingId === booking.id}
-                                                            onClick={() => runAction(booking.id, 'cancel')}
+                                                            onClick={() => runAction(booking.id)}
                                                             className="flex h-8 items-center rounded-md border border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
                                                         >
                                                             Batalkan
@@ -616,6 +1021,191 @@ export default function AdminBookings({ bookings }: Props) {
                         </div>
                     </div>
                 </div>
+                <Dialog open={Boolean(confirmBooking)} onOpenChange={closeConfirmModal}>
+                    <DialogContent className="w-[calc(100vw-2rem)] max-w-xl rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl">
+                        <DialogHeader className="border-b border-slate-200 px-6 py-5">
+                            <DialogTitle className="text-xl font-bold text-slate-900">
+                                Konfirmasi Booking
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-slate-500">
+                                Pilih sumber harga sebelum booking ini dikonfirmasi.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {confirmBooking && (
+                            <div className="space-y-5 px-6 py-5">
+                                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        <div>
+                                            <p className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                Pemesan
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                                {confirmBooking.user.name}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {confirmBooking.user.phone || confirmBooking.user.email || '-'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                Jadwal
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                                {fmtDate(confirmBooking.date)}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {confirmBooking.start_time.slice(0, 5)} - {confirmBooking.end_time.slice(0, 5)}
+                                            </p>
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <p className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                Lapangan
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                                {confirmBooking.court.name || '-'}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {confirmBooking.court.venue.name || '-'} · {confirmBooking.court.sport.name || '-'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="mb-3 text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                        Pilihan Harga
+                                    </p>
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setConfirmPriceMode('system');
+                                                setConfirmError('');
+                                            }}
+                                            className={cn(
+                                                'rounded-2xl border px-4 py-3 text-left transition-all',
+                                                confirmPriceMode === 'system'
+                                                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                    : 'border-slate-200 bg-white hover:border-slate-300',
+                                            )}
+                                        >
+                                            <p className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                                                Harga Sistem
+                                            </p>
+                                            <p className="mt-1 text-sm font-bold text-slate-900">
+                                                {fmtCurrency(confirmSystemTotal)}
+                                            </p>
+                                            <p className="mt-1 text-[11px] text-slate-400">
+                                                Gunakan harga otomatis dari rules lapangan.
+                                            </p>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setConfirmPriceMode('manual');
+                                                setConfirmManualTotal((current) => current ?? confirmBooking.total_price);
+                                                setConfirmError('');
+                                            }}
+                                            className={cn(
+                                                'rounded-2xl border px-4 py-3 text-left transition-all',
+                                                confirmPriceMode === 'manual'
+                                                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                    : 'border-slate-200 bg-white hover:border-slate-300',
+                                            )}
+                                        >
+                                            <p className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                                                Harga Manual
+                                            </p>
+                                            <p className="mt-1 text-sm font-bold text-slate-900">
+                                                {fmtCurrency(confirmManualTotal ?? confirmBooking.total_price)}
+                                            </p>
+                                            <p className="mt-1 text-[11px] text-slate-400">
+                                                Ubah nominal akhir sebelum booking dikonfirmasi.
+                                            </p>
+                                        </button>
+                                    </div>
+
+                                    {confirmPriceMode === 'manual' && (
+                                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm shadow-slate-900/5">
+                                            <label className="mb-2 block text-xs font-semibold text-slate-500">
+                                                Harga Manual
+                                            </label>
+                                            <div className="relative">
+                                                <span className="absolute inset-y-0 left-0 flex items-center pl-1 text-sm font-semibold text-slate-500">
+                                                    Rp
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    value={(confirmManualTotal ?? confirmBooking.total_price).toLocaleString('id-ID')}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value.replace(/\D/g, '');
+                                                        setConfirmManualTotal(value ? Number(value) : 0);
+                                                    }}
+                                                    className="block w-full border-0 border-b-2 border-emerald-200 bg-transparent py-1 pr-2 pl-8 text-lg font-bold text-slate-900 outline-none focus:border-emerald-500"
+                                                />
+                                            </div>
+                                            <p className="mt-2 text-[11px] text-slate-400">
+                                                Nominal ini akan dipakai sebagai total akhir booking.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-500">Harga tersimpan saat ini</span>
+                                        <span className="font-semibold text-slate-700">
+                                            {fmtCurrency(confirmBooking.total_price)}
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 flex items-center justify-between text-sm">
+                                        <span className="text-slate-500">Sumber harga</span>
+                                        <span className="font-semibold text-slate-700">
+                                            {confirmPriceMode === 'manual' ? 'Manual' : 'Sistem'}
+                                        </span>
+                                    </div>
+                                    <div className="mt-3 border-t border-slate-200 pt-3">
+                                        <div className="flex items-end justify-between">
+                                            <span className="text-sm font-semibold text-slate-900">Total setelah konfirmasi</span>
+                                            <span className="text-2xl font-bold text-emerald-600">
+                                                {fmtCurrency(confirmEffectiveTotal)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {confirmError && (
+                                    <div className="flex items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                                        {confirmError}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <DialogFooter className="border-t border-slate-200 px-6 py-4">
+                            <button
+                                type="button"
+                                onClick={() => closeConfirmModal(false)}
+                                disabled={isConfirmSubmitting}
+                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={submitConfirmation}
+                                disabled={!confirmBooking || isConfirmSubmitting}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {isConfirmSubmitting && <Spinner className="h-4 w-4" />}
+                                {isConfirmSubmitting ? 'Memproses...' : 'Konfirmasi Sekarang'}
+                            </button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

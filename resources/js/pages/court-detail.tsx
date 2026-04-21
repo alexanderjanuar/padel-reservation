@@ -157,9 +157,6 @@ function CheckoutModal({
     const [phoneInput, setPhoneInput] = useState(customer?.phone ?? '');
     const isGuestCheckout = !customer?.id;
     const needsPhone = Boolean(customer?.id) && !customer?.phone;
-    const deliveryTarget = isGuestCheckout
-        ? guestForm.phone || guestForm.email
-        : customer?.phone || phoneInput || customer?.email || '';
 
     const updateGuestField = (field: keyof GuestBookingForm, value: string) => {
         setGuestForm((prev) => ({ ...prev, [field]: value }));
@@ -348,20 +345,20 @@ function CheckoutModal({
                         <div className="min-h-0 flex-1 overflow-y-auto">
                             <div className="space-y-4 px-5 py-4 sm:px-7 sm:py-5">
                         <div className="border-b border-slate-200 pb-4 sm:pb-5">
-                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <p className="font-display text-base font-black text-slate-900">{item.courtName}</p>
-                                        <p className="mt-1 text-xs text-slate-500">{item.venueName} · {item.sportName}</p>
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <p className="font-display text-base font-black text-slate-900">{item.courtName}</p>
+                                            <p className="mt-1 text-xs text-slate-500">{item.venueName} · {item.sportName}</p>
                                         <p className="mt-2 text-xs text-slate-600">
-                                            {format(item.date, 'dd MMM yyyy', { locale: idLocale })} · {item.startTime}–{item.endTime} · {item.hours} jam
-                                        </p>
+                                                {format(item.date, 'dd MMM yyyy', { locale: idLocale })} · {item.startTime}–{item.endTime} · {item.hours} jam
+                                            </p>
+                                        </div>
+                                        <span className="shrink-0 text-sm font-bold text-emerald-600">
+                                            {fmt(item.totalPrice)}
+                                        </span>
                                     </div>
-                                    <span className="shrink-0 text-sm font-bold text-emerald-600">
-                                        {fmt(item.totalPrice)}
-                                    </span>
                                 </div>
-                            </div>
                         </div>
 
                         <div className="border-b border-slate-200 pb-4 sm:pb-5">

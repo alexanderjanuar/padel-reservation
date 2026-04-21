@@ -137,6 +137,7 @@ interface Venue {
     id: number;
     name: string;
     slug: string;
+    description?: string | null;
     address: string;
     city: string;
     phone: string;
@@ -321,6 +322,7 @@ export default function Venues({ venues }: VenuesProps) {
     // Form logic setup
     const form = useForm({
         name: '',
+        description: '',
         city: '',
         address: '',
         latitude: '' as number | '',
@@ -347,6 +349,7 @@ export default function Venues({ venues }: VenuesProps) {
     const [venueToEdit, setVenueToEdit] = useState<Venue | null>(null);
     const editForm = useForm({
         name: '',
+        description: '',
         city: '',
         address: '',
         latitude: '' as number | '',
@@ -362,6 +365,7 @@ export default function Venues({ venues }: VenuesProps) {
         setVenueToEdit(venue);
         editForm.setData({
             name: venue.name,
+            description: venue.description || '',
             city: venue.city,
             address: venue.address,
             latitude: venue.latitude ? Number(venue.latitude) : '',
@@ -789,6 +793,21 @@ export default function Venues({ venues }: VenuesProps) {
                                                             Alamat Lengkap
                                                         </label>
                                                         <InputError message={form.errors.address} className="mt-2" />
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label htmlFor="description" className="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+                                                            Deskripsi <span className="font-normal normal-case tracking-normal text-slate-400">(opsional)</span>
+                                                        </label>
+                                                        <textarea
+                                                            id="description"
+                                                            rows={3}
+                                                            value={form.data.description}
+                                                            onChange={(e) => form.setData('description', e.target.value)}
+                                                            placeholder="Deskripsikan fasilitas dan keunggulan venue ini..."
+                                                            className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-3 text-[15px] font-medium text-slate-900 placeholder:font-normal placeholder:text-slate-400 transition-all hover:border-slate-300 focus:border-padel-green focus:ring-0 focus:outline-none"
+                                                        />
+                                                        <InputError message={form.errors.description} />
                                                     </div>
 
                                                     <div className="flex items-center gap-3 pt-2">
@@ -1295,6 +1314,21 @@ export default function Venues({ venues }: VenuesProps) {
                                                 Alamat Lengkap
                                             </label>
                                             <InputError message={editForm.errors.address} className="mt-2" />
+                                        </div>
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <label htmlFor="edit-description" className="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+                                                Deskripsi <span className="font-normal normal-case tracking-normal text-slate-400">(opsional)</span>
+                                            </label>
+                                            <textarea
+                                                id="edit-description"
+                                                rows={3}
+                                                value={editForm.data.description}
+                                                onChange={(e) => editForm.setData('description', e.target.value)}
+                                                placeholder="Deskripsikan fasilitas dan keunggulan venue ini..."
+                                                className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-3 text-[15px] font-medium text-slate-900 placeholder:font-normal placeholder:text-slate-400 transition-all hover:border-slate-300 focus:border-padel-green focus:ring-0 focus:outline-none"
+                                            />
+                                            <InputError message={editForm.errors.description} />
                                         </div>
 
                                         <div className="flex items-center gap-3 pt-2">

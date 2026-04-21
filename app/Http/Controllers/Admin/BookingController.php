@@ -57,52 +57,12 @@ class BookingController extends Controller
         }
 
         $court = Court::findOrFail($validated['court_id']);
-
-        // Calculate expected price
-        $dateStr = $validated['date'];
-        $dayOfWeek = (int) date('w', strtotime($dateStr)); // 0 (Sun) to 6 (Sat)
-        $startHour = (int) explode(':', $validated['start_time'])[0];
-        $endHour = (int) explode(':', $validated['end_time'])[0];
-
-        $calculatedPrice = 0;
-
-        $findRule = function (int $hour) use ($court, $dayOfWeek): ?array {
-            $slotHour = sprintf('%02d:00', $hour);
-            if (! is_array($court->pricing_rules)) {
-                return null;
-            }
-            foreach ($court->pricing_rules as $rule) {
-                if (in_array($dayOfWeek, $rule['days'] ?? [])) {
-                    if ($slotHour >= $rule['start_time'] && $slotHour < $rule['end_time']) {
-                        return $rule;
-                    }
-                }
-            }
-
-            return null;
-        };
-
-        $h = $startHour;
-        while ($h < $endHour) {
-            $rule = $findRule($h);
-            $slotPrice = $rule ? (int) $rule['price'] : $court->price_per_hour;
-
-            // Try 2-hour package: next hour exists and falls in the same rule window
-            if ($h + 1 < $endHour && $rule !== null && ! empty($rule['price_2_hours'])) {
-                $nextSlotHour = sprintf('%02d:00', $h + 1);
-                $nextInSameRule = $nextSlotHour >= $rule['start_time'] && $nextSlotHour < $rule['end_time'];
-
-                if ($nextInSameRule) {
-                    $calculatedPrice += (int) $rule['price_2_hours'];
-                    $h += 2;
-
-                    continue;
-                }
-            }
-
-            $calculatedPrice += $slotPrice;
-            $h++;
-        }
+        $calculatedPrice = $this->calculateBookingPrice(
+            $court,
+            $validated['date'],
+            $validated['start_time'],
+            $validated['end_time'],
+        );
 
         // The calculated price is still computed above, but we no longer enforce it
         // strictly matches the incoming total_price to allow for admin manual overrides.
@@ -193,8 +153,17 @@ class BookingController extends Controller
         return response()->json(['message' => 'Bukti pembayaran berhasil diupload.']);
     }
 
-    public function confirm(Booking $booking): JsonResponse
+    public function confirm(Request $request, Booking $booking): JsonResponse
     {
+        $validated = $request->validate([
+            'price_mode' => ['required', 'in:system,manual'],
+            'total_price' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        if ($validated['price_mode'] === 'manual' && ! array_key_exists('total_price', $validated)) {
+            return response()->json(['message' => 'Harga manual wajib diisi sebelum booking dikonfirmasi.'], 422);
+        }
+
         if (! in_array($booking->status, ['pending'])) {
             return response()->json(['message' => 'Booking tidak dapat dikonfirmasi.'], 422);
         }
@@ -211,10 +180,30 @@ class BookingController extends Controller
             return response()->json(['message' => 'Slot ini sudah dikonfirmasi untuk booking lain. Tidak bisa dikonfirmasi ganda.'], 422);
         }
 
-        $booking->update(['status' => 'confirmed']);
+        $booking->loadMissing('court');
+
+        $systemPrice = $this->calculateBookingPrice(
+            $booking->court,
+            $booking->date,
+            $booking->start_time,
+            $booking->end_time,
+        );
+
+        $finalPrice = $validated['price_mode'] === 'manual'
+            ? (int) $validated['total_price']
+            : $systemPrice;
+
+        $booking->update([
+            'status' => 'confirmed',
+            'total_price' => $finalPrice,
+        ]);
 
         if ($booking->payment) {
-            $booking->payment->update(['status' => 'paid', 'paid_at' => now()]);
+            $booking->payment->update([
+                'amount' => $finalPrice,
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
         } else {
             Payment::create([
                 'booking_id' => $booking->id,
@@ -225,10 +214,13 @@ class BookingController extends Controller
             ]);
         }
 
-        $booking->load(['user', 'court.venue']);
+        $booking->load(['user', 'court.venue', 'court.sport', 'payment']);
         $this->fonnteService->sendConfirmationNotification($booking);
 
-        return response()->json(['message' => 'Booking berhasil dikonfirmasi.']);
+        return response()->json([
+            'message' => 'Booking berhasil dikonfirmasi.',
+            'booking' => $booking,
+        ]);
     }
 
     public function cancel(Booking $booking): JsonResponse
@@ -240,5 +232,55 @@ class BookingController extends Controller
         $booking->update(['status' => 'cancelled']);
 
         return response()->json(['message' => 'Booking berhasil dibatalkan.']);
+    }
+
+    private function calculateBookingPrice(Court $court, string $date, string $startTime, string $endTime): int
+    {
+        $dayOfWeek = (int) date('w', strtotime($date));
+        $startHour = (int) explode(':', $startTime)[0];
+        $endHour = (int) explode(':', $endTime)[0];
+        $calculatedPrice = 0;
+
+        $findRule = function (int $hour) use ($court, $dayOfWeek): ?array {
+            $slotHour = sprintf('%02d:00', $hour);
+
+            if (! is_array($court->pricing_rules)) {
+                return null;
+            }
+
+            foreach ($court->pricing_rules as $rule) {
+                if (in_array($dayOfWeek, $rule['days'] ?? []) &&
+                    $slotHour >= $rule['start_time'] &&
+                    $slotHour < $rule['end_time']) {
+                    return $rule;
+                }
+            }
+
+            return null;
+        };
+
+        $hour = $startHour;
+
+        while ($hour < $endHour) {
+            $rule = $findRule($hour);
+            $slotPrice = $rule ? (int) $rule['price'] : $court->price_per_hour;
+
+            if ($hour + 1 < $endHour && $rule !== null && ! empty($rule['price_2_hours'])) {
+                $nextSlotHour = sprintf('%02d:00', $hour + 1);
+                $nextInSameRule = $nextSlotHour >= $rule['start_time'] && $nextSlotHour < $rule['end_time'];
+
+                if ($nextInSameRule) {
+                    $calculatedPrice += (int) $rule['price_2_hours'];
+                    $hour += 2;
+
+                    continue;
+                }
+            }
+
+            $calculatedPrice += $slotPrice;
+            $hour++;
+        }
+
+        return $calculatedPrice;
     }
 }
