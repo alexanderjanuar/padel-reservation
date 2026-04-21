@@ -90,11 +90,14 @@ interface Customer {
 
 interface SlotMeta {
     booking_id: number;
+    user_id?: number;
     customer: string;
+    email?: string;
     phone: string;
     start_time: string;
     end_time: string;
     status: string;
+    payment_status?: string;
     total_price: number;
     notes?: string;
 }
@@ -253,6 +256,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
     const [bookingNotes, setBookingNotes] = useState<string>('');
     const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
     const [selectedSportIds, setSelectedSportIds] = useState<number[]>([]);
+    const [editingBookingId, setEditingBookingId] = useState<number | null>(
+        null,
+    );
 
     // Split View State
     const [selectedCourtId, setSelectedCourtId] = useState<number | null>(
@@ -330,7 +336,114 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
 
     const visibleDates = generateVisibleDates();
 
-    // Form logic to come...
+    const resetBookingForm = () => {
+        setBookingUserMode('search');
+        setSelectedCustomer(null);
+        setNewCustomer({ name: '', email: '', phone: '' });
+        setSearchQuery('');
+        setBookingError('');
+        setBookingNotes('');
+        setPaymentStatus('paid');
+        setPriceInputMode('system');
+        setCustomTotal(null);
+        setEditingBookingId(null);
+        setSelectedRange({ start: '08:00', end: null });
+    };
+
+    const openEditBookingModal = (court: Court, meta: SlotMeta) => {
+        const endHour = Math.max(
+            parseInt(meta.end_time.split(':')[0], 10) - 1,
+            parseInt(meta.start_time.split(':')[0], 10),
+        );
+        const endSlot =
+            endHour === parseInt(meta.start_time.split(':')[0], 10)
+                ? null
+                : `${endHour.toString().padStart(2, '0')}:00`;
+
+        setSelectedCourtId(court.id);
+        setSelectedRange({
+            start: meta.start_time,
+            end: endSlot,
+        });
+        setSelectedCustomer({
+            id: meta.user_id,
+            name: meta.customer,
+            email: meta.email ?? '',
+            phone: meta.phone === '—' ? '' : meta.phone,
+        });
+        setPaymentStatus(meta.payment_status === 'paid' ? 'paid' : 'unpaid');
+        setPriceInputMode('manual');
+        setCustomTotal(meta.total_price);
+        setBookingNotes(meta.notes ?? '');
+        setBookingError('');
+        setEditingBookingId(meta.booking_id);
+        setBookedSlotInfo(null);
+        setIsBookingModalOpen(true);
+    };
+
+    const handleBookingSlotSelection = (
+        court: Court,
+        time: string,
+        blockedSlots: string[],
+    ) => {
+        if (selectedCourtId !== court.id) {
+            setSelectedCourtId(court.id);
+            setSelectedRange({
+                start: time,
+                end: null,
+            });
+            return;
+        }
+
+        if (!selectedRange.start || selectedRange.end) {
+            setSelectedRange({
+                start: time,
+                end: null,
+            });
+            return;
+        }
+
+        if (time < selectedRange.start) {
+            setSelectedRange({
+                start: time,
+                end: null,
+            });
+            return;
+        }
+
+        if (time > selectedRange.start) {
+            const startHour = parseInt(selectedRange.start.split(':')[0], 10);
+            const endHour = parseInt(time.split(':')[0], 10);
+            let hasConflict = false;
+
+            for (let hour = startHour + 1; hour <= endHour; hour++) {
+                const checkTime = `${hour.toString().padStart(2, '0')}:00`;
+                if (blockedSlots.includes(checkTime)) {
+                    hasConflict = true;
+                    break;
+                }
+            }
+
+            if (hasConflict) {
+                setSelectedRange({
+                    start: time,
+                    end: null,
+                });
+            } else {
+                setSelectedRange({
+                    start: selectedRange.start,
+                    end: time,
+                });
+            }
+
+            return;
+        }
+
+        setSelectedRange({
+            start: null,
+            end: null,
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -556,7 +669,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                 const handleTimeSlotClickForCourt = (
                                     time: string,
                                     isAvailable: boolean,
-                                    bookedSlots: string[],
+                                    blockedSlots: string[],
                                 ) => {
                                     if (!isAvailable) return;
                                     // Switch to this court if selecting a different one
@@ -605,7 +718,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                             ) {
                                                 const checkTime = `${h.toString().padStart(2, '0')}:00`;
                                                 if (
-                                                    bookedSlots.includes(
+                                                    blockedSlots.includes(
                                                         checkTime,
                                                     )
                                                 ) {
@@ -857,12 +970,40 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                 );
                                                 const bookedSlots =
                                                     court.booked_slots || [];
+                                                const blockedSlots =
+                                                    bookedSlots.filter(
+                                                        (bookedSlot) =>
+                                                            (() => {
+                                                                const slotMeta =
+                                                                    court.slot_meta?.[
+                                                                        bookedSlot
+                                                                    ];
+
+                                                                if (!slotMeta) {
+                                                                    return false;
+                                                                }
+
+                                                                if (
+                                                                    slotMeta.booking_id ===
+                                                                    editingBookingId
+                                                                ) {
+                                                                    return false;
+                                                                }
+
+                                                                return [
+                                                                    'confirmed',
+                                                                    'completed',
+                                                                ].includes(
+                                                                    slotMeta.status,
+                                                                );
+                                                            })(),
+                                                    );
                                                 const timeSlots = baseHours.map(
                                                     (hour) => {
                                                         const timeString = `${hour.toString().padStart(2, '0')}:00`;
                                                         return {
                                                             time: timeString,
-                                                            status: bookedSlots.includes(
+                                                            status: blockedSlots.includes(
                                                                 timeString,
                                                             )
                                                                 ? 'booked'
@@ -944,7 +1085,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                                 h++
                                                                             ) {
                                                                                 if (
-                                                                                    bookedSlots.includes(
+                                                                                    blockedSlots.includes(
                                                                                         `${h.toString().padStart(2, '0')}:00`,
                                                                                     )
                                                                                 )
@@ -982,7 +1123,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                                 handleTimeSlotClickForCourt(
                                                                                     slot.time,
                                                                                     isAvailable,
-                                                                                    bookedSlots,
+                                                                                    blockedSlots,
                                                                                 );
                                                                             }}
                                                                             onMouseEnter={() => {
@@ -1093,11 +1234,12 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                         </div>
                                                                     </div>
                                                                     <button
-                                                                        onClick={() =>
+                                                                        onClick={() => {
+                                                                            resetBookingForm();
                                                                             setIsBookingModalOpen(
                                                                                 true,
-                                                                            )
-                                                                        }
+                                                                            );
+                                                                        }}
                                                                         className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-7 py-3 text-sm font-semibold text-white shadow-emerald-500/20 transition-all outline-none hover:bg-emerald-600 hover:shadow-lg active:scale-[0.98] sm:w-auto"
                                                                     >
                                                                         Buat
@@ -1464,6 +1606,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                     const canCancel = !['cancelled', 'completed'].includes(
                         meta.status,
                     );
+                    const canEdit = ['pending', 'confirmed'].includes(
+                        meta.status,
+                    );
 
                     return (
                         <Dialog
@@ -1581,6 +1726,21 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                 {/* ── Footer actions ── */}
                                 <div className="flex items-center justify-between gap-3 px-6 pt-2 pb-6">
                                     <div className="flex items-center gap-2">
+                                        {canEdit && (
+                                            <button
+                                                onClick={() =>
+                                                    openEditBookingModal(
+                                                        bc,
+                                                        meta,
+                                                    )
+                                                }
+                                                disabled={!!slotActionLoading}
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-[12px] font-bold text-slate-700 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600 active:scale-[0.97] disabled:opacity-50"
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
+                                                Edit
+                                            </button>
+                                        )}
                                         {canCancel && (
                                             <button
                                                 onClick={() =>
@@ -1934,11 +2094,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                     setIsBookingModalOpen(open);
                     if (!open) {
                         setTimeout(() => {
-                            setBookingUserMode('search');
-                            setSelectedCustomer(null);
-                            setNewCustomer({ name: '', email: '', phone: '' });
-                            setSearchQuery('');
-                            setBookingError('');
+                            resetBookingForm();
                         }, 300);
                     }
                 }}
@@ -1946,11 +2102,14 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                 <DialogContent className="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-3xl border-0 bg-white p-0 shadow-2xl sm:max-w-lg md:max-h-[85vh] md:max-w-[800px]">
                     <DialogHeader className="shrink-0 space-y-1 border-b border-slate-100 bg-white px-6 py-6 sm:px-8 md:px-10">
                         <DialogTitle className="text-xl font-bold text-slate-900 md:text-2xl">
-                            Konfirmasi Booking
+                            {editingBookingId
+                                ? 'Edit Booking'
+                                : 'Konfirmasi Booking'}
                         </DialogTitle>
                         <DialogDescription className="text-sm font-medium text-slate-500">
-                            Lengkapi detail kustomer dan selesaikan reservasi
-                            ini.
+                            {editingBookingId
+                                ? 'Perbarui detail booking dan pastikan slot barunya masih tersedia.'
+                                : 'Lengkapi detail kustomer dan selesaikan reservasi ini.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -1968,9 +2127,10 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                 </h3>
                                             </div>
                                             <button
-                                                onClick={() =>
-                                                    setSelectedCustomer(null)
-                                                }
+                                                onClick={() => {
+                                                    setSelectedCustomer(null);
+                                                    setEditingBookingId(null);
+                                                }}
                                                 className="group flex items-center gap-1.5 text-xs font-bold text-slate-400 transition-colors hover:text-red-500"
                                             >
                                                 <X className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-90" />
@@ -2289,6 +2449,174 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
 
                             {/* RIGHT COLUMN: Booking Details & Payment */}
                             <div className="space-y-10">
+                                <div>
+                                    <h3 className="mb-4 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                        Pilih Slot Waktu
+                                    </h3>
+                                    {(() => {
+                                        const selectedCourt = courts.find(
+                                            (court) =>
+                                                court.id === selectedCourtId,
+                                        );
+
+                                        if (!selectedCourt) {
+                                            return (
+                                                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+                                                    Pilih lapangan terlebih dahulu untuk mengatur jam booking.
+                                                </div>
+                                            );
+                                        }
+
+                                        const bookedSlots =
+                                            selectedCourt.booked_slots || [];
+                                        const blockedSlots = bookedSlots.filter(
+                                            (bookedSlot) => {
+                                                const slotMeta =
+                                                    selectedCourt.slot_meta?.[
+                                                        bookedSlot
+                                                    ];
+
+                                                if (!slotMeta) return false;
+                                                if (
+                                                    slotMeta.booking_id ===
+                                                    editingBookingId
+                                                ) {
+                                                    return false;
+                                                }
+
+                                                return [
+                                                    'confirmed',
+                                                    'completed',
+                                                ].includes(slotMeta.status);
+                                            },
+                                        );
+
+                                        const modalSlots = Array.from(
+                                            { length: 15 },
+                                            (_, index) => {
+                                                const hour = index + 7;
+                                                return `${hour.toString().padStart(2, '0')}:00`;
+                                            },
+                                        );
+
+                                        return (
+                                            <div className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">
+                                                            {selectedCourt.name}
+                                                        </p>
+                                                        <p className="mt-1 text-xs text-slate-500">
+                                                            Klik sekali untuk pilih jam mulai, lalu klik lagi untuk tentukan jam akhir.
+                                                        </p>
+                                                    </div>
+                                                    <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm">
+                                                        {selectedDate.toLocaleDateString(
+                                                            'id-ID',
+                                                            {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                            },
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                                                    {modalSlots.map((slot) => {
+                                                        const isBlocked =
+                                                            blockedSlots.includes(
+                                                                slot,
+                                                            );
+                                                        const isSelectedSlot =
+                                                            (() => {
+                                                                if (
+                                                                    !selectedRange.start
+                                                                )
+                                                                    return false;
+
+                                                                if (
+                                                                    !selectedRange.end
+                                                                ) {
+                                                                    return (
+                                                                        slot ===
+                                                                        selectedRange.start
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    slot >=
+                                                                        selectedRange.start &&
+                                                                    slot <=
+                                                                        selectedRange.end
+                                                                );
+                                                            })();
+
+                                                        const slotMeta =
+                                                            selectedCourt
+                                                                .slot_meta?.[
+                                                                slot
+                                                            ];
+
+                                                        return (
+                                                            <button
+                                                                key={slot}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    if (
+                                                                        isBlocked
+                                                                    )
+                                                                        return;
+
+                                                                    handleBookingSlotSelection(
+                                                                        selectedCourt,
+                                                                        slot,
+                                                                        blockedSlots,
+                                                                    );
+                                                                }}
+                                                                disabled={
+                                                                    isBlocked
+                                                                }
+                                                                title={
+                                                                    isBlocked &&
+                                                                    slotMeta
+                                                                        ? `${slotMeta.customer} • ${slotMeta.start_time}-${slotMeta.end_time}`
+                                                                        : slot
+                                                                }
+                                                                className={cn(
+                                                                    'rounded-2xl border px-2 py-3 text-center text-xs font-bold transition-all',
+                                                                    isBlocked
+                                                                        ? 'cursor-not-allowed border-rose-200 bg-rose-50 text-rose-500 line-through'
+                                                                        : isSelectedSlot
+                                                                          ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
+                                                                          : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-600',
+                                                                )}
+                                                            >
+                                                                {slot}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                                        Dipilih
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
+                                                        Sudah confirmed
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="h-2.5 w-2.5 rounded-full bg-white ring-1 ring-slate-300" />
+                                                        Bisa dipilih
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+
                                 {/* Summary Block */}
                                 <div>
                                     <h3 className="mb-6 text-xs font-bold tracking-wider text-slate-400 uppercase">
@@ -2633,7 +2961,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                             }}
                             className="w-full rounded-lg bg-emerald-500 px-6 py-2.5 text-center text-[13px] font-bold text-white shadow-sm shadow-emerald-500/20 transition-all outline-none hover:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-95 sm:w-auto"
                         >
-                            Konfirmasi Reservasi
+                            {editingBookingId
+                                ? 'Simpan Perubahan'
+                                : 'Konfirmasi Reservasi'}
                         </button>
                     </div>
                     {bookingError && (
@@ -2674,7 +3004,7 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                     const endTime = `${endHour.toString().padStart(2, '0')}:00`;
 
                     try {
-                        await axios.post('/bookings', {
+                        const payload = {
                             user_id: selectedCustomer.id,
                             court_id: selectedCourt.id,
                             date: format(selectedDate, 'yyyy-MM-dd'),
@@ -2683,35 +3013,43 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                             total_price: effectiveTotal,
                             payment_status: paymentStatus,
                             notes: bookingNotes,
-                        });
+                        };
+
+                        if (editingBookingId) {
+                            await axios.patch(
+                                `/bookings/${editingBookingId}`,
+                                payload,
+                            );
+                        } else {
+                            await axios.post('/bookings', payload);
+                        }
 
                         setIsConfirmModalOpen(false);
                         setIsBookingModalOpen(false);
-                        setSelectedRange({ start: '08:00', end: null });
-                        setSelectedCustomer(null);
-                        setSearchQuery('');
-                        setPaymentStatus('paid');
-                        setPriceInputMode('system');
-                        setCustomTotal(null);
-                        setBookingNotes('');
+                        resetBookingForm();
 
                         window.dispatchEvent(
                             new CustomEvent('toast', {
                                 detail: {
                                     type: 'success',
-                                    message: 'Booking berhasil dibuat!',
+                                    message: editingBookingId
+                                        ? 'Booking berhasil diperbarui!'
+                                        : 'Booking berhasil dibuat!',
                                 },
                             }),
                         );
 
                         router.reload({ only: ['courts'] });
-                    } catch (err: any) {
+                    } catch (err: unknown) {
+                        const message = axios.isAxiosError(err)
+                            ? (err.response?.data?.message ??
+                                  'Terjadi kesalahan. Coba lagi.')
+                            : 'Terjadi kesalahan. Coba lagi.';
+
                         setBookingError(
-                            err.response?.data?.message ??
-                                'Terjadi kesalahan. Coba lagi.',
+                            message,
                         );
                         setIsConfirmModalOpen(false);
-                        setSelectedRange({ start: null, end: null });
                         router.reload({ only: ['courts'] });
                     } finally {
                         setIsSubmittingBooking(false);
@@ -2730,11 +3068,14 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                         <DialogContent className="overflow-hidden rounded-2xl border-slate-200/60 bg-white p-0 shadow-2xl sm:max-w-md">
                             <DialogHeader className="border-b border-slate-100 px-7 pt-7 pb-5">
                                 <DialogTitle className="text-lg font-bold text-slate-900">
-                                    Konfirmasi Booking
+                                    {editingBookingId
+                                        ? 'Konfirmasi Perubahan Booking'
+                                        : 'Konfirmasi Booking'}
                                 </DialogTitle>
                                 <DialogDescription className="text-sm text-slate-500">
-                                    Pastikan semua detail di bawah sudah benar
-                                    sebelum membuat booking.
+                                    {editingBookingId
+                                        ? 'Pastikan perubahan slot dan detail booking sudah benar sebelum disimpan.'
+                                        : 'Pastikan semua detail di bawah sudah benar sebelum membuat booking.'}
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -2855,7 +3196,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                     )}
                                     {isSubmittingBooking
                                         ? 'Memproses...'
-                                        : 'Ya, Buat Booking'}
+                                        : editingBookingId
+                                          ? 'Ya, Simpan Perubahan'
+                                          : 'Ya, Buat Booking'}
                                 </button>
                             </DialogFooter>
                         </DialogContent>

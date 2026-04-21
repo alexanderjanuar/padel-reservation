@@ -108,6 +108,10 @@ Route::post('bookings', [BookingController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('bookings.store');
 
+Route::patch('bookings/{booking}', [BookingController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('bookings.update');
+
 Route::post('bookings/guest', [BookingController::class, 'store'])
     ->name('bookings.guest');
 

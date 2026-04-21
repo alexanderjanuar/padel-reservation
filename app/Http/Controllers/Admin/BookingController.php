@@ -42,13 +42,12 @@ class BookingController extends Controller
             $userId = $guestUser->id;
         }
 
-        // Prevent double-booking against confirmed schedules only.
-        $conflict = Booking::where('court_id', $validated['court_id'])
-            ->whereDate('date', $validated['date'])
-            ->whereIn('status', ['confirmed', 'completed'])
-            ->where('start_time', '<', $validated['end_time'])
-            ->where('end_time', '>', $validated['start_time'])
-            ->exists();
+        $conflict = $this->hasBookingConflict(
+            $validated['court_id'],
+            $validated['date'],
+            $validated['start_time'],
+            $validated['end_time'],
+        );
 
         if ($conflict) {
             return response()->json([
@@ -122,6 +121,84 @@ class BookingController extends Controller
                 : 'Permintaan booking berhasil dibuat. Admin akan follow up melalui WhatsApp.',
             'booking' => $booking,
         ], 201);
+    }
+
+    public function update(Request $request, Booking $booking): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'court_id' => ['required', 'exists:courts,id'],
+            'date' => ['required', 'date'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'total_price' => ['nullable', 'integer', 'min:0'],
+            'payment_status' => ['required', 'in:paid,unpaid'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        if (in_array($booking->status, ['cancelled', 'completed'], true)) {
+            return response()->json(['message' => 'Booking ini tidak dapat diedit.'], 422);
+        }
+
+        $conflict = $this->hasBookingConflict(
+            (int) $validated['court_id'],
+            $validated['date'],
+            $validated['start_time'],
+            $validated['end_time'],
+            $booking->id,
+            ['confirmed', 'completed'],
+        );
+
+        if ($conflict) {
+            return response()->json([
+                'message' => 'Slot waktu tersebut sudah dibooking. Silakan pilih waktu lain.',
+            ], 422);
+        }
+
+        $court = Court::findOrFail($validated['court_id']);
+        $calculatedPrice = $this->calculateBookingPrice(
+            $court,
+            $validated['date'],
+            $validated['start_time'],
+            $validated['end_time'],
+        );
+        $finalPrice = isset($validated['total_price']) ? (int) $validated['total_price'] : $calculatedPrice;
+        $isPaid = $validated['payment_status'] === 'paid';
+
+        $booking->update([
+            'user_id' => $validated['user_id'],
+            'court_id' => $validated['court_id'],
+            'date' => $validated['date'],
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
+            'total_price' => $finalPrice,
+            'status' => $isPaid ? 'confirmed' : 'pending',
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        if ($booking->payment) {
+            $booking->payment->update([
+                'method' => $isPaid ? 'cash' : 'manual',
+                'amount' => $finalPrice,
+                'status' => $isPaid ? 'paid' : 'pending',
+                'paid_at' => $isPaid ? now() : null,
+            ]);
+        } else {
+            Payment::create([
+                'booking_id' => $booking->id,
+                'method' => $isPaid ? 'cash' : 'manual',
+                'amount' => $finalPrice,
+                'status' => $isPaid ? 'paid' : 'pending',
+                'paid_at' => $isPaid ? now() : null,
+            ]);
+        }
+
+        $booking->load(['user', 'court.venue', 'court.sport', 'payment']);
+
+        return response()->json([
+            'message' => 'Booking berhasil diperbarui.',
+            'booking' => $booking,
+        ]);
     }
 
     public function uploadProof(Booking $booking, Request $request): JsonResponse
@@ -282,5 +359,23 @@ class BookingController extends Controller
         }
 
         return $calculatedPrice;
+    }
+
+    private function hasBookingConflict(
+        int $courtId,
+        string $date,
+        string $startTime,
+        string $endTime,
+        ?int $ignoreBookingId = null,
+        array $statuses = ['pending', 'confirmed', 'completed'],
+    ): bool {
+        return Booking::query()
+            ->where('court_id', $courtId)
+            ->whereDate('date', $date)
+            ->whereIn('status', $statuses)
+            ->when($ignoreBookingId, fn ($query) => $query->where('id', '!=', $ignoreBookingId))
+            ->where('start_time', '<', $endTime)
+            ->where('end_time', '>', $startTime)
+            ->exists();
     }
 }

@@ -24,7 +24,7 @@ class CourtController extends Controller
             'bookings' => function ($query) use ($date) {
                 $query->where('date', $date)
                     ->whereIn('status', ['pending', 'confirmed', 'completed'])
-                    ->with('user:id,name,phone')
+                    ->with(['user:id,name,email,phone', 'payment:id,booking_id,status'])
                     ->select('id', 'court_id', 'user_id', 'start_time', 'end_time', 'status', 'total_price', 'notes');
             },
         ])
@@ -52,11 +52,14 @@ class CourtController extends Controller
                         $bookedSlots[] = $slot;
                         $slotMeta[$slot] = [
                             'booking_id' => $booking->id,
+                            'user_id' => $booking->user?->id,
                             'customer' => $booking->user?->name ?? 'Guest',
+                            'email' => $booking->user?->email,
                             'phone' => $booking->user?->phone ?? '—',
                             'start_time' => substr($booking->start_time, 0, 5),
                             'end_time' => substr($booking->end_time, 0, 5),
                             'status' => $booking->status,
+                            'payment_status' => $booking->payment?->status ?? 'pending',
                             'total_price' => $booking->total_price,
                             'notes' => $booking->notes,
                         ];
