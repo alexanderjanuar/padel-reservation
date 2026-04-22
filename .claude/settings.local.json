@@ -57,7 +57,8 @@
       "Bash(php artisan test --compact --filter=\"Midtrans|GuestBooking\")",
       "Bash(php artisan:*)",
       "Bash(npx tsc:*)",
-      "Bash(python3 -c \"import sys,json; [print\\(r[\\\\\"Key_name\\\\\"], r[\\\\\"Column_name\\\\\"]\\) for r in json.loads\\(sys.stdin.read\\(\\).split\\(\\\\\"\\\\n\\\\\"\\)[0]\\)]')"
+      "Bash(python3 -c \"import sys,json; [print\\(r[\\\\\"Key_name\\\\\"], r[\\\\\"Column_name\\\\\"]\\) for r in json.loads\\(sys.stdin.read\\(\\).split\\(\\\\\"\\\\n\\\\\"\\)[0]\\)]')",
+      "Bash(vendor/bin/pint --dirty --format agent app/Http/Controllers/Admin/BookingListController.php)"
     ]
   },
   "enabledMcpjsonServers": [

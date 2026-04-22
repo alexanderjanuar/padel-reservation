@@ -15,6 +15,7 @@ import {
     Filter,
     Inbox,
     MapPin,
+    Pencil,
     Plus,
     Search,
 } from 'lucide-react';
@@ -199,6 +200,25 @@ function calculateBookingPrice(
     }
 
     return total;
+}
+
+const BOOKING_MODAL_SLOTS = Array.from({ length: 15 }, (_, index) => {
+    const hour = index + 7;
+    return `${hour.toString().padStart(2, '0')}:00`;
+});
+
+function getSelectableRangeEnd(endTime: string) {
+    const hour = parseInt(endTime.split(':')[0], 10) - 1;
+    return `${hour.toString().padStart(2, '0')}:00`;
+}
+
+function getSubmittedEndTime(range: { start: string | null; end: string | null }) {
+    if (!range.start) return null;
+
+    const rawEnd = range.end ?? range.start;
+    const endHour = parseInt(rawEnd.split(':')[0], 10) + 1;
+
+    return `${endHour.toString().padStart(2, '0')}:00`;
 }
 
 function mapApiBookingToRow(booking: {
@@ -442,6 +462,21 @@ export default function AdminBookings({
     const [confirmManualTotal, setConfirmManualTotal] = useState<number | null>(null);
     const [confirmError, setConfirmError] = useState('');
     const [isConfirmSubmitting, setIsConfirmSubmitting] = useState(false);
+    const [editBooking, setEditBooking] = useState<BookingItem | null>(null);
+    const [availabilityCourts, setAvailabilityCourts] = useState(courts);
+    const [isAvailabilityLoading, setIsAvailabilityLoading] = useState(false);
+    const [editDate, setEditDate] = useState(todayStr);
+    const [editCourtId, setEditCourtId] = useState<number | null>(null);
+    const [editRange, setEditRange] = useState<{ start: string | null; end: string | null }>({
+        start: null,
+        end: null,
+    });
+    const [editPaymentStatus, setEditPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid');
+    const [editPriceMode, setEditPriceMode] = useState<'system' | 'manual'>('system');
+    const [editManualTotal, setEditManualTotal] = useState<number | null>(null);
+    const [editNotes, setEditNotes] = useState('');
+    const [editError, setEditError] = useState('');
+    const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
     const handlePreset = (preset: Preset, from: string, to: string) => {
         setActivePreset(preset);
@@ -501,6 +536,23 @@ export default function AdminBookings({
         [courts, confirmBooking],
     );
 
+    const editCourt = useMemo(
+        () => availabilityCourts.find((court) => court.id === editCourtId) ?? null,
+        [availabilityCourts, editCourtId],
+    );
+
+    const editSystemTotal = useMemo(() => {
+        if (!editCourt || !editRange.start) return 0;
+
+        const submittedEnd = getSubmittedEndTime(editRange);
+        if (!submittedEnd) return 0;
+
+        return calculateBookingPrice(editCourt, editRange.start, submittedEnd, parseISO(editDate));
+    }, [editCourt, editRange, editDate]);
+
+    const editEffectiveTotal =
+        editPriceMode === 'manual' && editManualTotal !== null ? editManualTotal : editSystemTotal;
+
     const confirmSystemTotal = useMemo(() => {
         if (!confirmBooking) return 0;
         if (!confirmCourt) return confirmBooking.total_price;
@@ -532,6 +584,107 @@ export default function AdminBookings({
         setConfirmPriceMode('system');
         setConfirmManualTotal(null);
         setConfirmError('');
+    };
+
+    const loadAvailability = async (date: string) => {
+        setIsAvailabilityLoading(true);
+
+        try {
+            const route = bookingRoutes.availability({ query: { date } });
+            const response = await axios.get(route.url);
+            setAvailabilityCourts(response.data?.courts ?? []);
+        } catch {
+            setEditError('Gagal memuat ketersediaan slot untuk tanggal tersebut.');
+        } finally {
+            setIsAvailabilityLoading(false);
+        }
+    };
+
+    const openEditModal = async (booking: BookingItem) => {
+        const bookingCourtId = booking.court.id ?? null;
+        const initialRangeEnd =
+            booking.end_time > booking.start_time ? getSelectableRangeEnd(booking.end_time) : null;
+
+        setEditBooking(booking);
+        setEditDate(booking.date);
+        setEditCourtId(bookingCourtId);
+        setEditRange({
+            start: booking.start_time,
+            end: initialRangeEnd,
+        });
+        setEditPaymentStatus(booking.status === 'confirmed' ? 'paid' : 'unpaid');
+        setEditNotes(booking.notes ?? '');
+        setEditPriceMode('manual');
+        setEditManualTotal(booking.total_price);
+        setEditError('');
+
+        await loadAvailability(booking.date);
+    };
+
+    const resetEditState = () => {
+        setEditBooking(null);
+        setEditDate(todayStr);
+        setEditCourtId(null);
+        setEditRange({ start: null, end: null });
+        setEditPaymentStatus('unpaid');
+        setEditPriceMode('system');
+        setEditManualTotal(null);
+        setEditNotes('');
+        setEditError('');
+        setAvailabilityCourts(courts);
+    };
+
+    const closeEditModal = (open: boolean) => {
+        if (open || isEditSubmitting) return;
+        resetEditState();
+    };
+
+    const handleEditDateChange = async (value: string) => {
+        setEditDate(value);
+        setEditError('');
+        await loadAvailability(value);
+    };
+
+    const handleEditCourtChange = (courtId: number) => {
+        setEditCourtId(courtId);
+        setEditRange({ start: null, end: null });
+        setEditError('');
+    };
+
+    const handleEditSlotSelection = (
+        _court: AvailabilityCourt,
+        slot: string,
+        blockedSlots: string[],
+    ) => {
+        if (!editRange.start || editRange.end) {
+            setEditRange({ start: slot, end: null });
+            setEditError('');
+            return;
+        }
+
+        if (slot <= editRange.start) {
+            setEditRange({ start: slot, end: null });
+            setEditError('');
+            return;
+        }
+
+        const startHour = parseInt(editRange.start.split(':')[0], 10);
+        const endHour = parseInt(slot.split(':')[0], 10);
+
+        for (let hour = startHour + 1; hour <= endHour; hour++) {
+            const candidate = `${hour.toString().padStart(2, '0')}:00`;
+
+            if (blockedSlots.includes(candidate)) {
+                setEditError('Rentang waktu melewati slot yang sudah dikonfirmasi booking lain.');
+                return;
+            }
+        }
+
+        setEditRange({
+            start: editRange.start,
+            end: slot,
+        });
+        setEditError('');
     };
 
     const runAction = async (bookingId: number) => {
@@ -634,6 +787,81 @@ export default function AdminBookings({
         }
     };
 
+    const submitEditBooking = async () => {
+        if (!editBooking || !editCourtId || !editRange.start) {
+            setEditError('Lengkapi lapangan dan slot booking terlebih dahulu.');
+            return;
+        }
+
+        const endTime = getSubmittedEndTime(editRange);
+        if (!endTime) {
+            setEditError('Slot booking belum lengkap.');
+            return;
+        }
+
+        if (editPriceMode === 'manual' && editManualTotal === null) {
+            setEditError('Masukkan harga manual sebelum menyimpan perubahan.');
+            return;
+        }
+
+        setIsEditSubmitting(true);
+        setActingId(editBooking.id);
+        setFeedback(null);
+        setEditError('');
+
+        try {
+            const route = bookingRoutes.update({ booking: editBooking.id });
+            const response = await axios({
+                url: route.url,
+                method: route.method,
+                data: {
+                    user_id: editBooking.user.id,
+                    court_id: editCourtId,
+                    date: editDate,
+                    start_time: editRange.start,
+                    end_time: endTime,
+                    total_price: editPriceMode === 'manual' ? editManualTotal : editSystemTotal,
+                    payment_status: editPaymentStatus,
+                    notes: editNotes,
+                },
+            });
+
+            const updatedBooking = response.data?.booking
+                ? mapApiBookingToRow(response.data.booking)
+                : {
+                      ...editBooking,
+                      date: editDate,
+                      start_time: editRange.start,
+                      end_time: endTime,
+                      total_price: editEffectiveTotal,
+                      status: (editPaymentStatus === 'paid' ? 'confirmed' : 'pending') as BookingStatus,
+                      notes: editNotes,
+                  };
+
+            setRows((current) =>
+                current.map((booking) => (booking.id === editBooking.id ? updatedBooking : booking)),
+            );
+            setFeedback({
+                type: 'success',
+                text: response.data?.message ?? 'Booking berhasil diperbarui.',
+            });
+            resetEditState();
+        } catch (error: unknown) {
+            const message = axios.isAxiosError(error)
+                ? (error.response?.data?.message ?? 'Terjadi kesalahan saat memperbarui booking.')
+                : 'Terjadi kesalahan saat memperbarui booking.';
+
+            setEditError(message);
+            setFeedback({
+                type: 'error',
+                text: message,
+            });
+        } finally {
+            setIsEditSubmitting(false);
+            setActingId(null);
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Booking" />
@@ -677,70 +905,53 @@ export default function AdminBookings({
                     )}
                 >
                     <div className="min-h-0">
-                        <div className="grid grid-cols-1 gap-6 border-t border-b border-slate-200 py-6 md:grid-cols-4 md:gap-8">
-                            <div className="flex flex-col">
-                                <span className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                                    <CalendarCheck2 className="h-3.5 w-3.5" />
-                                    Total Booking
-                                </span>
-                                <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                                    {liveStats.total}
-                                </span>
-                                <span className="mt-2 text-xs font-medium text-slate-400">Semua waktu</span>
-                            </div>
-                            <div className="flex flex-col border-t border-slate-100 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-8">
-                                <span className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                                    <Clock3 className="h-3.5 w-3.5 text-amber-500" />
-                                    Menunggu Konfirmasi
-                                </span>
-                                <span className="text-3xl font-semibold tracking-tight text-amber-600">
-                                    {liveStats.pending}
-                                </span>
-                                <span className="mt-2 text-xs font-medium text-slate-400">Perlu tindakan</span>
-                            </div>
-                            <div className="flex flex-col border-t border-slate-100 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-8">
-                                <span className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                    Dikonfirmasi
-                                </span>
-                                <span className="text-3xl font-semibold tracking-tight text-emerald-600">
-                                    {liveStats.confirmed}
-                                </span>
-                                <span className="mt-2 text-xs font-medium text-slate-400">Booking aktif</span>
-                            </div>
-                            <div className="flex flex-col border-t border-slate-100 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-8">
-                                <span className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                                    <CalendarDays className="h-3.5 w-3.5 text-sky-500" />
-                                    Hari Ini
-                                </span>
-                                <span className="text-3xl font-semibold tracking-tight text-sky-600">
-                                    {liveStats.today}
-                                </span>
-                                <span className="mt-2 text-xs font-medium text-slate-400">Jadwal hari ini</span>
-                            </div>
+                        <div className="grid grid-cols-2 gap-4 border-t border-b border-slate-200 py-5 md:grid-cols-4 md:gap-0 md:py-6">
+                            {[
+                                { icon: <CalendarCheck2 className="h-3.5 w-3.5" />, label: 'Total', value: liveStats.total, color: 'text-slate-900', sub: 'Semua waktu' },
+                                { icon: <Clock3 className="h-3.5 w-3.5 text-amber-500" />, label: 'Menunggu', value: liveStats.pending, color: 'text-amber-600', sub: 'Perlu tindakan' },
+                                { icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />, label: 'Dikonfirmasi', value: liveStats.confirmed, color: 'text-emerald-600', sub: 'Booking aktif' },
+                                { icon: <CalendarDays className="h-3.5 w-3.5 text-sky-500" />, label: 'Hari Ini', value: liveStats.today, color: 'text-sky-600', sub: 'Jadwal hari ini' },
+                            ].map((stat, i) => (
+                                <div key={stat.label} className={cn('flex flex-col', i > 0 && 'md:border-l md:pl-8')}>
+                                    <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                                        {stat.icon}
+                                        {stat.label}
+                                    </span>
+                                    <span className={cn('text-2xl font-semibold tracking-tight md:text-3xl', stat.color)}>
+                                        {stat.value}
+                                    </span>
+                                    <span className="mt-1.5 text-xs font-medium text-slate-400">{stat.sub}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
                 {/* ═══════════ Action Toolbar ═══════════ */}
-                <div className="flex flex-col gap-3 py-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                        {/* Search */}
-                        <div className="relative flex items-center">
+                <div className="flex flex-col gap-2 py-1">
+                    {/* Row 1: Search + count */}
+                    <div className="flex items-center gap-2">
+                        <div className="relative flex flex-1 items-center sm:flex-none">
                             <Search className="absolute left-3 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Cari nama, lapangan, venue, atau ID..."
+                                placeholder="Cari nama, lapangan, atau ID..."
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="h-9 w-64 rounded-full border border-slate-200/80 bg-white pr-4 pl-9 text-sm focus:border-padel-green-dark focus:ring-padel-green-dark sm:w-72"
+                                className="h-9 w-full rounded-full border border-slate-200/80 bg-white pr-4 pl-9 text-sm focus:border-padel-green-dark focus:ring-padel-green-dark sm:w-72"
                             />
                         </div>
+                        <span className="ml-auto shrink-0 text-sm text-slate-500">
+                            <span className="font-semibold text-slate-700">{filteredRows.length}</span>
+                            <span className="hidden sm:inline"> booking</span>
+                        </span>
+                    </div>
 
-                        {/* Status filter */}
+                    {/* Row 2: Filters */}
+                    <div className="flex flex-wrap items-center gap-2">
                         <div className="relative flex h-9 items-center">
                             <Filter className="pointer-events-none absolute left-3 h-4 w-4 text-slate-400" />
                             <select
@@ -760,7 +971,6 @@ export default function AdminBookings({
                             <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-slate-400" />
                         </div>
 
-                        {/* Date range picker */}
                         <DateRangePicker
                             dateFrom={dateFrom}
                             dateTo={dateTo}
@@ -768,10 +978,6 @@ export default function AdminBookings({
                             onPreset={handlePreset}
                             onCustomChange={handleCustomDate}
                         />
-
-                        <span className="ml-auto text-sm font-medium text-slate-500">
-                            <span className="font-semibold text-slate-700">{filteredRows.length}</span> booking
-                        </span>
                     </div>
                 </div>
 
@@ -790,96 +996,100 @@ export default function AdminBookings({
                 )}
 
                 {/* ═══════════ Data Table ═══════════ */}
-                <div className="flex flex-col">
+                <div className="flex flex-col rounded-2xl border border-slate-200 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="bg-slate-50">
-                                <tr className="border-b border-slate-200/80">
-                                    <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
-                                        ID / Dibuat
+                            <thead>
+                                <tr className="border-b border-slate-200 bg-slate-50/80">
+                                    <th className="px-4 py-3 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
+                                        ID
                                     </th>
-                                    <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
+                                    <th className="px-4 py-3 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                                         Pemesan
                                     </th>
-                                    <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
+                                    <th className="px-4 py-3 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                                         Lapangan
                                     </th>
-                                    <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
+                                    <th className="px-4 py-3 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                                         Jadwal
                                     </th>
-                                    <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
+                                    <th className="px-4 py-3 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                                         Biaya
                                     </th>
-                                    <th className="px-5 py-4 text-[10px] font-light tracking-wide text-slate-600">
+                                    <th className="px-4 py-3 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                                         Status
                                     </th>
-                                    <th className="px-5 py-4 text-right text-[10px] font-light tracking-wide text-slate-600">
+                                    <th className="px-4 py-3 text-right text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                                         Aksi
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100/80">
+                            <tbody className="divide-y divide-slate-100">
                                 {paginatedRows.length > 0 ? (
                                     paginatedRows.map((booking) => {
                                         const meta = statusMeta[booking.status];
                                         const canConfirm = booking.status === 'pending';
                                         const canCancel = !['cancelled', 'completed'].includes(booking.status);
+                                        const canEdit =
+                                            !['cancelled', 'completed'].includes(booking.status) &&
+                                            booking.date >= todayStr &&
+                                            Boolean(booking.user.id);
+                                        const isActing = actingId === booking.id;
 
                                         return (
                                             <tr
                                                 key={booking.id}
-                                                className="group transition-colors outline-none hover:bg-slate-50/40"
+                                                className="group bg-white transition-colors hover:bg-slate-50/60"
                                             >
-                                                <td className="px-5 py-4">
-                                                    <span className="font-semibold text-slate-900">
+                                                <td className="px-4 py-3.5">
+                                                    <span className="text-xs font-bold text-slate-400">
                                                         #{booking.id}
                                                     </span>
-                                                    <p className="mt-0.5 text-[11px] text-slate-400">
+                                                    <p className="mt-0.5 text-[10px] text-slate-400">
                                                         {fmtDateTime(booking.created_at)}
                                                     </p>
                                                 </td>
-                                                <td className="px-5 py-4">
-                                                    <span className="text-slate-700 transition-colors group-hover:text-slate-900">
+                                                <td className="px-4 py-3.5">
+                                                    <span className="font-medium text-slate-800">
                                                         {booking.user.name}
                                                     </span>
                                                     <p className="mt-0.5 text-[11px] text-slate-400">
-                                                        {booking.user.phone || booking.user.email || '-'}
+                                                        {booking.user.phone || booking.user.email || '—'}
                                                     </p>
                                                 </td>
-                                                <td className="px-5 py-4">
-                                                    <span className="text-slate-700 group-hover:text-slate-900">
-                                                        {booking.court.name || '-'}
+                                                <td className="px-4 py-3.5">
+                                                    <span className="font-medium text-slate-800">
+                                                        {booking.court.name || '—'}
                                                     </span>
-                                                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                                                    <div className="mt-1 flex items-center gap-1.5">
+                                                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
                                                             {booking.court.sport.name || 'Olahraga'}
                                                         </span>
-                                                        <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                                                            <MapPin className="h-3 w-3 text-padel-green" />
-                                                            {booking.court.venue.name || '-'}
+                                                        <span className="flex items-center gap-0.5 text-[10px] text-slate-400">
+                                                            <MapPin className="h-2.5 w-2.5 text-padel-green" />
+                                                            {booking.court.venue.name || '—'}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-4">
-                                                    <span className="text-slate-700 group-hover:text-slate-900">
+                                                <td className="px-4 py-3.5">
+                                                    <span className="font-medium text-slate-800">
                                                         {fmtDate(booking.date)}
                                                     </span>
                                                     <p className="mt-0.5 text-[11px] text-slate-400">
-                                                        {booking.start_time.slice(0, 5)} –{' '}
-                                                        {booking.end_time.slice(0, 5)}
+                                                        {booking.start_time.slice(0, 5)} – {booking.end_time.slice(0, 5)}
                                                     </p>
                                                 </td>
-                                                <td className="px-5 py-4">
-                                                    <span className="font-medium text-slate-700 group-hover:text-slate-900">
+                                                <td className="px-4 py-3.5">
+                                                    <span className="font-semibold text-slate-800">
                                                         {fmtCurrency(booking.total_price)}
                                                     </span>
                                                     <p className="mt-0.5 text-[11px] capitalize text-slate-400">
                                                         {booking.payment.method
                                                             ? booking.payment.method.replace('_', ' ')
-                                                            : 'Belum ada metode'}
+                                                            : 'Belum ada'}
                                                     </p>
                                                 </td>
-                                                <td className="px-5 py-4">
+                                                <td className="px-4 py-3.5">
                                                     <span
                                                         className={cn(
                                                             'inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ring-1 ring-inset',
@@ -889,25 +1099,36 @@ export default function AdminBookings({
                                                         {meta.label}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-4">
-                                                    <div className="flex items-center justify-end gap-2">
+                                                <td className="px-4 py-3.5">
+                                                    <div className="flex items-center justify-end gap-1.5">
                                                         <button
                                                             type="button"
-                                                            disabled={!canConfirm || actingId === booking.id}
-                                                            onClick={() => openConfirmModal(booking)}
-                                                            className="flex h-8 items-center rounded-md bg-padel-green px-3 text-xs font-semibold text-white transition-colors hover:bg-padel-green-dark disabled:cursor-not-allowed disabled:opacity-40"
+                                                            disabled={!canEdit || isActing}
+                                                            onClick={() => void openEditModal(booking)}
+                                                            title="Edit booking"
+                                                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                                                         >
-                                                            {actingId === booking.id && canConfirm
-                                                                ? '...'
-                                                                : 'Konfirmasi'}
+                                                            <Pencil className="h-3.5 w-3.5" />
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            disabled={!canCancel || actingId === booking.id}
-                                                            onClick={() => runAction(booking.id)}
-                                                            className="flex h-8 items-center rounded-md border border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                                            disabled={!canConfirm || isActing}
+                                                            onClick={() => openConfirmModal(booking)}
+                                                            className="flex h-7 items-center rounded-lg bg-padel-green px-2.5 text-[11px] font-semibold text-white transition-colors hover:bg-padel-green-dark disabled:cursor-not-allowed disabled:opacity-40"
                                                         >
-                                                            Batalkan
+                                                            {isActing && canConfirm ? (
+                                                                <Spinner className="h-3 w-3" />
+                                                            ) : (
+                                                                'Konfirmasi'
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={!canCancel || isActing}
+                                                            onClick={() => runAction(booking.id)}
+                                                            className="flex h-7 items-center rounded-lg border border-rose-200 bg-rose-50 px-2.5 text-[11px] font-semibold text-rose-600 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                                        >
+                                                            Batal
                                                         </button>
                                                     </div>
                                                 </td>
@@ -916,16 +1137,16 @@ export default function AdminBookings({
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-16 text-center">
+                                        <td colSpan={7} className="px-6 py-14 text-center">
                                             <div className="flex flex-col items-center justify-center">
-                                                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-50">
+                                                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
                                                     <Inbox className="h-5 w-5 text-slate-400" />
                                                 </div>
-                                                <h3 className="mb-1 text-sm font-semibold text-slate-900">
+                                                <p className="text-sm font-semibold text-slate-700">
                                                     Tidak ada booking ditemukan
-                                                </h3>
-                                                <p className="text-[13px] text-slate-500">
-                                                    Coba ubah kata kunci atau filter status.
+                                                </p>
+                                                <p className="mt-1 text-xs text-slate-400">
+                                                    Coba ubah kata kunci atau filter.
                                                 </p>
                                             </div>
                                         </td>
@@ -936,24 +1157,28 @@ export default function AdminBookings({
                     </div>
 
                     {/* ═══════════ Pagination Footer ═══════════ */}
-                    <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-                        <span className="text-[13px] text-slate-500">
-                            Menampilkan:{' '}
-                            <span className="font-semibold text-slate-700">
-                                {filteredRows.length === 0 ? 0 : (currentPage - 1) * linesPerPage + 1} –{' '}
-                                {Math.min(currentPage * linesPerPage, filteredRows.length)}
-                            </span>{' '}
-                            of {filteredRows.length}
+                    <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/60 px-4 py-3 sm:flex-row">
+                        <span className="text-[12px] text-slate-400">
+                            {filteredRows.length === 0 ? (
+                                'Tidak ada data'
+                            ) : (
+                                <>
+                                    <span className="font-semibold text-slate-600">
+                                        {(currentPage - 1) * linesPerPage + 1}–{Math.min(currentPage * linesPerPage, filteredRows.length)}
+                                    </span>
+                                    {' '}dari {filteredRows.length} booking
+                                </>
+                            )}
                         </span>
 
-                        <div className="flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row sm:gap-6">
-                            <div className="flex flex-wrap items-center justify-center gap-1">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1 || totalPages === 0}
-                                    className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
+                                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
                                 >
-                                    <ChevronLeft className="h-4 w-4" />
+                                    <ChevronLeft className="h-3.5 w-3.5" />
                                 </button>
 
                                 {Array.from({ length: totalPages }).map((_, idx) => {
@@ -966,11 +1191,8 @@ export default function AdminBookings({
                                         ) {
                                             if (pageNumber === 2 || pageNumber === totalPages - 1) {
                                                 return (
-                                                    <span
-                                                        key={pageNumber}
-                                                        className="flex h-8 w-8 items-center justify-center text-slate-400"
-                                                    >
-                                                        ...
+                                                    <span key={pageNumber} className="flex h-7 w-7 items-center justify-center text-[12px] text-slate-300">
+                                                        ···
                                                     </span>
                                                 );
                                             }
@@ -982,10 +1204,10 @@ export default function AdminBookings({
                                             key={pageNumber}
                                             onClick={() => setCurrentPage(pageNumber)}
                                             className={cn(
-                                                'flex h-8 w-8 items-center justify-center rounded text-sm font-medium transition-colors',
+                                                'flex h-7 w-7 items-center justify-center rounded-lg text-[12px] font-medium transition-colors',
                                                 currentPage === pageNumber
-                                                    ? 'border border-slate-200 bg-white text-slate-900 shadow-sm'
-                                                    : 'text-slate-600 hover:bg-slate-50',
+                                                    ? 'bg-slate-900 text-white'
+                                                    : 'text-slate-500 hover:bg-slate-100',
                                             )}
                                         >
                                             {pageNumber}
@@ -996,35 +1218,446 @@ export default function AdminBookings({
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages || totalPages === 0}
-                                    className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
+                                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
                                 >
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronRight className="h-3.5 w-3.5" />
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <span className="text-[13px] text-slate-500">Baris per halaman</span>
-                                <select
-                                    value={linesPerPage}
-                                    onChange={(e) => {
-                                        setLinesPerPage(Number(e.target.value));
-                                        setCurrentPage(1);
-                                    }}
-                                    className="h-8 rounded-lg border border-slate-200 bg-white px-2 py-0 text-[13px] font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 focus:border-slate-300 focus:ring-0"
-                                >
-                                    <option value={5}>5 / halaman</option>
-                                    <option value={10}>10 / halaman</option>
-                                    <option value={20}>20 / halaman</option>
-                                    <option value={50}>50 / halaman</option>
-                                </select>
-                            </div>
+                            <select
+                                value={linesPerPage}
+                                onChange={(e) => {
+                                    setLinesPerPage(Number(e.target.value));
+                                    setCurrentPage(1);
+                                }}
+                                className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[12px] font-medium text-slate-500 transition-colors hover:bg-slate-50 focus:ring-0"
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                            </select>
                         </div>
                     </div>
                 </div>
+                <Dialog open={Boolean(editBooking)} onOpenChange={closeEditModal}>
+                    <DialogContent className="flex w-[calc(100vw-2rem)] max-w-4xl flex-col gap-0 rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl max-h-[92vh] sm:max-h-[88vh]">
+                        <DialogHeader className="shrink-0 border-b border-slate-200 px-5 py-4 sm:px-6 sm:py-5">
+                            <DialogTitle className="text-lg font-bold text-slate-900 sm:text-xl">
+                                Edit Booking Mendatang
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-slate-500">
+                                Perbarui jadwal booking dan pastikan slot barunya tidak bentrok dengan booking lain yang sudah dikonfirmasi.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {editBooking && (
+                            <div className="flex-1 overflow-y-auto overscroll-contain">
+                                <div className="space-y-5 px-5 py-5 sm:space-y-6 sm:px-6">
+                                    <div className="space-y-4">
+                                        <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 sm:p-5">
+                                            <div className="flex items-start gap-3">
+                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white">
+                                                    {editBooking.user.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="truncate text-base font-bold text-slate-900">
+                                                            {editBooking.user.name}
+                                                        </p>
+                                                        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                                            #{editBooking.id}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-1 truncate text-sm text-slate-500">
+                                                        {editBooking.user.phone || editBooking.user.email || '-'}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                                                    <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Booking Saat Ini
+                                                    </p>
+                                                    <p className="mt-1.5 text-sm font-semibold text-slate-900">
+                                                        {editBooking.court.name || '—'}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-slate-500">
+                                                        {fmtDate(editBooking.date)} · {editBooking.start_time.slice(0, 5)} - {editBooking.end_time.slice(0, 5)}
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                                                    <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Venue
+                                                    </p>
+                                                    <p className="mt-1.5 text-sm font-semibold text-slate-900">
+                                                        {editBooking.court.venue.name || '—'}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-slate-500">
+                                                        {editBooking.court.sport.name || 'Olahraga'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 sm:p-5">
+                                            <p className="text-[10px] font-bold tracking-[0.2em] text-emerald-700 uppercase">
+                                                Ringkasan Update
+                                            </p>
+                                            <div className="mt-4 grid grid-cols-2 gap-3">
+                                                <div className="rounded-xl bg-white px-4 py-3 shadow-sm shadow-emerald-900/5">
+                                                    <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                                                        Mulai
+                                                    </p>
+                                                    <p className="mt-1 text-lg font-bold text-slate-900">
+                                                        {editRange.start ? editRange.start.slice(0, 5) : '—'}
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-xl bg-white px-4 py-3 shadow-sm shadow-emerald-900/5">
+                                                    <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                                                        Selesai
+                                                    </p>
+                                                    <p className="mt-1 text-lg font-bold text-slate-900">
+                                                        {getSubmittedEndTime(editRange)?.slice(0, 5) ?? '—'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="mt-3 rounded-xl bg-white px-4 py-3 shadow-sm shadow-emerald-900/5">
+                                                <div className="flex items-center justify-between gap-3 text-sm">
+                                                    <span className="text-slate-500">Total baru</span>
+                                                    <span className="text-xl font-bold text-emerald-600">
+                                                        {fmtCurrency(editEffectiveTotal)}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                                                    <span>Harga sebelumnya</span>
+                                                    <span className="font-semibold text-slate-700">
+                                                        {fmtCurrency(editBooking.total_price)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-5">
+                                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                                            <div className="mb-4 flex items-center gap-3">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white">
+                                                    1
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-slate-900">
+                                                        Atur Jadwal Booking
+                                                    </h3>
+                                                    <p className="text-xs text-slate-500">
+                                                        Pilih tanggal, status pembayaran, dan lapangan sebelum menentukan slot waktu.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Tanggal
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        value={editDate}
+                                                        min={todayStr}
+                                                        onChange={(e) => void handleEditDateChange(e.target.value)}
+                                                        className="block h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Status Pembayaran
+                                                    </label>
+                                                    <select
+                                                        value={editPaymentStatus}
+                                                        onChange={(e) => setEditPaymentStatus(e.target.value as 'paid' | 'unpaid')}
+                                                        className="block h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                                                    >
+                                                        <option value="unpaid">Belum Lunas</option>
+                                                        <option value="paid">Lunas</option>
+                                                    </select>
+                                                </div>
+                                                <div className="sm:col-span-2">
+                                                    <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Lapangan
+                                                    </label>
+                                                    <select
+                                                        value={editCourtId ?? ''}
+                                                        onChange={(e) => handleEditCourtChange(Number(e.target.value))}
+                                                        className="block h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                                                    >
+                                                        <option value="" disabled>
+                                                            Pilih lapangan
+                                                        </option>
+                                                        {availabilityCourts.map((court) => (
+                                                            <option key={court.id} value={court.id}>
+                                                                {court.name} · {court.venue.name ?? '-'} · {court.sport.name ?? '-'}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                                            <div className="mb-4 flex items-start justify-between gap-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                        2
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-sm font-bold text-slate-900">
+                                                            Pilih Slot Waktu
+                                                        </h3>
+                                                        <p className="text-xs text-slate-500">
+                                                            Klik satu slot untuk mulai, lalu pilih slot akhir sesuai durasi booking.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {editRange.start && (
+                                                    <span className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700">
+                                                        <Clock3 className="h-3 w-3" />
+                                                        {editRange.start.slice(0, 5)} → {getSubmittedEndTime(editRange)?.slice(0, 5) ?? '?'}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {isAvailabilityLoading ? (
+                                                <div className="flex min-h-48 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
+                                                    <Spinner className="h-5 w-5 text-emerald-500" />
+                                                </div>
+                                            ) : !editCourt ? (
+                                                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-400">
+                                                    Pilih lapangan terlebih dahulu untuk menampilkan slot waktu.
+                                                </div>
+                                            ) : (
+                                                (() => {
+                                                    const blockedSlots = (editCourt.booked_slots || []).filter((slot) => {
+                                                        const slotMeta = editCourt.slot_meta?.[slot];
+
+                                                        if (!slotMeta) return false;
+                                                        if (slotMeta.booking_id === editBooking.id) return false;
+
+                                                        return ['confirmed', 'completed'].includes(slotMeta.status);
+                                                    });
+
+                                                    return (
+                                                        <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                                            <div className="grid gap-2 text-[11px] text-slate-500 sm:grid-cols-3">
+                                                                <span className="rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200">
+                                                                    Slot putih: masih tersedia
+                                                                </span>
+                                                                <span className="rounded-xl bg-emerald-50 px-3 py-2 text-emerald-700 ring-1 ring-emerald-200">
+                                                                    Slot hijau: pilihan Anda
+                                                                </span>
+                                                                <span className="rounded-xl bg-rose-50 px-3 py-2 text-rose-600 ring-1 ring-rose-200">
+                                                                    Slot merah: sudah dikonfirmasi
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                                                                {BOOKING_MODAL_SLOTS.map((slot) => {
+                                                                    const isBlocked = blockedSlots.includes(slot);
+                                                                    const isSelected =
+                                                                        editRange.start &&
+                                                                        (editRange.end
+                                                                            ? slot >= editRange.start && slot <= editRange.end
+                                                                            : slot === editRange.start);
+                                                                    const slotMeta = editCourt.slot_meta?.[slot];
+
+                                                                    return (
+                                                                        <button
+                                                                            key={slot}
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                !isBlocked &&
+                                                                                handleEditSlotSelection(
+                                                                                    editCourt,
+                                                                                    slot,
+                                                                                    blockedSlots,
+                                                                                )
+                                                                            }
+                                                                            disabled={isBlocked}
+                                                                            title={
+                                                                                isBlocked && slotMeta
+                                                                                    ? `${slotMeta.customer} • ${slotMeta.start_time}-${slotMeta.end_time}`
+                                                                                    : slot
+                                                                            }
+                                                                            className={cn(
+                                                                                'rounded-xl border py-3 text-center text-xs font-bold transition-all',
+                                                                                isBlocked
+                                                                                    ? 'cursor-not-allowed border-rose-200 bg-rose-50 text-rose-400 line-through'
+                                                                                    : isSelected
+                                                                                      ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
+                                                                                      : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-600',
+                                                                            )}
+                                                                        >
+                                                                            {slot}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()
+                                            )}
+                                        </div>
+
+                                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                                            <div className="mb-4 flex items-center gap-3">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white">
+                                                    3
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-slate-900">
+                                                        Atur Harga & Catatan
+                                                    </h3>
+                                                    <p className="text-xs text-slate-500">
+                                                        Tentukan apakah booking memakai harga sistem atau manual.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditPriceMode('system')}
+                                                        className={cn(
+                                                            'rounded-xl border px-4 py-3 text-left transition-all',
+                                                            editPriceMode === 'system'
+                                                                ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                                : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white',
+                                                        )}
+                                                    >
+                                                        <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                                            Harga Sistem
+                                                        </p>
+                                                        <p className="mt-1 text-sm font-bold text-slate-900">
+                                                            {fmtCurrency(editSystemTotal)}
+                                                        </p>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setEditPriceMode('manual');
+                                                            setEditManualTotal((current) => current ?? editBooking.total_price);
+                                                        }}
+                                                        className={cn(
+                                                            'rounded-xl border px-4 py-3 text-left transition-all',
+                                                            editPriceMode === 'manual'
+                                                                ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                                : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white',
+                                                        )}
+                                                    >
+                                                        <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                                            Harga Manual
+                                                        </p>
+                                                        <p className="mt-1 text-sm font-bold text-slate-900">
+                                                            {fmtCurrency(editManualTotal ?? editBooking.total_price)}
+                                                        </p>
+                                                    </button>
+                                                </div>
+
+                                            {editPriceMode === 'manual' && (
+                                                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                                    <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Nominal Manual
+                                                    </label>
+                                                    <div className="relative">
+                                                        <span className="absolute inset-y-0 left-0 flex items-center text-sm font-semibold text-slate-400">
+                                                            Rp
+                                                        </span>
+                                                        <input
+                                                            type="text"
+                                                            value={(editManualTotal ?? editBooking.total_price).toLocaleString('id-ID')}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value.replace(/\D/g, '');
+                                                                setEditManualTotal(value ? Number(value) : 0);
+                                                            }}
+                                                            className="block w-full border-0 border-b-2 border-emerald-200 bg-transparent py-1 pr-2 pl-7 text-lg font-bold text-slate-900 outline-none focus:border-emerald-500"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_0.85fr]">
+                                                <div>
+                                                    <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Catatan
+                                                    </label>
+                                                    <textarea
+                                                        value={editNotes}
+                                                        onChange={(e) => setEditNotes(e.target.value)}
+                                                        rows={4}
+                                                        placeholder="Catatan tambahan..."
+                                                        className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-300 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                                                    />
+                                                </div>
+
+                                                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                                    <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                                        Total Pembayaran
+                                                    </p>
+                                                    <div className="mt-3 flex items-center justify-between text-sm">
+                                                        <span className="text-slate-500">Harga sebelumnya</span>
+                                                        <span className="font-semibold text-slate-600">
+                                                            {fmtCurrency(editBooking.total_price)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-3 border-t border-slate-200 pt-3">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span className="text-sm font-semibold text-slate-900">Total baru</span>
+                                                            <span className="text-xl font-bold text-emerald-600">
+                                                                {fmtCurrency(editEffectiveTotal)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {editError && (
+                                        <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                                            {editError}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <DialogFooter className="shrink-0 border-t border-slate-200 px-5 py-4 sm:px-6">
+                            <button
+                                type="button"
+                                onClick={() => closeEditModal(false)}
+                                disabled={isEditSubmitting}
+                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={submitEditBooking}
+                                disabled={!editBooking || isEditSubmitting || isAvailabilityLoading}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {isEditSubmitting && <Spinner className="h-4 w-4" />}
+                                {isEditSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                            </button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
                 <Dialog open={Boolean(confirmBooking)} onOpenChange={closeConfirmModal}>
-                    <DialogContent className="w-[calc(100vw-2rem)] max-w-xl rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl">
-                        <DialogHeader className="border-b border-slate-200 px-6 py-5">
-                            <DialogTitle className="text-xl font-bold text-slate-900">
+                    <DialogContent className="flex w-[calc(100vw-2rem)] max-w-lg flex-col gap-0 rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl max-h-[90vh]">
+                        <DialogHeader className="shrink-0 border-b border-slate-200 px-5 py-4 sm:px-6">
+                            <DialogTitle className="text-lg font-bold text-slate-900">
                                 Konfirmasi Booking
                             </DialogTitle>
                             <DialogDescription className="text-sm text-slate-500">
@@ -1033,159 +1666,136 @@ export default function AdminBookings({
                         </DialogHeader>
 
                         {confirmBooking && (
-                            <div className="space-y-5 px-6 py-5">
-                                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <div>
-                                            <p className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-                                                Pemesan
-                                            </p>
-                                            <p className="mt-1 text-sm font-semibold text-slate-900">
-                                                {confirmBooking.user.name}
-                                            </p>
-                                            <p className="text-xs text-slate-500">
-                                                {confirmBooking.user.phone || confirmBooking.user.email || '-'}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-                                                Jadwal
-                                            </p>
-                                            <p className="mt-1 text-sm font-semibold text-slate-900">
-                                                {fmtDate(confirmBooking.date)}
-                                            </p>
-                                            <p className="text-xs text-slate-500">
-                                                {confirmBooking.start_time.slice(0, 5)} - {confirmBooking.end_time.slice(0, 5)}
-                                            </p>
-                                        </div>
-                                        <div className="sm:col-span-2">
-                                            <p className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-                                                Lapangan
-                                            </p>
-                                            <p className="mt-1 text-sm font-semibold text-slate-900">
-                                                {confirmBooking.court.name || '-'}
-                                            </p>
-                                            <p className="text-xs text-slate-500">
-                                                {confirmBooking.court.venue.name || '-'} · {confirmBooking.court.sport.name || '-'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="mb-3 text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">
-                                        Pilihan Harga
-                                    </p>
-                                    <div className="grid gap-2 sm:grid-cols-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setConfirmPriceMode('system');
-                                                setConfirmError('');
-                                            }}
-                                            className={cn(
-                                                'rounded-2xl border px-4 py-3 text-left transition-all',
-                                                confirmPriceMode === 'system'
-                                                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
-                                                    : 'border-slate-200 bg-white hover:border-slate-300',
-                                            )}
-                                        >
-                                            <p className="text-xs font-bold tracking-wider text-slate-500 uppercase">
-                                                Harga Sistem
-                                            </p>
-                                            <p className="mt-1 text-sm font-bold text-slate-900">
-                                                {fmtCurrency(confirmSystemTotal)}
-                                            </p>
-                                            <p className="mt-1 text-[11px] text-slate-400">
-                                                Gunakan harga otomatis dari rules lapangan.
-                                            </p>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setConfirmPriceMode('manual');
-                                                setConfirmManualTotal((current) => current ?? confirmBooking.total_price);
-                                                setConfirmError('');
-                                            }}
-                                            className={cn(
-                                                'rounded-2xl border px-4 py-3 text-left transition-all',
-                                                confirmPriceMode === 'manual'
-                                                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
-                                                    : 'border-slate-200 bg-white hover:border-slate-300',
-                                            )}
-                                        >
-                                            <p className="text-xs font-bold tracking-wider text-slate-500 uppercase">
-                                                Harga Manual
-                                            </p>
-                                            <p className="mt-1 text-sm font-bold text-slate-900">
-                                                {fmtCurrency(confirmManualTotal ?? confirmBooking.total_price)}
-                                            </p>
-                                            <p className="mt-1 text-[11px] text-slate-400">
-                                                Ubah nominal akhir sebelum booking dikonfirmasi.
-                                            </p>
-                                        </button>
-                                    </div>
-
-                                    {confirmPriceMode === 'manual' && (
-                                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm shadow-slate-900/5">
-                                            <label className="mb-2 block text-xs font-semibold text-slate-500">
-                                                Harga Manual
-                                            </label>
-                                            <div className="relative">
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-1 text-sm font-semibold text-slate-500">
-                                                    Rp
-                                                </span>
-                                                <input
-                                                    type="text"
-                                                    value={(confirmManualTotal ?? confirmBooking.total_price).toLocaleString('id-ID')}
-                                                    onChange={(e) => {
-                                                        const value = e.target.value.replace(/\D/g, '');
-                                                        setConfirmManualTotal(value ? Number(value) : 0);
-                                                    }}
-                                                    className="block w-full border-0 border-b-2 border-emerald-200 bg-transparent py-1 pr-2 pl-8 text-lg font-bold text-slate-900 outline-none focus:border-emerald-500"
-                                                />
+                            <div className="flex-1 overflow-y-auto overscroll-contain">
+                                <div className="space-y-4 px-5 py-5 sm:px-6">
+                                    {/* Booking info — compact horizontal card */}
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                        <p className="mb-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                            Detail Booking
+                                        </p>
+                                        <div className="space-y-2.5">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-xs text-slate-500">Pemesan</span>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-semibold text-slate-900">{confirmBooking.user.name}</p>
+                                                    <p className="text-[11px] text-slate-400">{confirmBooking.user.phone || confirmBooking.user.email || '—'}</p>
+                                                </div>
                                             </div>
-                                            <p className="mt-2 text-[11px] text-slate-400">
-                                                Nominal ini akan dipakai sebagai total akhir booking.
-                                            </p>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-xs text-slate-500">Lapangan</span>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-semibold text-slate-900">{confirmBooking.court.name || '—'}</p>
+                                                    <p className="text-[11px] text-slate-400">
+                                                        {confirmBooking.court.venue.name || '—'} · {confirmBooking.court.sport.name || '—'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-xs text-slate-500">Jadwal</span>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-semibold text-slate-900">{fmtDate(confirmBooking.date)}</p>
+                                                    <p className="text-[11px] text-slate-400">
+                                                        {confirmBooking.start_time.slice(0, 5)} – {confirmBooking.end_time.slice(0, 5)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Price options */}
+                                    <div>
+                                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                            Pilihan Harga
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setConfirmPriceMode('system'); setConfirmError(''); }}
+                                                className={cn(
+                                                    'rounded-xl border px-3 py-3 text-left transition-all',
+                                                    confirmPriceMode === 'system'
+                                                        ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                        : 'border-slate-200 bg-white hover:border-slate-300',
+                                                )}
+                                            >
+                                                <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Sistem</p>
+                                                <p className="mt-1 text-sm font-bold text-slate-900">{fmtCurrency(confirmSystemTotal)}</p>
+                                                <p className="mt-1 text-[10px] text-slate-400">Harga otomatis dari rules lapangan.</p>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setConfirmPriceMode('manual');
+                                                    setConfirmManualTotal((current) => current ?? confirmBooking.total_price);
+                                                    setConfirmError('');
+                                                }}
+                                                className={cn(
+                                                    'rounded-xl border px-3 py-3 text-left transition-all',
+                                                    confirmPriceMode === 'manual'
+                                                        ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                        : 'border-slate-200 bg-white hover:border-slate-300',
+                                                )}
+                                            >
+                                                <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Manual</p>
+                                                <p className="mt-1 text-sm font-bold text-slate-900">{fmtCurrency(confirmManualTotal ?? confirmBooking.total_price)}</p>
+                                                <p className="mt-1 text-[10px] text-slate-400">Ubah nominal sebelum konfirmasi.</p>
+                                            </button>
+                                        </div>
+
+                                        {confirmPriceMode === 'manual' && (
+                                            <div className="mt-2.5 rounded-xl border border-slate-200 bg-white px-4 py-3">
+                                                <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                    Nominal Manual
+                                                </label>
+                                                <div className="relative">
+                                                    <span className="absolute inset-y-0 left-0 flex items-center text-sm font-semibold text-slate-400">
+                                                        Rp
+                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        value={(confirmManualTotal ?? confirmBooking.total_price).toLocaleString('id-ID')}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value.replace(/\D/g, '');
+                                                            setConfirmManualTotal(value ? Number(value) : 0);
+                                                        }}
+                                                        className="block w-full border-0 border-b-2 border-emerald-200 bg-transparent py-1 pr-2 pl-7 text-lg font-bold text-slate-900 outline-none focus:border-emerald-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Price summary */}
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-500">Harga sebelumnya</span>
+                                            <span className="font-semibold text-slate-600">{fmtCurrency(confirmBooking.total_price)}</span>
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between text-sm">
+                                            <span className="text-slate-500">Sumber harga</span>
+                                            <span className="font-semibold text-slate-600">
+                                                {confirmPriceMode === 'manual' ? 'Manual' : 'Sistem'}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 border-t border-slate-200 pt-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-semibold text-slate-900">Total konfirmasi</span>
+                                                <span className="text-xl font-bold text-emerald-600">{fmtCurrency(confirmEffectiveTotal)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {confirmError && (
+                                        <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                                            {confirmError}
                                         </div>
                                     )}
                                 </div>
-
-                                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-500">Harga tersimpan saat ini</span>
-                                        <span className="font-semibold text-slate-700">
-                                            {fmtCurrency(confirmBooking.total_price)}
-                                        </span>
-                                    </div>
-                                    <div className="mt-2 flex items-center justify-between text-sm">
-                                        <span className="text-slate-500">Sumber harga</span>
-                                        <span className="font-semibold text-slate-700">
-                                            {confirmPriceMode === 'manual' ? 'Manual' : 'Sistem'}
-                                        </span>
-                                    </div>
-                                    <div className="mt-3 border-t border-slate-200 pt-3">
-                                        <div className="flex items-end justify-between">
-                                            <span className="text-sm font-semibold text-slate-900">Total setelah konfirmasi</span>
-                                            <span className="text-2xl font-bold text-emerald-600">
-                                                {fmtCurrency(confirmEffectiveTotal)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {confirmError && (
-                                    <div className="flex items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                                        {confirmError}
-                                    </div>
-                                )}
                             </div>
                         )}
 
-                        <DialogFooter className="border-t border-slate-200 px-6 py-4">
+                        <DialogFooter className="shrink-0 border-t border-slate-200 px-5 py-4 sm:px-6">
                             <button
                                 type="button"
                                 onClick={() => closeConfirmModal(false)}

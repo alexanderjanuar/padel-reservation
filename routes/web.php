@@ -104,6 +104,10 @@ Route::get('bookings', [BookingListController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('bookings.index');
 
+Route::get('bookings/availability', [BookingListController::class, 'availability'])
+    ->middleware(['auth', 'verified'])
+    ->name('bookings.availability');
+
 Route::post('bookings', [BookingController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('bookings.store');

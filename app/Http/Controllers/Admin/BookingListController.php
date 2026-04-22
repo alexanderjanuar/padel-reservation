@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Court;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,8 +26,8 @@ class BookingListController extends Controller
             ->map(fn (Booking $booking) => [
                 'id' => $booking->id,
                 'date' => $booking->date->format('Y-m-d'),
-                'start_time' => $booking->start_time,
-                'end_time' => $booking->end_time,
+                'start_time' => substr((string) $booking->start_time, 0, 5),
+                'end_time' => substr((string) $booking->end_time, 0, 5),
                 'status' => $booking->status,
                 'total_price' => $booking->total_price,
                 'notes' => $booking->notes,
@@ -59,6 +61,17 @@ class BookingListController extends Controller
         return Inertia::render('Admin/Bookings', [
             'bookings' => $bookings,
             'courts' => $this->getCourtsForDate(now()->toDateString()),
+        ]);
+    }
+
+    public function availability(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'date' => ['required', 'date'],
+        ]);
+
+        return response()->json([
+            'courts' => $this->getCourtsForDate($validated['date']),
         ]);
     }
 
