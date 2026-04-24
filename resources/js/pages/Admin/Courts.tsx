@@ -1185,7 +1185,9 @@ export default function Courts({ courts, venues, sports, filters }: Props) {
                                                                     </div>
                                                                     <button
                                                                         onClick={() => {
+                                                                            const savedRange = { ...selectedRange };
                                                                             resetBookingForm();
+                                                                            setSelectedRange(savedRange);
                                                                             setIsBookingModalOpen(
                                                                                 true,
                                                                             );
